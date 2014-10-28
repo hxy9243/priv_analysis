@@ -34,17 +34,24 @@ namespace {
       // TODO:
     }
 
-    // Run on Each Function
+    // Run on Module start
     virtual bool runOnModule (Module &M){
 
       // find function object
-      Function F = getfunction (TARGET_FUNC);
-
+      Function *F = getFunction (StringRef (TARGET_FUNC));
       // find all ocurring uses
-      
-      
-      
+      for (Value::user_iterator CI = F->use_begin (), CE = F->use_end ();
+	   CI != CE;
+	   CI ++){
+	// if CallInstr is calling priv_lower
+	if (dyn_cast<CallInst> (CI) && CI->getCalledFunction == F ){
+	  
+	  // add to the data table
 
+	}
+
+
+      }
       return false;
     }
   }; // endof struct PrivAnalysis
