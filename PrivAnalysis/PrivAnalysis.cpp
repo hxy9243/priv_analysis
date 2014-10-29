@@ -12,16 +12,19 @@
 #include "llvm/Pass.h"
 #include "llvm/Support/raw_ostream.h"
 
-#incude <unordered_map>
+#include <linux/capability.h>
+
+#include <unordered_map>
 
 #define TARGET_FUNC "priv_lower"
+#define CAP_SIZE (CAP_LAST_CAP + 1)
 
 using namespace llvm;
 
 namespace {
   // Data structure for priv_lower capabilities in each function
-  // Maps function name -> Array of capabilities
-  unordered_map <std::string, int[MAX_CAP_NUM]>PrivTable;
+  // Maps from InstCalls to -> Array of Capabilities
+  unordered_map <std::string, int[CAP_SIZE]>CAPTable;
 
   // PrivAnalysis structure
   struct PrivAnalysis : public FunctionPass {
@@ -32,28 +35,42 @@ namespace {
     virtual bool doInitialization(Module &M){
       // Init data structure
       // TODO:
+
+
     }
 
     // Run on Module start
     virtual bool runOnModule (Module &M){
-
-      // find function object
       Function *F = getFunction (StringRef (TARGET_FUNC));
-      // find all ocurring uses
-      for (Value::user_iterator CI = F->use_begin (), CE = F->use_end ();
-	   CI != CE;
-	   CI ++){
-	// if CallInstr is calling priv_lower
-	if (dyn_cast<CallInst> (CI) && CI->getCalledFunction == F ){
-	  
-	  // add to the data table
 
-	}
+      // Find all users of function in the module
+      for (User *U : F->users()){
+	// If it's a call Inst calling the targeted function
+	if (CallInst *CI = dyn_cast<CallInst>(U) 
+	    && CI->getCalledFunction () == F){
+
+	  // Retrieve all capabilities from params of function call
+	  // Note: Skip the first param of priv_lower for it's redundant
+	  unsigned numArgs = CI->getNumArgOperands ();
+	  for (int i = 1; i < numArgs; i ++){
+	    // retrieve integer value
+	    Value *v = CI->getArgOperand (i);
+	    APInt *vi = dyn_cast<ConstantInt>(v)->getValue();
+	    unsigned val = (unsigned) vi->getZExtValue ();
 
 
-      }
+	  }
+
+	  // Get the function where the Instr is in
+	  Function *tf = CI->getParent ()->getParent ();
+	  // Add to map
+
+
+	} // if (CallInst *CI = dyn_cast<CallInst>(U))
+
+      } // for (user *U : F->users ())
       return false;
-    }
+    }  // virtual bool runOnModule
   }; // endof struct PrivAnalysis
 }
 
