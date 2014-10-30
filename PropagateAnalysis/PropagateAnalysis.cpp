@@ -12,31 +12,64 @@
 #include "llvm/Pass.h"
 #include "llvm/Support/raw_ostream.h"
 
-#incude <unordered_map>
+#include <unordered_map>
+
+using namespace llvm;
 
 #define TARGET_FUNC "priv_lower"
 
-using namespace llvm;
+std::unordered_map<llvm::Function, std::array>CAPTable;
 
 namespace {
 
   // PrivAnalysis structure
   struct PropagateAnalysis : public CallGraphSCCPass {
     static char ID;
-    PrivAnalysis() : FunctionPass (ID) {}
+    PropagateAnalysis () : CallGraphSCCPass (ID) {}
 
     // Do initialization
-    virtual bool doInitialization(CallGraph &CG){
+    virtual bool doInitialization (CallGraph &CG){
       // Init data structure
       // TODO:
+
+
+
     }
 
-    // Run on Each Function
+    // Run on CallGraph SCC
     virtual bool runOnSCC (CallGraphSCC &SCC){
       
+      // Iterate over CallGraphNodes inside SCC
+      for (CallGraphNode *CGNI = SCC.begin (), *CGNE = SCC.end ();
+	   CGNI != CGNE;
+	   CGNI ++){
+
+	// Get the function 
+	Function *CalleeFunc = CGNI->getFunction ();
+
+	  // Iterate all Call Records inside CallGraphNodes 
+	for (CallRecord CRI = SCC.begin(), CRE = SCC.end ();
+	     CRI != CRE;
+	     CRI ++){
+
+	  // Get the callee of current call record
+	  CallGraphNode *CalleeNode = CRI.second;
+
+
+
+	}
+
+      }
 
       return false;
     }
+
+
+    // preserve all analyses
+    void getAnalysisUsage(AnalysisUsage &AU) const override {
+      AU.setPreservesAll();
+    }
+
   }; // endof struct PropagateAnalysis
 }
 
