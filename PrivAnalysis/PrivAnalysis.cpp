@@ -26,7 +26,7 @@ using namespace llvm;
 namespace {
   // Data structure for priv_lower capabilities in each function
   // Maps from InstCalls to -> Array of Capabilities
-  std::unordered_map<std::string, int[CAP_SIZE]>CAPTable;
+  std::unordered_map<llvm::Function, std::array>CAPTable;
 
   // PrivAnalysis structure
   struct PrivAnalysis : public ModulePass {
