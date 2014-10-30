@@ -51,8 +51,8 @@ namespace {
       for (User *U : F->users ()){
 
       	// If it's a call Inst calling the targeted function
-	if (CallInst *CI = dyn_cast<CallInst>(U)){
-      	   if  (CI->getCalledFunction () == F) {
+	CallInst *CI = dyn_cast<CallInst>(U);
+	if (CI != NULL && CI->getCalledFunction () == F){
 
       	    fprintf (stderr, "function is %p\n", F);
       	    fprintf (stderr, "get function is %p\n", CI->getCalledFunction ());
@@ -67,6 +67,7 @@ namespace {
 	      unsigned val = (unsigned) vi->getZExtValue ();
 	      
 	      // Add it to the array
+	      // TODO
 
 	    }
 
@@ -74,7 +75,7 @@ namespace {
 	    Function *tf = CI->getParent ()->getParent ();
 
 	    // Add to map
-
+	    // TODO
 
 
 	   } // if (CI->getCalledFunction() == F)
