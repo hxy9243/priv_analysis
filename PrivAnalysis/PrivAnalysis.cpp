@@ -1,4 +1,4 @@
-// ====---------------  PrivAnalysis.cpp --------------------====
+// ====---------------  PrivAnalysis.cpp ---------*- C++ -*---====
 //
 // Local analysis of priv_lower calls in Function blocks.
 // Find all the priv_lower calls inside each of the functions,
@@ -7,17 +7,17 @@
 //
 // ====-------------------------------------------------------====
 
-#include <stdio.h>
-
 #include "llvm/ADT/Statistic.h"
 #include "llvm/IR/Instructions.h"
 #include "llvm/IR/Module.h"
+#include "llvm/IR/Constants.h"
 #include "llvm/Pass.h"
 #include "llvm/Support/raw_ostream.h"
 
 #include <linux/capability.h>
-
 #include <unordered_map>
+#include <vector>
+
 using namespace llvm;
 
 #define TARGET_FUNC "priv_raise"
@@ -26,12 +26,12 @@ using namespace llvm;
 namespace {
   // Data structure for priv_lower capabilities in each function
   // Maps from InstCalls to -> Array of Capabilities
-  //std::unordered_map<llvm::Function, std::array>CAPTable;
+  std::unordered_map<*Function, std::vector<bool> >CAPTable;
 
   // PrivAnalysis structure
   struct PrivAnalysis : public ModulePass {
     static char ID;
-    PrivAnalysis() : ModulePass (ID) {}
+    PrivAnalysis() : ModulePass(ID) {}
 
     // Do initialization
     virtual bool doInitialization(Module &M){
@@ -42,53 +42,47 @@ namespace {
     }
 
     // Run on Module start
-    virtual bool runOnModule (Module &M){
-      Function *F = M.getFunction (TARGET_FUNC);
+    virtual bool runOnModule(Module &M){
+      Function *F = M.getFunction(TARGET_FUNC);
 
       // protector
       // TODO: return instead of assert
       // assert (F != NULL && "Cannot find target function!");
 
       // Find all users of function in the module
-      for (Value::user_iterator UI = F->user_begin(), UE = F->user_end (); UI != UE; ++UI){
-      	// If it's a call Inst calling the targeted function
-	CallInst *CI = dyn_cast<CallInst>(*UI);
-	if (CI != NULL && CI->getCalledFunction() == F){
-	  
-	  // errs () << *CI << "\n";
-	  // errs () << CI->getParent()->getParent()->getName();
-	  
-	  // Retrieve all capabilities from params of function call
-	  // Note: Skip the first param of priv_lower for it's num of args
-	  int numArgs = (int) CI->getNumArgOperands ();
+      for (Value::user_iterator UI = F->user_begin(), UE = F->user_end(); UI != UE; ++UI){
+        // If it's a call Inst calling the targeted function
+        CallInst *CI = dyn_cast<CallInst>(*UI);
+        if (CI == NULL || CI->getCalledFunction() != F){
+          continue;
+        }
+      
+        // Retrieve all capabilities from params of function call
+        // Note: Skip the first param of priv_lower for it's num of args
+        int numArgs = (int) CI->getNumArgOperands();
+        for (int i = 1; i < numArgs; i ++){
+          // retrieve integer value
+          Value *v = CI->getArgOperand(i);
+          // problem here
+          ConstantInt *I = dyn_cast<ConstantInt>(v);
+          unsigned int iarg = I->getZExtValue();
 
-	  errs () << "num of args is " << numArgs << "\n";
-	  for (int i = 0; i < numArgs; i ++){
-	    // retrieve integer value
-	    Value *v = CI->getArgOperand (i);
-	    // problem here
-	    // ConstantInt *I = dyn_cast<ConstantInt>(*v);
-	      
-	    errs () << "args is " << *v << "\n";
+          errs() << "args is " << iarg << "\n";
 
-	    // Add it to the array
-	    // TODO
+          // Add it to the array
+          // TODO
 
-	  }
+        }
 
-	  // Get the function where the Instr is in
-	  Function *tf = CI->getParent ()->getParent ();
-	  errs () << "Parent of the instruction is " << tf->getName() << "\n";
+        // Get the function where the Instr is in
+        Function *tf = CI->getParent()->getParent();
+        errs() << "Parent of the instruction is " << tf->getName() << "\n";
 
+        // Add to map
+        // TODO
 
-	  // Add to map
-	  // TODO
-
-
-	
-	} // if (CI != NULL
-
-      } // for ()
+    
+      } // for (Value::use_iterator
 
       return false;
     }  // virtual bool runOnModule
