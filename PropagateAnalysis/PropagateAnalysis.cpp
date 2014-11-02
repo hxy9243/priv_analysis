@@ -36,7 +36,7 @@ namespace {
 
     }
 
-    // Run on CallGraph SCC
+`    // Run on CallGraph SCC
     virtual bool runOnSCC (CallGraphSCC &SCC){
       
       // Iterate over CallGraphNodes inside SCC

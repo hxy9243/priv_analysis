@@ -20,13 +20,13 @@
 #include <unordered_map>
 using namespace llvm;
 
-#define TARGET_FUNC "priv_lower"
+#define TARGET_FUNC "priv_raise"
 #define CAP_SIZE (CAP_LAST_CAP + 1)
 
 namespace {
   // Data structure for priv_lower capabilities in each function
   // Maps from InstCalls to -> Array of Capabilities
-  std::unordered_map<llvm::Function, std::array>CAPTable;
+  //std::unordered_map<llvm::Function, std::array>CAPTable;
 
   // PrivAnalysis structure
   struct PrivAnalysis : public ModulePass {
@@ -43,43 +43,50 @@ namespace {
 
     // Run on Module start
     virtual bool runOnModule (Module &M){
-      Function *F = M.getFunction (StringRef (TARGET_FUNC));
+      Function *F = M.getFunction (TARGET_FUNC);
 
       // protector
-      assert (F != NULL && "Cannot find target function!");
+      // TODO: return instead of assert
+      // assert (F != NULL && "Cannot find target function!");
+
       // Find all users of function in the module
-      for (User *U : F->users ()){
-
+      for (Value::user_iterator UI = F->user_begin(), UE = F->user_end (); UI != UE; ++UI){
       	// If it's a call Inst calling the targeted function
-	CallInst *CI = dyn_cast<CallInst>(U);
-	if (CI != NULL && CI->getCalledFunction () == F){
+	CallInst *CI = dyn_cast<CallInst>(*UI);
+	if (CI != NULL && CI->getCalledFunction() == F){
+	  
+	  // errs () << *CI << "\n";
+	  // errs () << CI->getParent()->getParent()->getName();
+	  
+	  // Retrieve all capabilities from params of function call
+	  // Note: Skip the first param of priv_lower for it's num of args
+	  int numArgs = (int) CI->getNumArgOperands ();
 
-      	    fprintf (stderr, "function is %p\n", F);
-      	    fprintf (stderr, "get function is %p\n", CI->getCalledFunction ());
-
-	    // Retrieve all capabilities from params of function call
-	    // Note: Skip the first param of priv_lower for it's num of args
-	    int numArgs = (int) CI->getNumArgOperands ();
-	    for (int i = 1; i < numArgs; i ++){
-	      // retrieve integer value
-	      Value *v = CI->getArgOperand (i);
-	      APInt *vi = dyn_cast<ConstantInt>(v)->getValue();
-	      unsigned val = (unsigned) vi->getZExtValue ();
+	  errs () << "num of args is " << numArgs << "\n";
+	  for (int i = 0; i < numArgs; i ++){
+	    // retrieve integer value
+	    Value *v = CI->getArgOperand (i);
+	    // problem here
+	    // ConstantInt *I = dyn_cast<ConstantInt>(*v);
 	      
-	      // Add it to the array
-	      // TODO
+	    errs () << "args is " << *v << "\n";
 
-	    }
-
-	    // Get the function where the Instr is in
-	    Function *tf = CI->getParent ()->getParent ();
-
-	    // Add to map
+	    // Add it to the array
 	    // TODO
 
+	  }
 
-	   } // if (CI->getCalledFunction() == F)
-	} // if (CallInst *CI = dyn_cast<CallInst>(U))
+	  // Get the function where the Instr is in
+	  Function *tf = CI->getParent ()->getParent ();
+	  errs () << "Parent of the instruction is " << tf->getName() << "\n";
+
+
+	  // Add to map
+	  // TODO
+
+
+	
+	} // if (CI != NULL
 
       } // for ()
 
