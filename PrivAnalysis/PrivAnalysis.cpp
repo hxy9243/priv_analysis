@@ -49,6 +49,7 @@ namespace {
     void RetrieveAllCAP(CallInst *CI, std::array<bool, CAP_TOTALNUM> &CAParray){
       int numArgs = (int) CI->getNumArgOperands();
 
+      // Note: Skip the first param of priv_lower for it's num of args
       for (int i = 1; i < numArgs; i ++){
         // retrieve integer value
         Value *v = CI->getArgOperand(i);
@@ -64,21 +65,21 @@ namespace {
     // Get the function where the CallInst is in, add to map
     //
     void AddFuncToMap(Function *tf, std::array<bool, CAP_TOTALNUM> CAParray){
-        std::map<Function *, std::array<bool, CAP_TOTALNUM> >&pCAPTable
-          = this->CAPTable;
+      std::map<Function *, std::array<bool, CAP_TOTALNUM> >&pCAPTable
+        = this->CAPTable;
 
-        // DEBUG
-        errs() << "Parent of the instruction is " << tf->getName() << "\n";
+      // DEBUG
+      errs() << "Parent of the instruction is " << tf->getName() << "\n";
 
-        // If new, add to map, else, Union the two arrays
-        if (pCAPTable.find(tf) == pCAPTable.end() ){
-          pCAPTable[tf] = CAParray;
+      // If new, add to map, else, Union the two arrays
+      if (pCAPTable.find(tf) == pCAPTable.end() ){
+        pCAPTable[tf] = CAParray;
+      }
+      else {
+        for (int i = 0; i < CAP_TOTALNUM; ++ i){
+          pCAPTable[tf][i] |= CAParray[i];
         }
-        else {
-          for (int i = 0; i < CAP_TOTALNUM; ++ i){
-            pCAPTable[tf][i] |= CAParray[i];
-          }
-        }
+      }
     }
 
     //
@@ -104,7 +105,6 @@ namespace {
         }
 
         // Retrieve all capabilities from params of function call
-        // Note: Skip the first param of priv_lower for it's num of args
         std::array<bool, CAP_TOTALNUM>CAParray = {0};
         RetrieveAllCAP (CI, CAParray);
 
