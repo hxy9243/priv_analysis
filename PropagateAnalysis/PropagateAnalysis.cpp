@@ -8,6 +8,7 @@
  
 #include "llvm/ADT/Statistic.h"
 #include "llvm/IR/Function.h"
+#include "llvm/Pass.h"
 #include "llvm/Analysis/CallGraph.h"
 #include "llvm/Analysis/CallGraphSCCPass.h"
 #include "llvm/Support/raw_ostream.h"
@@ -25,7 +26,17 @@ namespace {
     static char ID;
     PropagateAnalysis() : CallGraphSCCPass(ID) {}
 
+    //
+    // Require Analysis Usage
+    //
+    void getAnalysisUsage(AnalysisUsage &AU){
+      AU.setPreservesCFG();
+      AU.addRequired<PrivAnalysis>();
+    }
+
+    //
     // Do initialization
+    //
     virtual bool doInitialization(CallGraph &CG){
       // Init data structure
       // TODO:
@@ -62,7 +73,9 @@ namespace {
       return false;
     }
 
+    //
     // Run on CallGraph SCC
+    //
     virtual bool runOnSCC(CallGraphSCC &SCC){
       
       // // Iterate over CallGraphNodes inside SCC
@@ -83,8 +96,9 @@ namespace {
       return false;
     }
 
-
+    //
     // preserve all analyses
+    //
     void getAnalysisUsage(AnalysisUsage &AU) const override {
       AU.setPreservesAll();
     }
