@@ -5,6 +5,7 @@ add_subdirectory(Scalar)
 add_subdirectory(IPO)
 add_subdirectory(Vectorize)
 add_subdirectory(Hello)
+add_subdirectory(ObjCARC)
 add_subdirectory(PrivAnalysis)
 add_subdirectory(PropagateAnalysis)
-add_subdirectory(ObjCARC)
+

@@ -146,4 +146,4 @@ namespace {
 }
 
 char PrivAnalysis::ID = 0;
-static RegisterPass<PrivAnalysis> X("PrivAnalysis", "Local privilege analysis pass in each function", true, true);
+static RegisterPass<PrivAnalysis> X("PrivAnalysis", "Local Privilege Analysis", true, true);
