@@ -58,10 +58,11 @@ void PrivAnalysis::AddFuncToMap(Function *tf,
   // DEBUG
   errs() << "Parent of the instruction is " << tf->getName() << "\n";
 
-  // If new, add to map, else, Union the two arrays
+  // If new, add to map
   if (pCAPTable.find(tf) == pCAPTable.end() ){
     pCAPTable[tf] = CAParray;
   }
+  // else, Union the two arrays
   else {
     for (int i = 0; i < CAP_TOTALNUM; ++ i){
       pCAPTable[tf][i] |= CAParray[i];
@@ -93,7 +94,7 @@ bool PrivAnalysis::runOnModule(Module &M){
 
     // Retrieve all capabilities from params of function call
     std::array<bool, CAP_TOTALNUM>CAParray = {0};
-    RetrieveAllCAP (CI, CAParray);
+    RetrieveAllCAP(CI, CAParray);
 
     // Get the function where the Instr is in
     // Add CAP to Map (Function* => array of CAPs)
@@ -124,6 +125,7 @@ bool PrivAnalysis::runOnModule(Module &M){
 
 // getAnalysisUsage function
 // preserve all analyses
+// param: AU
 void PrivAnalysis::getAnalysisUsage(AnalysisUsage &AU) const {
   AU.setPreservesAll();
 }
