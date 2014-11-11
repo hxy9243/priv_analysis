@@ -1,3 +1,7 @@
 add_llvm_loadable_module( LLVMPrivAnalysis
   PrivAnalysis.cpp
   )
+
+add_llvm_loadable_module( LLVMPropagateAnalysis
+  PropagateAnalysis.cpp
+  )

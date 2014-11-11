@@ -1,9 +1,7 @@
 // ====---------------  PrivAnalysis.cpp ---------*- C++ -*---====
 //
 // Local analysis of priv_lower calls in Function blocks.
-// Find all the priv_lower calls inside each of the functions,
-// and propagate all the information from callees to callers,
-// and for global live analysis.
+// Find all the priv_lower calls inside each of the functions.
 //
 // ====-------------------------------------------------------====
 
