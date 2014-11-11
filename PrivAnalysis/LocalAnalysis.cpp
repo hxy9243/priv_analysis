@@ -34,8 +34,7 @@ bool LocalAnalysis::doInitialization(Module &M){
 // Retrieve all capabilities from params of function call
 // param: CI - call instruction to retrieve from
 //        CAParray - the array of capability to save to
-void LocalAnalysis::RetrieveAllCAP(CallInst *CI, 
-                                  std::array<bool, CAP_TOTALNUM>&CAParray){
+void LocalAnalysis::RetrieveAllCAP(CallInst *CI, CAPArray_t &CAParray){
   int numArgs = (int) CI->getNumArgOperands();
 
   // Note: Skip the first param of priv_lower for it's num of args
@@ -54,22 +53,19 @@ void LocalAnalysis::RetrieveAllCAP(CallInst *CI,
 // Get the function where the CallInst is in, add to map
 // param: tf - the function to add 
 //        CAParray - the array of capability to add to CAPTable
-void LocalAnalysis::AddFuncToMap(Function *tf, 
-                                std::array<bool, CAP_TOTALNUM>CAParray){
-  std::map<Function *, std::array<bool, CAP_TOTALNUM> >&pCAPTable
-    = CAPTable;
+void LocalAnalysis::AddFuncToMap(Function *tf, CAPArray_t CAParray){
 
   // DEBUG
   errs() << "Parent of the instruction is " << tf->getName() << "\n";
 
-  // If new, add to map
-  if (pCAPTable.find(tf) == pCAPTable.end() ){
-    pCAPTable[tf] = CAParray;
+  // If not found in map, add to map
+  if (CAPTable.find(tf) == CAPTable.end() ){
+    CAPTable[tf] = CAParray;
   }
   // else, Union the two arrays
   else {
     for (int i = 0; i < CAP_TOTALNUM; ++ i){
-      pCAPTable[tf][i] |= CAParray[i];
+      CAPTable[tf][i] |= CAParray[i];
     }
   }
 }
@@ -109,22 +105,12 @@ bool LocalAnalysis::runOnModule(Module &M){
 
   // DEBUG purpose: dump map table
   // ---------------------//
-  for (auto mi = CAPTable.begin(), me = CAPTable.end(); 
-       mi != me;
-       ++ mi){
-    errs() << mi->first->getName() << ":\n";
-    for (auto ai = mi->second.begin(), ae = mi->second.end();
-         ai != ae;
-         ++ ai){
-      errs() << *ai << "\t";
-    }
-    errs() << "\n";
-  }
-  errs() << "\n";
+  dumpCAPTable (CAPTable);
   // ----------------------//
 
   return false;
 } 
+
 
 
 // getAnalysisUsage function
@@ -134,3 +120,30 @@ void LocalAnalysis::getAnalysisUsage(AnalysisUsage &AU) const {
   AU.setPreservesAll();
 }
 
+
+// dump CAPTable for Debugging purpose
+namespace llvm{
+namespace localAnalysis{
+
+  void dumpCAPTable(CAPTable_t &CT){
+
+    // iterate through captable, a map from func to array
+    for (auto mi = CT.begin(), me = CT.end(); 
+         mi != me;
+         ++ mi){
+      errs() << mi->first->getName() << ":\n";
+
+      // iterate through cap array
+      for (auto ai = mi->second.begin(), ae = mi->second.end();
+           ai != ae;
+           ++ ai){
+        errs() << *ai << "\t";
+      }
+      errs() << "\n";
+    }
+    errs() << "\n";
+
+  }
+
+} // namespace localanalysis
+} // namespace llvm

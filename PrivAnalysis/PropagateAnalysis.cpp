@@ -38,8 +38,9 @@ void PropagateAnalysis::getAnalysisUsage(AnalysisUsage &AU) const{
 bool PropagateAnalysis::doInitialization(CallGraph &CG){
   // Init data structure
   // TODO:
-
-
+  LocalAnalysis &LA = getAnalysis<LocalAnalysis>();
+  dumpCAPTable(LA.CAPTable);
+  
   // Iterate through the callgraph for callgraphnodes
   for (CallGraph::iterator CI = CG.begin(), CE = CG.end();
        CI != CE;

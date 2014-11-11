@@ -25,12 +25,19 @@
 namespace llvm{
 namespace localAnalysis {
 
+  // type definition
+  // The array of bool representing all Capabilities 
+  typedef std::array<bool, CAP_TOTALNUM> CAPArray_t;
+  // The map from functions to CAPArray
+  typedef std::map<Function *, CAPArray_t> CAPTable_t;
+
+  // LocalAnlysis pass
   struct LocalAnalysis : public ModulePass {
   public:
     static char ID;
     // Data structure for priv_lower capabilities in each function
     // Maps from InstCalls to -> Array of Capabilities
-    std::map<Function *, std::array<bool, CAP_TOTALNUM> >CAPTable;
+    CAPTable_t CAPTable;
 
     // constructor
     LocalAnalysis();
@@ -46,11 +53,15 @@ namespace localAnalysis {
 
   private:
     // Retrieve all capabilities from params of function call
-    void RetrieveAllCAP(CallInst *CI, std::array<bool, CAP_TOTALNUM>&CAParray);
+    void RetrieveAllCAP(CallInst *CI, CAPArray_t &CAParray);
 
     // Get the function where the CallInst is in, add to map
-    void AddFuncToMap(Function *tf, std::array<bool, CAP_TOTALNUM>CAParray);
+    void AddFuncToMap(Function *tf, CAPArray_t CAParray);
   }; // endof struct PrivAnalysis
+
+  // for debugging purpose
+  void dumpCAPTable(CAPTable_t &CT);
+
 
 } // namespace localanalysis
 } // namespace llvm
