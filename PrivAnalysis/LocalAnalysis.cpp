@@ -14,10 +14,6 @@
 using namespace llvm;
 using namespace llvm::localAnalysis;
 
-// Pass registry
-char LocalAnalysis::ID = 0;
-static RegisterPass<LocalAnalysis> A("LocalAnalysis", "Local Privilege Analysis", true, true);
-
 
 // Constructor
 LocalAnalysis::LocalAnalysis() : ModulePass(ID) {}
@@ -112,13 +108,17 @@ bool LocalAnalysis::runOnModule(Module &M){
 } 
 
 
-
 // getAnalysisUsage function
 // preserve all analyses
 // param: AU
 void LocalAnalysis::getAnalysisUsage(AnalysisUsage &AU) const {
   AU.setPreservesAll();
 }
+
+
+// Pass registry
+char LocalAnalysis::ID = 0;
+static RegisterPass<LocalAnalysis> A("LocalAnalysis", "Local Privilege Analysis", true, true);
 
 
 // dump CAPTable for Debugging purpose
