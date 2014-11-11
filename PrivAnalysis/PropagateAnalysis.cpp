@@ -4,15 +4,20 @@
 // from callee up to callers.
 //
 // ====-------------------------------------------------------====
- 
-#include "PrivAnalysis.h"
-#include "PropagateAnalysis.h"
+
+#include "PropagateAnalysis.h" 
+#include "LocalAnalysis.h"
 
 #include <array>
 #include <vector>
 #include <map>
 
 using namespace llvm;
+using namespace llvm::localAnalysis;
+using namespace llvm::propagateAnalysis;
+
+char PropagateAnalysis::ID = 0;
+static RegisterPass<PropagateAnalysis> X("PropagateAnalysis", "Privilege Propagate Analysis.");
 
 // PropagateAnalysis constructor
 PropagateAnalysis::PropagateAnalysis() : CallGraphSCCPass(ID) {}
@@ -21,7 +26,7 @@ PropagateAnalysis::PropagateAnalysis() : CallGraphSCCPass(ID) {}
 // Require Analysis Usage
 void PropagateAnalysis::getAnalysisUsage(AnalysisUsage &AU) const{
   AU.setPreservesCFG();
-  AU.addRequired<PrivAnalysis>();
+  AU.addRequired<LocalAnalysis>();
 
   // preserve usage
   AU.setPreservesAll();

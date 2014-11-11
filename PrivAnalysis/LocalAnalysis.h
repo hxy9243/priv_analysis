@@ -1,12 +1,12 @@
-// ====---------------  PrivAnalysis.cpp ---------*- C++ -*---====
+// ====-------------  LocalAnalysis.h -----------*- C++ -*---====
 //
 // Local analysis of priv_lower calls in Function blocks.
 // Find all the priv_lower calls inside each of the functions.
 //
 // ====-------------------------------------------------------====
 
-#ifndef __PRIVANALYSIS_H__
-#define __PRIVANALYSIS_H__
+#ifndef __LOCALANALYSIS_H__
+#define __LOCALANALYSIS_H__
 
 #include "llvm/ADT/Statistic.h"
 #include "llvm/IR/Instructions.h"
@@ -22,11 +22,10 @@
 #define TARGET_FUNC "priv_raise"
 #define CAP_TOTALNUM (CAP_LAST_CAP + 1)
 
-using namespace llvm;
+namespace llvm{
+namespace localAnalysis {
 
-namespace {
-
-  struct PrivAnalysis : public ModulePass {
+  struct LocalAnalysis : public ModulePass {
   public:
     static char ID;
     // Data structure for priv_lower capabilities in each function
@@ -34,7 +33,7 @@ namespace {
     std::map<Function *, std::array<bool, CAP_TOTALNUM> >CAPTable;
 
     // constructor
-    PrivAnalysis();
+    LocalAnalysis();
 
     // initialization method
     virtual bool doInitialization(Module &M);
@@ -53,11 +52,8 @@ namespace {
     void AddFuncToMap(Function *tf, std::array<bool, CAP_TOTALNUM>CAParray);
   }; // endof struct PrivAnalysis
 
-}
-
-// Pass registry
-char PrivAnalysis::ID = 0;
-static RegisterPass<PrivAnalysis> X("PrivAnalysis", "Local Privilege Analysis", true, true);
+} // namespace localanalysis
+} // namespace llvm
 
 
 #endif

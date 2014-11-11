@@ -1,25 +1,31 @@
-// ====---------------  PrivAnalysis.cpp ---------*- C++ -*---====
+// ====--------------  LocalAnalysis.cpp ---------*- C++ -*---====
 //
 // Local analysis of priv_lower calls in Function blocks.
 // Find all the priv_lower calls inside each of the functions.
 //
 // ====-------------------------------------------------------====
 
-#include "PrivAnalysis.h"
+#include "LocalAnalysis.h"
 
 #include <linux/capability.h>
 #include <map>
 #include <array>
 
 using namespace llvm;
+using namespace llvm::localAnalysis;
+
+// Pass registry
+char LocalAnalysis::ID = 0;
+static RegisterPass<LocalAnalysis> A("LocalAnalysis", "Local Privilege Analysis", true, true);
+
 
 // Constructor
-PrivAnalysis::PrivAnalysis() : ModulePass(ID) {}
+LocalAnalysis::LocalAnalysis() : ModulePass(ID) {}
 
 
 // Do initialization
 // param: Module 
-bool PrivAnalysis::doInitialization(Module &M){
+bool LocalAnalysis::doInitialization(Module &M){
   return false;
 }
 
@@ -28,7 +34,7 @@ bool PrivAnalysis::doInitialization(Module &M){
 // Retrieve all capabilities from params of function call
 // param: CI - call instruction to retrieve from
 //        CAParray - the array of capability to save to
-void PrivAnalysis::RetrieveAllCAP(CallInst *CI, 
+void LocalAnalysis::RetrieveAllCAP(CallInst *CI, 
                                   std::array<bool, CAP_TOTALNUM>&CAParray){
   int numArgs = (int) CI->getNumArgOperands();
 
@@ -48,7 +54,7 @@ void PrivAnalysis::RetrieveAllCAP(CallInst *CI,
 // Get the function where the CallInst is in, add to map
 // param: tf - the function to add 
 //        CAParray - the array of capability to add to CAPTable
-void PrivAnalysis::AddFuncToMap(Function *tf, 
+void LocalAnalysis::AddFuncToMap(Function *tf, 
                                 std::array<bool, CAP_TOTALNUM>CAParray){
   std::map<Function *, std::array<bool, CAP_TOTALNUM> >&pCAPTable
     = CAPTable;
@@ -71,7 +77,7 @@ void PrivAnalysis::AddFuncToMap(Function *tf,
 
 // Run on Module start
 // param: Module
-bool PrivAnalysis::runOnModule(Module &M){
+bool LocalAnalysis::runOnModule(Module &M){
   Function *F = M.getFunction(TARGET_FUNC);
 
   // Protector: didn't find any function TARGET_FUNC
@@ -124,7 +130,7 @@ bool PrivAnalysis::runOnModule(Module &M){
 // getAnalysisUsage function
 // preserve all analyses
 // param: AU
-void PrivAnalysis::getAnalysisUsage(AnalysisUsage &AU) const {
+void LocalAnalysis::getAnalysisUsage(AnalysisUsage &AU) const {
   AU.setPreservesAll();
 }
 

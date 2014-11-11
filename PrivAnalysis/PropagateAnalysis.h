@@ -19,9 +19,8 @@
 #include <vector>
 #include <map>
 
-using namespace llvm;
-
-namespace {
+namespace llvm{
+namespace propagateAnalysis{
 
   // PrivAnalysis structure
   struct PropagateAnalysis : public CallGraphSCCPass {
@@ -42,10 +41,8 @@ namespace {
     virtual bool runOnSCC(CallGraphSCC &SCC);
 
   }; 
-}
 
-char PropagateAnalysis::ID = 0;
-static RegisterPass<PropagateAnalysis> A("PropagateAnalysis", "Privilege Propagate Analysis.");
-
+} // namespace propagateAnalysis
+} // namespace llvm
 
 #endif
