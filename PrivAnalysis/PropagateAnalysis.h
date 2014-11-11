@@ -10,20 +10,21 @@
 
 #include "llvm/ADT/Statistic.h"
 #include "llvm/IR/Function.h"
+#include "llvm/IR/Module.h"
 #include "llvm/Pass.h"
 #include "llvm/Analysis/CallGraph.h"
-#include "llvm/Analysis/CallGraphSCCPass.h"
 #include "llvm/Support/raw_ostream.h"
 
 #include <array>
 #include <vector>
 #include <map>
 
+
 namespace llvm{
 namespace propagateAnalysis{
 
-  // PrivAnalysis structure
-  struct PropagateAnalysis : public CallGraphSCCPass {
+  // PropagateAnalysis class
+  struct PropagateAnalysis : public ModulePass {
   public:
     // pass ID
     static char ID;
@@ -35,10 +36,10 @@ namespace propagateAnalysis{
     void getAnalysisUsage(AnalysisUsage &AU) const;
 
     // do initialization
-    virtual bool doInitialization(CallGraph &CG);
+    virtual bool doInitialization(Module &M);
 
     // Run on CallGraph SCC
-    virtual bool runOnSCC(CallGraphSCC &SCC);
+    virtual bool runOnModule(Module &M);
 
   }; 
 

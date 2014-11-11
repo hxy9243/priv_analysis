@@ -17,7 +17,7 @@ using namespace llvm::localAnalysis;
 using namespace llvm::propagateAnalysis;
 
 // PropagateAnalysis constructor
-PropagateAnalysis::PropagateAnalysis() : CallGraphSCCPass(ID) {}
+PropagateAnalysis::PropagateAnalysis() : ModulePass(ID) {}
 
 
 // Require Analysis Usage
@@ -34,13 +34,11 @@ void PropagateAnalysis::getAnalysisUsage(AnalysisUsage &AU) const{
 
 // Do initialization
 // param: CG - the call graph
-bool PropagateAnalysis::doInitialization(CallGraph &CG){
+bool PropagateAnalysis::doInitialization(Module &M){
   // Init data structure
   // TODO:
   errs() << "initialization\n";
-
-  LocalAnalysis &LA = getAnalysis<LocalAnalysis>();
-  dumpCAPTable(LA.CAPTable);
+  CallGraph CG(M);
 
   // Iterate through the callgraph for callgraphnodes
   for (CallGraph::iterator CI = CG.begin(), CE = CG.end();
@@ -76,7 +74,7 @@ bool PropagateAnalysis::doInitialization(CallGraph &CG){
 
 // Run on CallGraph SCC
 // param: SCC - call graph strongly coupled components
-bool PropagateAnalysis::runOnSCC(CallGraphSCC &SCC){
+bool PropagateAnalysis::runOnModule(Module &M){
   errs() << "Starting runOnSCC\n";
 
   LocalAnalysis &LA = getAnalysis<LocalAnalysis>();
