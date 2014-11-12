@@ -90,7 +90,7 @@ bool LocalAnalysis::runOnModule(Module &M){
     }
 
     // Retrieve all capabilities from params of function call
-    std::array<bool, CAP_TOTALNUM>CAParray = {0};
+    CAPArray_t CAParray = {0};
     RetrieveAllCAP(CI, CAParray);
 
     // Get the function where the Instr is in
