@@ -1,7 +1,9 @@
-// ====----------  PropagateAnalysis.cpp ---------*- C++ -*---====
+// ====----------  PropagateAnalysis.h ----------*- C++ -*---====
 //
 // Analysis the call graph, propagate the live privilege property
 // from callee up to callers.
+// The output of the pass is the whole set of the privilege each 
+// function requires to run
 //
 // ====-------------------------------------------------------====
 
@@ -42,6 +44,10 @@ namespace propagateAnalysis{
 
     // Run on CallGraph SCC
     virtual bool runOnModule(Module &M);
+
+  private:
+    // Data propagation analysis
+    void Propagate(Module &M, CAPTable_t &CAPTable);
 
   };
 

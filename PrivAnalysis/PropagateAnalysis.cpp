@@ -1,9 +1,13 @@
-// ====---------------  PrivAnalysis.cpp ---------*- C++ -*---====
+// ====----------  PropagateAnalysis.cpp ---------*- C++ -*---====
 //
 // Analysis the call graph, propagate the live privilege property
 // from callee up to callers.
+// The output of the pass is the whole set of the privilege each 
+// function requires to run
 //
 // ====-------------------------------------------------------====
+
+#include "llvm/Analysis/CallGraph.h"
 
 #include "PropagateAnalysis.h"
 #include "LocalAnalysis.h"
@@ -79,10 +83,14 @@ bool PropagateAnalysis::runOnModule(Module &M){
 
   LocalAnalysis &LA = getAnalysis<LocalAnalysis>();
 
-  // Get CAPTable for
+  // Get CAPTable for propagation anlysis
   CAPTable = LA.CAPTable;
 
+  // DEBUG
   dumpCAPTable(CAPTable);
+
+  // Depth First Search Analysis for data propagation
+  Propagate(M, CAPTable);
 
   // Iterate over CallGraphNodes inside SCC
   // for (CallGraphNode *CGNI = SCC.begin (), *CGNE = SCC.end ();
@@ -101,6 +109,68 @@ bool PropagateAnalysis::runOnModule(Module &M){
 
   return false;
 }
+
+
+// Depth First Search data propagation analysis
+// param: CG - the callgraph to analyse
+//        CAPTable - the captable to store live analysis data
+void PropagateAnalysis::Propagate(Module &M, CAPTable_t &CAPTable){
+
+  // The ins and outs of function
+  CAPTable_t CAPTable_in;
+  CAPTable_t CAPTable_out;
+
+  bool ischanged = true;
+
+  // Get Callgraph
+  CallGraph CG(M);
+
+  // Keep iterating until converged
+  while (ischanged){
+
+    // Iterate through the callgraph
+    for (CallGraph::iterator CI = CG.begin(), CE = CG.end();
+         CI != CE;
+         ++ CI){
+      // get CallgraphNode
+      CallGraphNode *N = CI->second;
+      Function *FCaller = N->getFunction();
+      // protector
+      if (!FCaller){
+        continue;
+      }
+
+      // Iterate through Callgraphnode for callees
+      for (CallGraphNode::iterator RI = N->begin(), RE = N->end();
+           RI != RE;
+           ++ RI){
+        // get callee
+        Function *FCallee = RI->second->getFunction();
+        if (!FCallee){
+          continue;
+        }
+
+        // Propagate all information from callee to caller_out
+
+
+
+
+        // Propagate all information from caller_out to caller_in
+
+
+
+        
+
+      } // iterate for callee
+
+
+    } // iterator for caller nodes
+
+  } // main loop
+
+}
+
+
 
 
 // register pass
