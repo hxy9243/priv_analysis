@@ -40,39 +40,6 @@ void PropagateAnalysis::getAnalysisUsage(AnalysisUsage &AU) const{
 // Do initialization
 // param: CG - the call graph
 bool PropagateAnalysis::doInitialization(Module &M){
-  // Init data structure
-  // TODO:
-  errs() << "initialization\n";
-  CallGraph CG(M);
-
-  // Iterate through the callgraph for callgraphnodes
-  for (CallGraph::iterator CI = CG.begin(), CE = CG.end();
-       CI != CE;
-       ++ CI){
-
-    const CallGraphNode *N = CI->second;
-    Function *FCaller = N->getFunction();
-    if (!FCaller){
-      continue;
-    }
-
-    // Iterate through each callgraphnode for callees
-    for (auto RI = N->begin(), RE = N->end(); RI != RE; ++ RI){
-      Function *FCallee = RI->second->getFunction();
-      if (!FCallee){
-        continue;
-      }
-
-      // DEBUG
-      //////////////
-      errs() << FCaller->getName()
-             << " Calls function "
-             << FCallee->getName()
-             << "\n";
-      //////////////
-    }
-  }
-
   return false;
 }
 
@@ -94,21 +61,8 @@ bool PropagateAnalysis::runOnModule(Module &M){
   Propagate(M, CAPTable);
 
   errs() << "Dump table after propagation\n";
+
   dumpCAPTable(CAPTable);
-  // Iterate over CallGraphNodes inside SCC
-  // for (CallGraphNode *CGNI = SCC.begin (), *CGNE = SCC.end ();
-  //      CGNI != CGNE;
-  //      CGNI ++){
-  //   // Get the function
-  //   Function *CalleeFunc = CGNI->getFunction ();
-  //     // Iterate all Call Records inside CallGraphNodes
-  //   for (CallRecord CRI = SCC.begin(), CRE = SCC.end ();
-  //        CRI != CRE;
-  //        CRI ++){
-  //     // Get the callee of current call record
-  //     CallGraphNode *CalleeNode = CRI.second;
-  //   }
-  // }
 
   return false;
 }
@@ -172,16 +126,11 @@ void PropagateAnalysis::Propagate(Module &M, CAPTable_t &CAPTable){
 
     } // iterator for caller nodes
 
-    dumpCAPTable(CAPTable_in);
-
-    errs() << "Propagate Iteration!\n";
   } // main loop
 
   CAPTable = CAPTable_in;
 
 }
-
-
 
 
 // register pass
