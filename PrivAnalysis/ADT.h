@@ -33,6 +33,10 @@ namespace privAnalysis{
   // Union two arrays, save result to dest and test dest ischanged
   bool UnionCAPArrays(CAPArray_t &dest, CAPArray_t &src);
 
+  // for debugging purpose
+  void dumpCAPTable(CAPTable_t &CT);
+
+
 } // namespace privAnalysis
 } // namepsace llvm
 

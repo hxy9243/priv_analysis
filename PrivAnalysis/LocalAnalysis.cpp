@@ -122,29 +122,3 @@ char LocalAnalysis::ID = 0;
 static RegisterPass<LocalAnalysis> A("LocalAnalysis", "Local Privilege Analysis", true, true);
 
 
-// dump CAPTable for Debugging purpose
-namespace llvm{
-namespace localAnalysis{
-
-  void dumpCAPTable(CAPTable_t &CT){
-
-    // iterate through captable, a map from func to array
-    for (auto mi = CT.begin(), me = CT.end();
-         mi != me;
-         ++ mi){
-      errs() << mi->first->getName() << ":\n";
-
-      // iterate through cap array
-      for (auto ai = mi->second.begin(), ae = mi->second.end();
-           ai != ae;
-           ++ ai){
-        errs() << *ai << "\t";
-      }
-      errs() << "\n";
-    }
-    errs() << "\n";
-
-  }
-
-} // namespace localanalysis
-} // namespace llvm

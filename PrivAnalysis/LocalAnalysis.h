@@ -50,9 +50,6 @@ namespace localAnalysis {
     void AddFuncToMap(Function *tf, CAPArray_t CAParray);
   }; // endof struct PrivAnalysis
 
-  // for debugging purpose
-  void dumpCAPTable(CAPTable_t &CT);
-
 
 } // namespace localanalysis
 } // namespace llvm
