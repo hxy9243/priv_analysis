@@ -15,10 +15,9 @@
 #include "llvm/Analysis/CallGraph.h"
 #include "llvm/Support/raw_ostream.h"
 
-#include <array>
-#include <vector>
-#include <map>
+#include "ADT.h"
 
+using namespace llvm::privAnalysis;
 
 namespace llvm{
 namespace propagateAnalysis{
@@ -28,6 +27,9 @@ namespace propagateAnalysis{
   public:
     // pass ID
     static char ID;
+
+    // CAPTable after info propagation
+    CAPTable_t CAPTable;
 
     // constructor
     PropagateAnalysis();
@@ -41,7 +43,7 @@ namespace propagateAnalysis{
     // Run on CallGraph SCC
     virtual bool runOnModule(Module &M);
 
-  }; 
+  };
 
 } // namespace propagateAnalysis
 } // namespace llvm

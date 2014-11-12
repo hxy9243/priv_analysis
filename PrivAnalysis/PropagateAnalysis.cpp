@@ -1,11 +1,11 @@
 // ====---------------  PrivAnalysis.cpp ---------*- C++ -*---====
-// 
+//
 // Analysis the call graph, propagate the live privilege property
 // from callee up to callers.
 //
 // ====-------------------------------------------------------====
 
-#include "PropagateAnalysis.h" 
+#include "PropagateAnalysis.h"
 #include "LocalAnalysis.h"
 
 #include <array>
@@ -13,6 +13,7 @@
 #include <map>
 
 using namespace llvm;
+using namespace llvm::privAnalysis;
 using namespace llvm::localAnalysis;
 using namespace llvm::propagateAnalysis;
 
@@ -62,7 +63,7 @@ bool PropagateAnalysis::doInitialization(Module &M){
       //////////////
       errs() << FCaller->getName()
              << " Calls function "
-             << FCallee->getName() 
+             << FCallee->getName()
              << "\n";
       //////////////
     }
@@ -75,18 +76,21 @@ bool PropagateAnalysis::doInitialization(Module &M){
 // Run on CallGraph SCC
 // param: SCC - call graph strongly coupled components
 bool PropagateAnalysis::runOnModule(Module &M){
-  errs() << "Starting runOnSCC\n";
 
   LocalAnalysis &LA = getAnalysis<LocalAnalysis>();
-  dumpCAPTable(LA.CAPTable);
-      
-  // // Iterate over CallGraphNodes inside SCC
+
+  // Get CAPTable for
+  CAPTable = LA.CAPTable;
+
+  dumpCAPTable(CAPTable);
+
+  // Iterate over CallGraphNodes inside SCC
   // for (CallGraphNode *CGNI = SCC.begin (), *CGNE = SCC.end ();
   //      CGNI != CGNE;
   //      CGNI ++){
-  //   // Get the function 
+  //   // Get the function
   //   Function *CalleeFunc = CGNI->getFunction ();
-  //     // Iterate all Call Records inside CallGraphNodes 
+  //     // Iterate all Call Records inside CallGraphNodes
   //   for (CallRecord CRI = SCC.begin(), CRE = SCC.end ();
   //        CRI != CRE;
   //        CRI ++){
@@ -102,4 +106,3 @@ bool PropagateAnalysis::runOnModule(Module &M){
 // register pass
 char PropagateAnalysis::ID = 0;
 static RegisterPass<PropagateAnalysis> X("PropagateAnalysis", "Privilege Propagate Analysis.");
-

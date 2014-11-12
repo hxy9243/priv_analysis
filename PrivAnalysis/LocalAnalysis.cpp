@@ -12,6 +12,7 @@
 #include <array>
 
 using namespace llvm;
+using namespace llvm::privAnalysis;
 using namespace llvm::localAnalysis;
 
 
@@ -20,7 +21,7 @@ LocalAnalysis::LocalAnalysis() : ModulePass(ID) {}
 
 
 // Do initialization
-// param: Module 
+// param: Module
 bool LocalAnalysis::doInitialization(Module &M){
   return false;
 }
@@ -47,7 +48,7 @@ void LocalAnalysis::RetrieveAllCAP(CallInst *CI, CAPArray_t &CAParray){
 
 
 // Get the function where the CallInst is in, add to map
-// param: tf - the function to add 
+// param: tf - the function to add
 //        CAParray - the array of capability to add to CAPTable
 void LocalAnalysis::AddFuncToMap(Function *tf, CAPArray_t CAParray){
 
@@ -105,7 +106,7 @@ bool LocalAnalysis::runOnModule(Module &M){
   // ----------------------//
 
   return false;
-} 
+}
 
 
 // getAnalysisUsage function
@@ -128,7 +129,7 @@ namespace localAnalysis{
   void dumpCAPTable(CAPTable_t &CT){
 
     // iterate through captable, a map from func to array
-    for (auto mi = CT.begin(), me = CT.end(); 
+    for (auto mi = CT.begin(), me = CT.end();
          mi != me;
          ++ mi){
       errs() << mi->first->getName() << ":\n";

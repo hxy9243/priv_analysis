@@ -15,21 +15,12 @@
 #include "llvm/Pass.h"
 #include "llvm/Support/raw_ostream.h"
 
-#include <linux/capability.h>
-#include <map>
-#include <array>
+#include "ADT.h"
 
-#define TARGET_FUNC "priv_raise"
-#define CAP_TOTALNUM (CAP_LAST_CAP + 1)
+using namespace llvm::privAnalysis;
 
 namespace llvm{
 namespace localAnalysis {
-
-  // type definition
-  // The array of bool representing all Capabilities 
-  typedef std::array<bool, CAP_TOTALNUM> CAPArray_t;
-  // The map from functions to CAPArray
-  typedef std::map<Function *, CAPArray_t> CAPTable_t;
 
   // LocalAnlysis pass
   struct LocalAnalysis : public ModulePass {
@@ -68,6 +59,3 @@ namespace localAnalysis {
 
 
 #endif
-
-
-
