@@ -87,11 +87,14 @@ bool PropagateAnalysis::runOnModule(Module &M){
   CAPTable = LA.CAPTable;
 
   // DEBUG
+  errs() << "Dump table before propagation\n";
   dumpCAPTable(CAPTable);
 
   // Depth First Search Analysis for data propagation
   Propagate(M, CAPTable);
 
+  errs() << "Dump table after propagation\n";
+  dumpCAPTable(CAPTable);
   // Iterate over CallGraphNodes inside SCC
   // for (CallGraphNode *CGNI = SCC.begin (), *CGNE = SCC.end ();
   //      CGNI != CGNE;
@@ -120,6 +123,9 @@ void PropagateAnalysis::Propagate(Module &M, CAPTable_t &CAPTable){
   CAPTable_t CAPTable_in;
   CAPTable_t CAPTable_out;
 
+  CopyTableKeys(CAPTable_in, CAPTable);
+  CopyTableKeys(CAPTable_out, CAPTable);
+
   bool ischanged = true;
 
   // Get Callgraph
@@ -127,12 +133,13 @@ void PropagateAnalysis::Propagate(Module &M, CAPTable_t &CAPTable){
 
   // Keep iterating until converged
   while (ischanged){
+    ischanged = false;
 
     // Iterate through the callgraph
     for (CallGraph::iterator CI = CG.begin(), CE = CG.end();
          CI != CE;
          ++ CI){
-      // get CallgraphNode
+      // Get CallgraphNode
       CallGraphNode *N = CI->second;
       Function *FCaller = N->getFunction();
       // protector
@@ -140,33 +147,37 @@ void PropagateAnalysis::Propagate(Module &M, CAPTable_t &CAPTable){
         continue;
       }
 
+      // Get Caller mapped array in CAPTables
+      CAPArray_t &callerIn = CAPTable_in[FCaller];
+      CAPArray_t &callerOut = CAPTable_out[FCaller];
       // Iterate through Callgraphnode for callees
       for (CallGraphNode::iterator RI = N->begin(), RE = N->end();
            RI != RE;
            ++ RI){
-        // get callee
+        // Get callee
         Function *FCallee = RI->second->getFunction();
         if (!FCallee){
           continue;
         }
 
-        // Propagate all information from callee to caller_out
+        CAPArray_t &calleeIn = CAPTable_in[FCallee];
+        // Propagate all information from callee to caller_out 
+        UnionCAPArrays(callerOut, calleeIn);
 
+      } // Iterate through Callgraphnode for callees
 
-
-
-        // Propagate all information from caller_out to caller_in
-
-
-
-        
-
-      } // iterate for callee
-
+      // Propagate all information from caller_out to caller_in
+      UnionCAPArrays(callerOut, CAPTable[FCaller]);
+      ischanged |= UnionCAPArrays(callerIn, callerOut);
 
     } // iterator for caller nodes
 
+    dumpCAPTable(CAPTable_in);
+
+    errs() << "Propagate Iteration!\n";
   } // main loop
+
+  CAPTable = CAPTable_in;
 
 }
 
