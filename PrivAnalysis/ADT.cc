@@ -47,19 +47,20 @@ namespace privAnalysis{
 
 
   // dump CAPTable for Debugging purpose
+  // param: CT - the CAPTable to dump
   void dumpCAPTable(CAPTable_t &CT){
 
     // iterate through captable, a map from func to array
     for (auto mi = CT.begin(), me = CT.end();
          mi != me;
          ++ mi){
-      errs() << mi->first->getName() << ":\n";
+      errs() << mi->first->getName() << " Privileges:\n";
 
       // iterate through cap array
-      for (auto ai = mi->second.begin(), ae = mi->second.end();
-           ai != ae;
-           ++ ai){
-        errs() << *ai << "\t";
+      for (unsigned int i = 0; i < mi->second.size(); ++ i){
+        if (mi->second[i]){
+          errs() << i << "\t";
+        }
       }
       errs() << "\n";
     }
