@@ -19,81 +19,85 @@ using namespace llvm::splitBB;
 
 
 // Constructor
-SplitBB::SplitBB() : BasicBlockPass(ID) {}
+SplitBB::SplitBB() : ModulePass(ID) {}
 
 
 // do Initialization
-bool SplitBB::doInitialization(Function &F){
+bool SplitBB::doInitialization(Module &M){
   return false;
 }
 
 
 // run on Basic Block
-bool SplitBB::runOnBasicBlock(BasicBlock &B){
-
-  // Store the split location in BasicBlocks
-  std::map<BasicBlock *, std::vector<Instruction *> >splitLocationInBB;
-
-  // iterate through all instructions to find out split locations
-  for(BasicBlock::iterator II = B.begin(), IE = B.end();
-      II != IE;
-      ++ II){
-
-    // We are only interested in CallInst
-    CallInst *CI = dyn_cast<CallInst>(II);
-    if (CI == NULL){
-      continue;
-    }
-
-    // Split the BasicBlock according to the instruction type
-    // possible chances are:
-    //    priv_raise, priv_lower calls
-    //    non-external function calls
-    Function *CalledFunc = CI->getCalledFunction();
-    // privraise
-    if (CalledFunc->getName() == PRIVRAISE){
-      std::vector<Instruction *> &InstVector = splitLocationInBB[&B];
-      if (II != B.begin()){
-        // add Inst to split location
-        InstVector.push_back(dyn_cast<Instruction>(II));
-      }
-    }
-
-    // privlower
-    else if (CalledFunc->getName() == PRIVLOWER){
-      std::vector<Instruction *> &InstVector = splitLocationInBB[&B];
-      if (II != B.end()){
-        // add Inst to split location
-        InstVector.push_back(dyn_cast<Instruction>(++ II));
-      }
-    }
-
-    // other non-external library function calls
-    // -- functions not defined in other libraries
-    else if (!isExternLibCall(CalledFunc)){
-      std::vector<Instruction *> &InstVector = splitLocationInBB[&B];
-      if (II != B.begin()){
-        // add Inst to split location
-        InstVector.push_back(dyn_cast<Instruction>(II));
-      }
-      if (II != B.end()){
-        // add Inst to split location
-        InstVector.push_back(dyn_cast<Instruction>(++ II));
-      }
-    }
+bool SplitBB::runOnModule(Module &M){
+  // split on PrivRaise calls
+  Function *FRaise = M.getFunction(PRIVRAISE);
+  if (FRaise != NULL){
+    splitOnFunction(FRaise, SPLIT_HERE);
   }
+
+  // split on PrivLower calls
+  Function *FLower = M.getFunction(PRIVLOWER);
+  if (FLower != NULL){
+    splitOnFunction(FLower, SPLIT_NEXT);
+  }
+
   
+
+
   // It modifies CFG
   return true;
 }
 
 
-// run on Basic Block
-bool SplitBB::isExternLibCall(Function *F){
 
+// split on all calling site of the Function
+// param: F - The function to split
+//        splitLoc - SPLIT_HERE split on the instruction
+//                   SPLIT_NEXT split on the next instruction
+//                   SPLIT_HERE | SPLIT_NEXT split both locations
+void SplitBB::splitOnFunction(Function *F, int splitLoc){
 
+  // iterate all uses for calling instruction
+  for (Value::user_iterator UI = F->user_begin(), UE = F->user_end();
+       UI != UE;
+       ++ UI){
+    CallInst *CI = dyn_cast<CallInst>(*UI);
+    if (CI == NULL || CI->getCalledFunction() != F){
+      continue;
+    }
+      
+    // split on the instruction
+    BasicBlock *BB = CI->getParent();
 
-  return true;
+    // if split on the head of the calling instruction
+    if (splitLoc & SPLIT_HERE){
+      if (dyn_cast<Instruction>(CI) !=
+          dyn_cast<Instruction>(BB->begin())){
+        BB->splitBasicBlock(CI);
+
+        // DEBUG
+        errs() << "split on " << CI->getParent()->getParent()->getName() << "\n";
+      }
+      // DEBUG
+      else{
+        errs() << "you're the start of " << CI->getParent()->getParent()->getName() << " I'm not splitting you\n";
+      }
+    }
+
+    // if split on next of the calling instruction
+    if (splitLoc & SPLIT_NEXT){
+      if (dyn_cast<Instruction>(CI) !=
+          dyn_cast<Instruction>(BB->end())){
+        //Instruction *splitPoint = CI->getNextNode();
+        BB->splitBasicBlock(CI->getNextNode());
+        errs() << "split on " << CI->getParent()->getParent()->getName() << "\n";
+      }
+      else {
+        errs() << "you're the end of " << CI->getParent()->getParent()->getName() << " I'm not splitting you\n";
+      }
+    }
+  }
 }
 
 

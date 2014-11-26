@@ -20,6 +20,10 @@
 
 #include "ADT.h"
 
+#define SPLIT_HERE  1
+#define SPLIT_NEXT  2
+
+
 using namespace llvm::privAnalysis;
 
 namespace llvm {
@@ -27,24 +31,29 @@ namespace splitBB {
 
   // SplitBB pass
   // Separate Priv related Insts to Single BBs
-  struct SplitBB : public BasicBlockPass {
+  struct SplitBB : public ModulePass {
   public:
     static char ID;
     SplitBB();
-    
+    // Store the split location in BasicBlocks
+    std::map<BasicBlock *, std::vector<Instruction *> >splitLocationInBB;
+
     // Vector to store BB info for analysis
     std::vector<BasicBlock *> BBtoAnalyze;
 
     // initialization
-    virtual bool doInitialization(Function &F);
+    virtual bool doInitialization(Module &M);
 
     // Run on BasicBlock Start
-    virtual bool runOnBasicBlock(BasicBlock &B);
+    virtual bool runOnModule(Module &M);
 
     // Preserve analysis usage
     void getAnalysisUsage(AnalysisUsage &AU) const;
 
   private:
+    // Split instruction on all the Function calling sites
+    void splitOnFunction(Function *F, int splitLoc);
+
     // Find out if instruction is from extern library,
     // which doesn't 
     bool isExternLibCall(Function *F);
