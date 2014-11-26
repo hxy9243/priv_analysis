@@ -42,7 +42,25 @@ bool SplitBB::runOnModule(Module &M){
     splitOnFunction(FLower, SPLIT_NEXT);
   }
 
-  
+  // split on non-extern Function call sites
+  for (Module::iterator FI = M.begin(), FE = M.end();
+       FI != FE;
+       ++ FI){
+    Function *F = dyn_cast<Function>(FI);
+
+    // skip priv_* calls
+    if (F->getName() == PRIVRAISE ||
+        F->getName() == PRIVLOWER){
+      continue;
+    }
+    // skip external functions
+    if (F->empty()){
+      errs () << F->getName() << " is empty!\n";
+      continue;
+    }
+
+    splitOnFunction(F, SPLIT_HERE | SPLIT_NEXT);
+  }
 
 
   // It modifies CFG
@@ -68,33 +86,48 @@ void SplitBB::splitOnFunction(Function *F, int splitLoc){
     }
       
     // split on the instruction
-    BasicBlock *BB = CI->getParent();
 
     // if split on the head of the calling instruction
     if (splitLoc & SPLIT_HERE){
+      BasicBlock *BB = CI->getParent();
+
       if (dyn_cast<Instruction>(CI) !=
           dyn_cast<Instruction>(BB->begin())){
         BB->splitBasicBlock(CI);
 
         // DEBUG
-        errs() << "split on " << CI->getParent()->getParent()->getName() << "\n";
+        errs() << "split on " 
+               << CI->getCalledFunction()->getName() << " in "
+               << CI->getParent()->getParent()->getName() << "\n";
       }
       // DEBUG
       else{
-        errs() << "you're the start of " << CI->getParent()->getParent()->getName() << " I'm not splitting you\n";
+        errs() << CI->getCalledFunction()->getName()
+               <<" is the start of a block in " 
+               << CI->getParent()->getParent()->getName() 
+               << " I'm not splitting you\n";
       }
     }
 
     // if split on next of the calling instruction
     if (splitLoc & SPLIT_NEXT){
+      BasicBlock *BB = CI->getParent();
+
       if (dyn_cast<Instruction>(CI) !=
           dyn_cast<Instruction>(BB->end())){
         //Instruction *splitPoint = CI->getNextNode();
         BB->splitBasicBlock(CI->getNextNode());
-        errs() << "split on " << CI->getParent()->getParent()->getName() << "\n";
+        errs() << "split on " 
+               << CI->getCalledFunction()->getName() << " in "
+               << CI->getParent()->getParent()->getName() << "\n";
+
       }
       else {
-        errs() << "you're the end of " << CI->getParent()->getParent()->getName() << " I'm not splitting you\n";
+        errs() << CI->getCalledFunction()->getName()
+               <<" is the start of a block in " 
+               << CI->getParent()->getParent()->getName() 
+               << " I'm not splitting you\n";
+
       }
     }
   }

@@ -54,10 +54,6 @@ namespace splitBB {
     // Split instruction on all the Function calling sites
     void splitOnFunction(Function *F, int splitLoc);
 
-    // Find out if instruction is from extern library,
-    // which doesn't 
-    bool isExternLibCall(Function *F);
-
   }; // struct splitBB
 
 } // namespace slitBB
