@@ -35,11 +35,12 @@ namespace splitBB {
   public:
     static char ID;
     SplitBB();
-    // Store the split location in BasicBlocks
-    std::map<BasicBlock *, std::vector<Instruction *> >splitLocationInBB;
 
     // Vector to store BB info for analysis
-    std::vector<BasicBlock *> BBtoAnalyze;
+    std::vector<BasicBlock *> PrivBB;
+
+    // Vector to store BB info for analysis
+    std::vector<BasicBlock *> CallSiteBB;
 
     // initialization
     virtual bool doInitialization(Module &M);

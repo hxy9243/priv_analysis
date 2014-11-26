@@ -62,6 +62,9 @@ bool SplitBB::runOnModule(Module &M){
     splitOnFunction(F, SPLIT_HERE | SPLIT_NEXT);
   }
 
+  // DEBUG
+  errs() << "Sizeof privBB is " << PrivBB.size() << "\n"
+         << "Sizeof CallSiteBB is " << CallSiteBB.size() << "\n";
 
   // It modifies CFG
   return true;
@@ -93,7 +96,15 @@ void SplitBB::splitOnFunction(Function *F, int splitLoc){
 
       if (dyn_cast<Instruction>(CI) !=
           dyn_cast<Instruction>(BB->begin())){
-        BB->splitBasicBlock(CI);
+        BasicBlock *NewBB = BB->splitBasicBlock(CI);
+
+        // save to data structure for later use
+        if (F->getName() == PRIVRAISE){
+          PrivBB.push_back(NewBB);
+        }
+        else{
+          CallSiteBB.push_back(NewBB);
+        }
 
         // DEBUG
         errs() << "split on " 
