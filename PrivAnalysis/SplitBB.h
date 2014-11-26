@@ -47,7 +47,7 @@ namespace splitBB {
   private:
     // Find out if instruction is from extern library,
     // which doesn't 
-    bool isExternLibcall(Instruction &I);
+    bool isExternLibCall(Function *F);
 
   }; // struct splitBB
 

@@ -31,7 +31,10 @@ bool SplitBB::doInitialization(Function &F){
 // run on Basic Block
 bool SplitBB::runOnBasicBlock(BasicBlock &B){
 
-  // iterate through all instructions
+  // Store the split location in BasicBlocks
+  std::map<BasicBlock *, std::vector<Instruction *> >splitLocationInBB;
+
+  // iterate through all instructions to find out split locations
   for(BasicBlock::iterator II = B.begin(), IE = B.end();
       II != IE;
       ++ II){
@@ -42,35 +45,56 @@ bool SplitBB::runOnBasicBlock(BasicBlock &B){
       continue;
     }
 
-    // if Instruction is priv_raise
-    // split the Instruction between priv_raise 
-    // and priv_lower as new separate BB
+    // Split the BasicBlock according to the instruction type
+    // possible chances are:
+    //    priv_raise, priv_lower calls
+    //    non-external function calls
     Function *CalledFunc = CI->getCalledFunction();
-    errs() << CalledFunc->getName() << "\n";
-
+    // privraise
     if (CalledFunc->getName() == PRIVRAISE){
+      std::vector<Instruction *> &InstVector = splitLocationInBB[&B];
+      if (II != B.begin()){
+        // add Inst to split location
+        InstVector.push_back(dyn_cast<Instruction>(II));
+      }
+    }
 
-      errs() << CalledFunc->getName() << "\n";
+    // privlower
+    else if (CalledFunc->getName() == PRIVLOWER){
+      std::vector<Instruction *> &InstVector = splitLocationInBB[&B];
+      if (II != B.end()){
+        // add Inst to split location
+        InstVector.push_back(dyn_cast<Instruction>(++ II));
+      }
+    }
 
-      // split the basic block
-      // TODO: Is this right?
-      // SplitBlock(&B, CI, this);
+    // other non-external library function calls
+    // -- functions not defined in other libraries
+    else if (!isExternLibCall(CalledFunc)){
+      std::vector<Instruction *> &InstVector = splitLocationInBB[&B];
+      if (II != B.begin()){
+        // add Inst to split location
+        InstVector.push_back(dyn_cast<Instruction>(II));
+      }
+      if (II != B.end()){
+        // add Inst to split location
+        InstVector.push_back(dyn_cast<Instruction>(++ II));
+      }
     }
   }
-
+  
   // It modifies CFG
   return true;
 }
 
 
 // run on Basic Block
-bool SplitBB::isExternLibcall(Instruction &I){
+bool SplitBB::isExternLibCall(Function *F){
 
 
 
   return true;
 }
-
 
 
 // getAnalysisUsage function
@@ -82,6 +106,8 @@ void SplitBB::getAnalysisUsage(AnalysisUsage &AU) const {
 
 // Pass registry
 char SplitBB::ID = 0;
-static RegisterPass<SplitBB> B("SplitBB", "Split BasicBlock pass", true, true);
+static RegisterPass<SplitBB> B("SplitBB", "Split BasicBlock pass", 
+                               false /* Modifies the CFG */,
+                               false /* Modify the program */);
 
 

@@ -119,6 +119,6 @@ void LocalAnalysis::getAnalysisUsage(AnalysisUsage &AU) const {
 
 // Pass registry
 char LocalAnalysis::ID = 0;
-static RegisterPass<LocalAnalysis> A("LocalAnalysis", "Local Privilege Analysis", true, true);
+static RegisterPass<LocalAnalysis> A("LocalAnalysis", "Local Privilege Analysis",true, true);
 
 
