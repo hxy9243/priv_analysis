@@ -38,14 +38,13 @@ void PropagateAnalysis::getAnalysisUsage(AnalysisUsage &AU) const{
 
 
 // Do initialization
-// param: CG - the call graph
 bool PropagateAnalysis::doInitialization(Module &M){
   return false;
 }
 
 
-// Run on CallGraph SCC
-// param: SCC - call graph strongly coupled components
+// Run on Module
+// param: M - the program Module
 bool PropagateAnalysis::runOnModule(Module &M){
 
   LocalAnalysis &LA = getAnalysis<LocalAnalysis>();
@@ -69,7 +68,7 @@ bool PropagateAnalysis::runOnModule(Module &M){
 
 
 // Depth First Search data propagation analysis
-// param: CG - the callgraph to analyse
+// param: M - the program module
 //        CAPTable - the captable to store live analysis data
 void PropagateAnalysis::Propagate(Module &M, CAPTable_t &CAPTable){
 
