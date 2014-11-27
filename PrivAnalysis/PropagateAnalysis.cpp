@@ -117,7 +117,7 @@ void PropagateAnalysis::Propagate(Module &M, FuncCAPTable_t &FuncCAPTable){
 
         CAPArray_t &calleeIn = FuncCAPTable_in[FCallee];
         // Propagate all information from callee to caller_out 
-        UnionCAPArrays(callerOut, calleeIn);
+        ischanged |= UnionCAPArrays(callerOut, calleeIn);
 
       } // Iterate through Callgraphnode for callees
 

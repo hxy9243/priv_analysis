@@ -49,13 +49,18 @@ bool GlobalLiveAnalysis::runOnModule(Module &M){
   PropagateAnalysis &PA = getAnalysis<PropagateAnalysis>();
 
   // retrieve all data structures
-  FuncCAPTable_t &FuncCAPTable = PA.FuncCAPTable;
+  FuncCAPTable_t &FuncUseCAPTable = PA.FuncCAPTable;
   BBCAPTable_t &BBCAPTable = PA.BBCAPTable;
   BBFuncTable_t &BBFuncTable = PA.BBFuncTable;
   
   // init data structure
   bool change = true;
   
+  // FuncLiveCAPTable maps from Functions to the 
+  // live CAP in the Functions
+  FuncCAPTable_t FuncLiveCAPTable;
+  BBCAPTable_t BBCAPTable_in;
+  BBCAPTable_t BBCAPTable_out;
 
   // iterate till convergence
   while (change){
@@ -71,8 +76,19 @@ bool GlobalLiveAnalysis::runOnModule(Module &M){
       for (Function::iterator BI = F->begin(), BE = F->end();
            BI != BE;
            ++ BI){
+        BasicBlock *B = dyn_cast<BasicBlock>(BI);
+        //////////////////////////////////
+        // Propagate information in each BB
+        //////////////////////////////////
+        
+        // if it's a terminating BB
         
 
+        // if it's a FunCall BB
+        
+
+        // propagate live info to in[BB]
+        
 
       } // iterate all BBs
 
