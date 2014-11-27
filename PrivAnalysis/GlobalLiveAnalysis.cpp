@@ -104,16 +104,19 @@ bool GlobalLiveAnalysis::runOnModule(Module &M){
         // if it's a FunCall BB (find as key in BBFuncTable)
         // add the live info to 
         // func live CAPTable for callee processing
-        if (BBFuncTable.find(BB) != BBFuncTable.end()){
+        if (BBFuncTable.find(B) != BBFuncTable.end()){
 
-
+          ischanged |= UnionCAPArrays(BBCAPTable_in[B],
+                                      FuncUseCAPTable[BBFuncTable[B]]);
 
         }
 
-        // propagate live info to in[B]
-        CAPArray_t &BBCAP;
+        // if it's a Priv Call BB
+        if (BBCAPTable.find(B) != BBCAPTable.end()){
+          ischanged |= UnionCAPArrays(BBCAPTable_in[B], BBCAPTable[B]);
+        }
 
-        ischanged |= UnionCAPArrays(BBCAPTable_out[B], BBCAP);
+        // propagate live info to in[B]
         ischanged |= UnionCAPArrays(BBCAPTable_in[B], BBCAPTable_out[B]);
 
       } // iterate all BBs
