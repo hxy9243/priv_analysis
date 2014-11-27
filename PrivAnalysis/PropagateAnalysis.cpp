@@ -49,8 +49,11 @@ bool PropagateAnalysis::runOnModule(Module &M){
 
   LocalAnalysis &LA = getAnalysis<LocalAnalysis>();
 
-  // Get FuncCAPTable for propagation anlysis
+  // Get all data structures for propagation analysis
   FuncCAPTable = LA.FuncCAPTable;
+  BBCAPTable = LA.BBCAPTable;
+  BBFuncTable = LA.BBFuncTable;
+
 
   // DEBUG
   errs() << "Dump table before propagation\n";

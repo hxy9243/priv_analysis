@@ -89,13 +89,16 @@ void LocalAnalysis::AddBBToMap(BasicBlock *B, CAPArray_t CAParray){
 // param: Module
 bool LocalAnalysis::runOnModule(Module &M){
 
+  // retrieve all data for later use
   SplitBB &SB = getAnalysis<SplitBB>();
-
-  Function *F = M.getFunction(TARGET_FUNC);
+  BBFuncTable = SB.BBFuncTable;
+  
+  // find all users of Targeted function
+  Function *F = M.getFunction(PRIVRAISE);
 
   // Protector: didn't find any function TARGET_FUNC
   if (F == NULL){
-    errs() << "Didn't find function " << TARGET_FUNC << "\n";
+    errs() << "Didn't find function " << PRIVRAISE << "\n";
     return false;
   }
 

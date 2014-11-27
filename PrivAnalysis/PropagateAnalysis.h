@@ -33,6 +33,13 @@ namespace propagateAnalysis{
     // CAPTable after info propagation
     FuncCAPTable_t FuncCAPTable;
 
+    // Data structure for priv capability use in each BB
+    // Maps from BB to -> Array of Capabilities
+    BBCAPTable_t BBCAPTable;
+
+    // Map from BB to its non-external Function Calls
+    BBFuncTable_t BBFuncTable;
+
     // constructor
     PropagateAnalysis();
 

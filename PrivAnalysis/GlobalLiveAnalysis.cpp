@@ -45,6 +45,14 @@ bool GlobalLiveAnalysis::doInitialization(Module &M){
 
 // Run on Module
 bool GlobalLiveAnalysis::runOnModule(Module &M){
+
+  PropagateAnalysis &PA = getAnalysis<PropagateAnalysis>();
+
+  // retrieve all data structures
+  FuncCAPTable_t &FuncCAPTable = PA.FuncCAPTable;
+  BBCAPTable_t &BBCAPTable = PA.BBCAPTable;
+  BBFuncTable_t &BBFuncTable = PA.BBFuncTable;
+  
   // init data structure
   bool change = true;
   

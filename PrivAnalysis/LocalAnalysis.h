@@ -34,6 +34,9 @@ namespace localAnalysis {
     // Maps from BB to -> Array of Capabilities
     BBCAPTable_t BBCAPTable;
 
+    // Map from BB to its non-external Function Calls
+    BBFuncTable_t BBFuncTable;
+
     // constructor
     LocalAnalysis();
 
