@@ -122,7 +122,7 @@ void PropagateAnalysis::Propagate(Module &M, FuncCAPTable_t &FuncCAPTable){
       } // Iterate through Callgraphnode for callees
 
       // Propagate all information from caller_out to caller_in
-      UnionCAPArrays(callerOut, FuncCAPTable[FCaller]);
+      ischanged |= UnionCAPArrays(callerOut, FuncCAPTable[FCaller]);
       ischanged |= UnionCAPArrays(callerIn, callerOut);
 
     } // iterator for caller nodes

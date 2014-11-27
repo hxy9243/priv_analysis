@@ -9,6 +9,7 @@
 #ifndef __GLOBALLIVEANALYSIS__
 #define __GLOBALLIVEANALYSIS__
 
+#include "llvm/Transforms/Utils/UnifyFunctionExitNodes.h"
 #include "llvm/ADT/Statistic.h"
 #include "llvm/IR/Instructions.h"
 #include "llvm/IR/Module.h"
@@ -19,6 +20,8 @@
 #include "ADT.h"
 #include "SplitBB.h"
 
+#include <vector>
+
 using namespace llvm::privAnalysis;
 
 namespace llvm{
@@ -27,6 +30,11 @@ namespace globalLiveAnalysis{
   struct GlobalLiveAnalysis : public ModulePass{
   public:
     static char ID;
+
+    std::vector<BasicBlock *>ReturnBBs;
+
+    BBCAPTable_t BBCAPTable_drop;
+
     GlobalLiveAnalysis();
 
     // initialization
@@ -39,7 +47,7 @@ namespace globalLiveAnalysis{
     void getAnalysisUsage(AnalysisUsage &AU) const;
 
   private:
-    
+    void getAllReturnBBs(std::vector<BasicBlock *> &ReturnBBs);
 
   };
 

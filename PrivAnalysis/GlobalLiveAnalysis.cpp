@@ -32,7 +32,7 @@ GlobalLiveAnalysis::GlobalLiveAnalysis() : ModulePass(ID) {}
 void GlobalLiveAnalysis::getAnalysisUsage(AnalysisUsage &AU) const{
   AU.addRequired<PropagateAnalysis>();
   AU.addRequired<SplitBB>();
-
+  AU.addRequired<UnifyFunctionExitNodes>();
 }
 
 
@@ -47,6 +47,7 @@ bool GlobalLiveAnalysis::doInitialization(Module &M){
 bool GlobalLiveAnalysis::runOnModule(Module &M){
 
   PropagateAnalysis &PA = getAnalysis<PropagateAnalysis>();
+  UnifyFunctionExitNodes &UnifyExitNode = getAnalysis<UnifyFunctionExitNodes>();
 
   // retrieve all data structures
   FuncCAPTable_t &FuncUseCAPTable = PA.FuncCAPTable;
@@ -54,7 +55,7 @@ bool GlobalLiveAnalysis::runOnModule(Module &M){
   BBFuncTable_t &BBFuncTable = PA.BBFuncTable;
   
   // init data structure
-  bool change = true;
+  bool ischanged = true;
   
   // FuncLiveCAPTable maps from Functions to the 
   // live CAP in the Functions
@@ -62,41 +63,71 @@ bool GlobalLiveAnalysis::runOnModule(Module &M){
   BBCAPTable_t BBCAPTable_in;
   BBCAPTable_t BBCAPTable_out;
 
+  // Find all BBs that contains return;
+  
+
   // iterate till convergence
-  while (change){
-    change = false;
+  while (ischanged){
+    ischanged = false;
 
     // iterate through all functions
     for (Module::iterator FI = M.begin(), FE = M.end();
          FI != FE;
          ++ FI){
       Function *F = dyn_cast<Function>(FI);
+      if (F == NULL || F->empty()){
+        continue;
+      }
+
+      UnifyExitNode.runOnFunction(*F);
+      BasicBlock *ReturnBB = UnifyExitNode.getReturnBlock();
 
       // iterate all BBs
       for (Function::iterator BI = F->begin(), BE = F->end();
            BI != BE;
            ++ BI){
         BasicBlock *B = dyn_cast<BasicBlock>(BI);
+        if (B == NULL){
+          continue;
+        }
         //////////////////////////////////
         // Propagate information in each BB
         //////////////////////////////////
         
-        // if it's a terminating BB
-        
+        // if it's a terminating BB, propagate the info
+        // from func live CAPTable to BB[out]
+        if (ReturnBB == B){
+          
 
-        // if it's a FunCall BB
-        
+        }
 
-        // propagate live info to in[BB]
-        
+        // if it's a FunCall BB (find as key in BBFuncTable)
+        // add the live info to 
+        // func live CAPTable for callee processing
+        if (BBFuncTable.find(BB) != BBFuncTable.end()){
+
+
+
+        }
+
+        // propagate live info to in[B]
+        CAPArray_t &BBCAP;
+
+        ischanged |= UnionCAPArrays(BBCAPTable_out[B], BBCAP);
+        ischanged |= UnionCAPArrays(BBCAPTable_in[B], BBCAPTable_out[B]);
 
       } // iterate all BBs
 
     } // iterate all functions
   } // while change
 
+  // find out the difference between in and out for each BB
+  
+
+
   return false;
 }
+
 
 
 // register pass
