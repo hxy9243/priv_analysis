@@ -45,7 +45,31 @@ bool GlobalLiveAnalysis::doInitialization(Module &M){
 
 // Run on Module
 bool GlobalLiveAnalysis::runOnModule(Module &M){
+  // init data structure
+  bool change = true;
+  
 
+  // iterate till convergence
+  while (change){
+    change = false;
+
+    // iterate through all functions
+    for (Module::iterator FI = M.begin(), FE = M.end();
+         FI != FE;
+         ++ FI){
+      Function *F = dyn_cast<Function>(FI);
+
+      // iterate all BBs
+      for (Function::iterator BI = F->begin(), BE = F->end();
+           BI != BE;
+           ++ BI){
+        
+
+
+      } // iterate all BBs
+
+    } // iterate all functions
+  } // while change
 
   return false;
 }

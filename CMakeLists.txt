@@ -7,5 +7,5 @@ add_subdirectory(Vectorize)
 add_subdirectory(Hello)
 add_subdirectory(ObjCARC)
 add_subdirectory(PrivAnalysis)
-add_subdirectory(PropagateAnalysis)
+
 
