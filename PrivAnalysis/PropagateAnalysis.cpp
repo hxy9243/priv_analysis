@@ -54,7 +54,6 @@ bool PropagateAnalysis::runOnModule(Module &M){
   BBCAPTable = LA.BBCAPTable;
   BBFuncTable = LA.BBFuncTable;
 
-
   // DEBUG
   errs() << "Dump table before propagation\n";
   dumpCAPTable(FuncCAPTable);

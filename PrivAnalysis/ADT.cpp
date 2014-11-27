@@ -14,6 +14,48 @@
 namespace llvm{
 namespace privAnalysis{
 
+
+  // Add to the FuncCAPTable, if Func exists, merge the CAPArray
+  // param: CAPTable - ref to the FuncCAPTable
+  //        F - the function to add
+  //        CAParray - the array of capability to add to FuncCAPTable
+  void AddToFuncCAPTable(FuncCAPTable_t &CAPTable,
+                         Function *F, 
+                         CAPArray_t CAParray) {
+    // If not found in map, add to map
+    if (CAPTable.find(F) == CAPTable.end()) {
+      CAPTable[F] = CAParray;
+    }
+    // else, Union the two arrays
+    else {
+      for (int i = 0; i < CAP_TOTALNUM; ++ i){
+        CAPTable[F][i] |= CAParray[i];
+      }
+    }
+  }
+
+
+  // Add to the BBCAPTable, if BB exists, merge the CAPArray
+  // param: CAPTable - ref to the BBCAPTable
+  //        B - the BasicBlock to add
+  //        CAParray - the array of capability to add to FuncCAPTable
+  void AddToBBCAPTable(BBCAPTable_t &CAPTable,
+                       BasicBlock *B, 
+                       CAPArray_t CAParray) {
+
+    // If not found in map, add to map
+    if (CAPTable.find(B) == CAPTable.end() ){
+      CAPTable[B] = CAParray;
+    }
+    // else, Union the two arrays
+    else {
+      for (int i = 0; i < CAP_TOTALNUM; ++ i){
+        CAPTable[B][i] |= CAParray[i];
+      }
+    }
+  }
+
+
   // Copy CAPTable keys from src to dest
   // After this operation, dest would have all keys src
   // has, with empty CAPArrays mapping to each keys

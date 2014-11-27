@@ -36,6 +36,14 @@ namespace privAnalysis{
   typedef std::map<BasicBlock *, Function*> BBFuncTable_t;
 
   // Data manipulation functions
+  // Get the function where the CallInst is in, add to map
+  void AddToFuncCAPTable(FuncCAPTable_t &CAPTable, 
+                         Function *F, CAPArray_t CAParray);
+
+  // Get the BasicBlock where the CallInst is in, add to map
+  void AddToBBCAPTable(BBCAPTable_t &CAPTable, 
+                       BasicBlock *B, CAPArray_t CAParray);
+
   // Copy CAPTable keys from src to dest, with array empty
   void CopyTableKeys(FuncCAPTable_t &dest, FuncCAPTable_t &src);
 

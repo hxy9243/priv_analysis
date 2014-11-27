@@ -53,11 +53,6 @@ namespace localAnalysis {
     // Retrieve all capabilities from params of function call
     void RetrieveAllCAP(CallInst *CI, CAPArray_t &CAParray);
 
-    // Get the function where the CallInst is in, add to map
-    void AddFuncToMap(Function *tf, CAPArray_t CAParray);
-
-    // Get the BasicBlock where the CallInst is in, add to map
-    void AddBBToMap(BasicBlock *B, CAPArray_t CAParray);
   }; // endof struct PrivAnalysis
 
 
