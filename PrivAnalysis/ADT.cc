@@ -19,7 +19,7 @@ namespace privAnalysis{
   // has, with empty CAPArrays mapping to each keys
   // param: dest - dest CAPTable
   //        src  - src CAPTable
-  void CopyTableKeys(CAPTable_t &dest, CAPTable_t &src){
+  void CopyTableKeys(FuncCAPTable_t &dest, FuncCAPTable_t &src){
     CAPArray_t emptyArray = {0};
 
     for(auto MI = src.begin(), ME = src.end(); MI != ME; ++ MI){
@@ -48,7 +48,7 @@ namespace privAnalysis{
 
   // dump CAPTable for Debugging purpose
   // param: CT - the CAPTable to dump
-  void dumpCAPTable(CAPTable_t &CT){
+  void dumpCAPTable(FuncCAPTable_t &CT){
 
     // iterate through captable, a map from func to array
     for (auto mi = CT.begin(), me = CT.end();

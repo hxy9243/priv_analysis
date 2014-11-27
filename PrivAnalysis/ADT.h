@@ -26,17 +26,17 @@ namespace privAnalysis{
   // The array of bool representing all Capabilities
   typedef std::array<bool, CAP_TOTALNUM> CAPArray_t;
   // The map from functions to CAPArray
-  typedef std::map<Function *, CAPArray_t> CAPTable_t;
+  typedef std::map<Function *, CAPArray_t> FuncCAPTable_t;
 
   // Data manipulation functions
   // Copy CAPTable keys from src to dest, with array empty
-  void CopyTableKeys(CAPTable_t &dest, CAPTable_t &src);
+  void CopyTableKeys(FuncCAPTable_t &dest, FuncCAPTable_t &src);
 
   // Union two arrays, save result to dest and test dest ischanged
   bool UnionCAPArrays(CAPArray_t &dest, CAPArray_t &src);
 
   // for debugging purpose
-  void dumpCAPTable(CAPTable_t &CT);
+  void dumpCAPTable(FuncCAPTable_t &CT);
 
 
 } // namespace privAnalysis

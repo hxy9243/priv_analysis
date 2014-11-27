@@ -28,7 +28,7 @@ namespace localAnalysis {
     static char ID;
     // Data structure for priv_lower capabilities in each function
     // Maps from InstCalls to -> Array of Capabilities
-    CAPTable_t CAPTable;
+    FuncCAPTable_t CAPTable;
 
     // constructor
     LocalAnalysis();

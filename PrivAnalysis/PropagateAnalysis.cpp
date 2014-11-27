@@ -70,11 +70,11 @@ bool PropagateAnalysis::runOnModule(Module &M){
 // Depth First Search data propagation analysis
 // param: M - the program module
 //        CAPTable - the captable to store live analysis data
-void PropagateAnalysis::Propagate(Module &M, CAPTable_t &CAPTable){
+void PropagateAnalysis::Propagate(Module &M, FuncCAPTable_t &CAPTable){
 
   // The ins and outs of function
-  CAPTable_t CAPTable_in;
-  CAPTable_t CAPTable_out;
+  FuncCAPTable_t CAPTable_in;
+  FuncCAPTable_t CAPTable_out;
 
   CopyTableKeys(CAPTable_in, CAPTable);
   CopyTableKeys(CAPTable_out, CAPTable);
