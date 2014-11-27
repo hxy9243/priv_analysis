@@ -64,7 +64,8 @@ bool SplitBB::runOnModule(Module &M){
 
   // DEBUG
   errs() << "Sizeof privBB is " << PrivBB.size() << "\n"
-         << "Sizeof CallSiteBB is " << CallSiteBB.size() << "\n";
+         << "Sizeof CallSiteBB is " << CallSiteBB.size() << "\n"
+         << "Sizeof BBFuncTable is " << BBFuncTable.size() << "\n";
 
   // It modifies CFG
   return true;
@@ -104,6 +105,7 @@ void SplitBB::splitOnFunction(Function *F, int splitLoc){
         }
         else{
           CallSiteBB.push_back(NewBB);
+          BBFuncTable[NewBB] = F;
         }
 
         // DEBUG

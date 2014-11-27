@@ -26,9 +26,13 @@ namespace localAnalysis {
   struct LocalAnalysis : public ModulePass {
   public:
     static char ID;
-    // Data structure for priv_lower capabilities in each function
+    // Data structure for local priv capability use in each function
     // Maps from InstCalls to -> Array of Capabilities
     FuncCAPTable_t FuncCAPTable;
+
+    // Data structure for priv capability use in each BB
+    // Maps from BB to -> Array of Capabilities
+    BBCAPTable_t BBCAPTable;
 
     // constructor
     LocalAnalysis();
@@ -48,6 +52,9 @@ namespace localAnalysis {
 
     // Get the function where the CallInst is in, add to map
     void AddFuncToMap(Function *tf, CAPArray_t CAParray);
+
+    // Get the BasicBlock where the CallInst is in, add to map
+    void AddBBToMap(BasicBlock *B, CAPArray_t CAParray);
   }; // endof struct PrivAnalysis
 
 

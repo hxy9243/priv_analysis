@@ -42,6 +42,9 @@ namespace splitBB {
     // Vector to store BB info for analysis
     std::vector<BasicBlock *> CallSiteBB;
 
+    // Map from BB to its non-external Function Calls
+    BBFuncTable_t BBFuncTable;
+
     // initialization
     virtual bool doInitialization(Module &M);
 

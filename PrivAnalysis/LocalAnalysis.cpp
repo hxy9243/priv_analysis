@@ -54,9 +54,6 @@ void LocalAnalysis::RetrieveAllCAP(CallInst *CI, CAPArray_t &CAParray){
 //        CAParray - the array of capability to add to FuncCAPTable
 void LocalAnalysis::AddFuncToMap(Function *tf, CAPArray_t CAParray){
 
-  // DEBUG
-  errs() << "Parent of the instruction is " << tf->getName() << "\n";
-
   // If not found in map, add to map
   if (FuncCAPTable.find(tf) == FuncCAPTable.end() ){
     FuncCAPTable[tf] = CAParray;
@@ -65,6 +62,24 @@ void LocalAnalysis::AddFuncToMap(Function *tf, CAPArray_t CAParray){
   else {
     for (int i = 0; i < CAP_TOTALNUM; ++ i){
       FuncCAPTable[tf][i] |= CAParray[i];
+    }
+  }
+}
+
+
+// Get the BasicBlock where the CallInst is in, add to map
+// param: B - the BasicBlock to add
+//        CAParray - the array of capability to add to FuncCAPTable
+void LocalAnalysis::AddBBToMap(BasicBlock *B, CAPArray_t CAParray){
+
+  // If not found in map, add to map
+  if (BBCAPTable.find(B) == BBCAPTable.end() ){
+    BBCAPTable[B] = CAParray;
+  }
+  // else, Union the two arrays
+  else {
+    for (int i = 0; i < CAP_TOTALNUM; ++ i){
+      BBCAPTable[B][i] |= CAParray[i];
     }
   }
 }
@@ -100,8 +115,9 @@ bool LocalAnalysis::runOnModule(Module &M){
 
     // Get the function where the Instr is in
     // Add CAP to Map (Function* => array of CAPs)
-    Function *tf = CI->getParent()->getParent();
-    AddFuncToMap(tf, CAParray);
+    // and Map (BB * => array of CAPs)
+    AddBBToMap(CI->getParent(), CAParray);
+    AddFuncToMap(CI->getParent()->getParent(), CAParray);
 
   }
 
