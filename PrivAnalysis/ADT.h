@@ -25,10 +25,15 @@ namespace privAnalysis{
   // type definition
   // The array of bool representing all Capabilities
   typedef std::array<bool, CAP_TOTALNUM> CAPArray_t;
+
   // The map from functions to CAPArray
   typedef std::map<Function *, CAPArray_t> FuncCAPTable_t;
+
   // The map from basicblock to CAPArray
   typedef std::map<BasicBlock *, CAPArray_t> BBCAPTable_t;
+
+  // The map from basicblock to CAPArray
+  typedef std::map<BasicBlock *, Function*> BBFuncTable_t;
 
   // Data manipulation functions
   // Copy CAPTable keys from src to dest, with array empty

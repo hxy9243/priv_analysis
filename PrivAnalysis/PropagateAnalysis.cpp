@@ -49,19 +49,19 @@ bool PropagateAnalysis::runOnModule(Module &M){
 
   LocalAnalysis &LA = getAnalysis<LocalAnalysis>();
 
-  // Get CAPTable for propagation anlysis
-  CAPTable = LA.CAPTable;
+  // Get FuncCAPTable for propagation anlysis
+  FuncCAPTable = LA.FuncCAPTable;
 
   // DEBUG
   errs() << "Dump table before propagation\n";
-  dumpCAPTable(CAPTable);
+  dumpCAPTable(FuncCAPTable);
 
   // Depth First Search Analysis for data propagation
-  Propagate(M, CAPTable);
+  Propagate(M, FuncCAPTable);
 
   errs() << "Dump table after propagation\n";
 
-  dumpCAPTable(CAPTable);
+  dumpCAPTable(FuncCAPTable);
 
   return false;
 }
@@ -69,15 +69,15 @@ bool PropagateAnalysis::runOnModule(Module &M){
 
 // Depth First Search data propagation analysis
 // param: M - the program module
-//        CAPTable - the captable to store live analysis data
-void PropagateAnalysis::Propagate(Module &M, FuncCAPTable_t &CAPTable){
+//        FuncCAPTable - the captable to store live analysis data
+void PropagateAnalysis::Propagate(Module &M, FuncCAPTable_t &FuncCAPTable){
 
   // The ins and outs of function
-  FuncCAPTable_t CAPTable_in;
-  FuncCAPTable_t CAPTable_out;
+  FuncCAPTable_t FuncCAPTable_in;
+  FuncCAPTable_t FuncCAPTable_out;
 
-  CopyTableKeys(CAPTable_in, CAPTable);
-  CopyTableKeys(CAPTable_out, CAPTable);
+  CopyTableKeys(FuncCAPTable_in, FuncCAPTable);
+  CopyTableKeys(FuncCAPTable_out, FuncCAPTable);
 
   bool ischanged = true;
 
@@ -100,9 +100,9 @@ void PropagateAnalysis::Propagate(Module &M, FuncCAPTable_t &CAPTable){
         continue;
       }
 
-      // Get Caller mapped array in CAPTables
-      CAPArray_t &callerIn = CAPTable_in[FCaller];
-      CAPArray_t &callerOut = CAPTable_out[FCaller];
+      // Get Caller mapped array in FuncCAPTables
+      CAPArray_t &callerIn = FuncCAPTable_in[FCaller];
+      CAPArray_t &callerOut = FuncCAPTable_out[FCaller];
       // Iterate through Callgraphnode for callees
       for (CallGraphNode::iterator RI = N->begin(), RE = N->end();
            RI != RE;
@@ -113,21 +113,21 @@ void PropagateAnalysis::Propagate(Module &M, FuncCAPTable_t &CAPTable){
           continue;
         }
 
-        CAPArray_t &calleeIn = CAPTable_in[FCallee];
+        CAPArray_t &calleeIn = FuncCAPTable_in[FCallee];
         // Propagate all information from callee to caller_out 
         UnionCAPArrays(callerOut, calleeIn);
 
       } // Iterate through Callgraphnode for callees
 
       // Propagate all information from caller_out to caller_in
-      UnionCAPArrays(callerOut, CAPTable[FCaller]);
+      UnionCAPArrays(callerOut, FuncCAPTable[FCaller]);
       ischanged |= UnionCAPArrays(callerIn, callerOut);
 
     } // iterator for caller nodes
 
   } // main loop
 
-  CAPTable = CAPTable_in;
+  FuncCAPTable = FuncCAPTable_in;
 
 }
 

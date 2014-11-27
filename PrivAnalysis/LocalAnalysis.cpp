@@ -6,6 +6,7 @@
 // ====-------------------------------------------------------====
 
 #include "LocalAnalysis.h"
+#include "SplitBB.h"
 
 #include <linux/capability.h>
 #include <map>
@@ -13,6 +14,7 @@
 
 using namespace llvm;
 using namespace llvm::privAnalysis;
+using namespace llvm::splitBB;
 using namespace llvm::localAnalysis;
 
 
@@ -49,20 +51,20 @@ void LocalAnalysis::RetrieveAllCAP(CallInst *CI, CAPArray_t &CAParray){
 
 // Get the function where the CallInst is in, add to map
 // param: tf - the function to add
-//        CAParray - the array of capability to add to CAPTable
+//        CAParray - the array of capability to add to FuncCAPTable
 void LocalAnalysis::AddFuncToMap(Function *tf, CAPArray_t CAParray){
 
   // DEBUG
   errs() << "Parent of the instruction is " << tf->getName() << "\n";
 
   // If not found in map, add to map
-  if (CAPTable.find(tf) == CAPTable.end() ){
-    CAPTable[tf] = CAParray;
+  if (FuncCAPTable.find(tf) == FuncCAPTable.end() ){
+    FuncCAPTable[tf] = CAParray;
   }
   // else, Union the two arrays
   else {
     for (int i = 0; i < CAP_TOTALNUM; ++ i){
-      CAPTable[tf][i] |= CAParray[i];
+      FuncCAPTable[tf][i] |= CAParray[i];
     }
   }
 }
@@ -71,6 +73,9 @@ void LocalAnalysis::AddFuncToMap(Function *tf, CAPArray_t CAParray){
 // Run on Module start
 // param: Module
 bool LocalAnalysis::runOnModule(Module &M){
+
+  SplitBB &SB = getAnalysis<SplitBB>();
+
   Function *F = M.getFunction(TARGET_FUNC);
 
   // Protector: didn't find any function TARGET_FUNC
@@ -102,7 +107,7 @@ bool LocalAnalysis::runOnModule(Module &M){
 
   // DEBUG purpose: dump map table
   // ---------------------//
-  dumpCAPTable (CAPTable);
+  dumpCAPTable (FuncCAPTable);
   // ----------------------//
 
   return false;
@@ -113,6 +118,9 @@ bool LocalAnalysis::runOnModule(Module &M){
 // preserve all analyses
 // param: AU
 void LocalAnalysis::getAnalysisUsage(AnalysisUsage &AU) const {
+
+  AU.addRequired<SplitBB>();
+
   AU.setPreservesAll();
 }
 

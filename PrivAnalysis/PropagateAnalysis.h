@@ -31,7 +31,7 @@ namespace propagateAnalysis{
     static char ID;
 
     // CAPTable after info propagation
-    FuncCAPTable_t CAPTable;
+    FuncCAPTable_t FuncCAPTable;
 
     // constructor
     PropagateAnalysis();
