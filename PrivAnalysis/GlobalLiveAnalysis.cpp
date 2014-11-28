@@ -9,7 +9,13 @@
 #include "llvm/Analysis/CallGraph.h"
 #include "llvm/Pass.h"
 
+
+#include "llvm/Transforms/Utils/BasicBlockUtils.h"
 #include "llvm/Transforms/Utils/UnifyFunctionExitNodes.h"
+#include "llvm/IR/Dominators.h"
+#include "llvm/IR/Function.h"
+#include "llvm/IR/Instructions.h"
+#include "llvm/IR/IntrinsicInst.h"
 #include "GlobalLiveAnalysis.h"
 #include "PropagateAnalysis.h"
 #include "LocalAnalysis.h"
@@ -62,7 +68,8 @@ bool GlobalLiveAnalysis::runOnModule(Module &M){
 
   // FuncLiveCAPTable maps from Functions to the
   // live CAP in the Functions
-  FuncCAPTable_t FuncLiveCAPTable;
+  FuncCAPTable_t FuncLiveCAPTable_in;
+  FuncCAPTable_t FuncLiveCAPTable_out;
   BBCAPTable_t BBCAPTable_in;
   BBCAPTable_t BBCAPTable_out;
 
@@ -87,6 +94,13 @@ bool GlobalLiveAnalysis::runOnModule(Module &M){
       UnifyExitNode.runOnFunction(*F);
       BasicBlock *ReturnBB = UnifyExitNode.getReturnBlock();
 
+
+      // Push information to the entry of function live
+      BasicBlock &EntryBB = F->getEntryBlock();
+      ischanged |= UnionCAPArrays(FuncLiveCAPTable_in[F], FuncUseCAPTable[F]);
+      ischanged |= UnionCAPArrays(FuncLiveCAPTable_in[F], FuncLiveCAPTable_out[F]);
+      ischanged |= UnionCAPArrays(FuncLiveCAPTable_in[F], BBCAPTable_in[&EntryBB]);
+
       // iterate all BBs
       for (Function::iterator BI = F->begin(), BE = F->end();
            BI != BE;
@@ -105,7 +119,7 @@ bool GlobalLiveAnalysis::runOnModule(Module &M){
         // if it's a terminating BB, propagate the info
         // from func live CAPTable to BB[out]
         if (ReturnBB == B){
-          ischanged |= UnionCAPArrays(BBCAPTable_out[B], FuncLiveCAPTable[F]);
+          ischanged |= UnionCAPArrays(BBCAPTable_out[B], FuncLiveCAPTable_out[F]);
         }
 
         // if it's a FunCall BB (find as key in BBFuncTable)
@@ -113,9 +127,9 @@ bool GlobalLiveAnalysis::runOnModule(Module &M){
         // func live CAPTable for callee processing
         if (BBFuncTable.find(B) != BBFuncTable.end()){
           ischanged |= UnionCAPArrays(BBCAPTable_in[B],
-                                      FuncUseCAPTable[BBFuncTable[B]]);
+                                      FuncLiveCAPTable_in[BBFuncTable[B]]);
 
-          ischanged |= UnionCAPArrays(FuncLiveCAPTable[F],
+          ischanged |= UnionCAPArrays(FuncLiveCAPTable_out[BBFuncTable[B]],
                                       BBCAPTable_out[B]);
 
         }
@@ -125,6 +139,17 @@ bool GlobalLiveAnalysis::runOnModule(Module &M){
           ischanged |= UnionCAPArrays(BBCAPTable_in[B], BBCAPTable[B]);
         }
 
+        //propagate from all its successors
+        TerminatorInst *BBTerm = B->getTerminator();
+        for(unsigned BSI = 0, BSE = BBTerm->getNumSuccessors(); 
+            BSI != BSE;
+            ++ BSI){
+          BasicBlock *SuccessorBB = BBTerm->getSuccessor(BSI);
+          ischanged |= UnionCAPArrays(BBCAPTable_out[B], 
+                                      BBCAPTable_in[SuccessorBB]);
+        }
+
+
         // propagate live info to in[B]
         ischanged |= UnionCAPArrays(BBCAPTable_in[B], BBCAPTable_out[B]);
 
@@ -133,10 +158,15 @@ bool GlobalLiveAnalysis::runOnModule(Module &M){
     } // iterate all functions
   } // while change
 
-  // find out the difference between in and out for each BB
+
+  ////////////////////////////////////////
+  // DEBUG
+  ////////////////////////////////////////
   errs() << "converged with " << i << " iterations\n";
 
   errs() << "BBCAPTable_in size " << BBCAPTable_in.size() << "\n";
+  ////////////////////////////////////////
+
 
   // Find Difference of BB in and out CAPArrays
   // Save it to the output 
@@ -149,8 +179,9 @@ bool GlobalLiveAnalysis::runOnModule(Module &M){
     DiffCAPArrays(BBCAPTable_drop[B], CAPArray_in, CAPArray_out);
   }
 
-
+  ////////////////////////////////////////
   // DEBUG
+  ////////////////////////////////////////
   errs() << "BBCAPTable_in size " << BBCAPTable_drop.size() << "\n";
 
   int count = 0;
@@ -173,6 +204,7 @@ bool GlobalLiveAnalysis::runOnModule(Module &M){
   errs() << "\n";
 
   return false;
+  ////////////////////////////////////////
 }
 
 

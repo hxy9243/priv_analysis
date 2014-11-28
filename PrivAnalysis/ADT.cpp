@@ -97,6 +97,11 @@ namespace privAnalysis{
    
     for (unsigned int i = 0; i < A.size(); ++i){
       dest[i] = A[i] & (~B[i]);
+
+      if (~A[i] & B[i]){
+        errs() << "\nBUG in Diff CAPArrays!\n\n";
+
+      }
     }
 
     return;

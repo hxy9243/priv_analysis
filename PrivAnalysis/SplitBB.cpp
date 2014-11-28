@@ -89,7 +89,6 @@ void SplitBB::splitOnFunction(Function *F, int splitLoc){
       continue;
     }
       
-    // split on the instruction
 
     // if split on the head of the calling instruction
     if (splitLoc & SPLIT_HERE){
@@ -97,6 +96,8 @@ void SplitBB::splitOnFunction(Function *F, int splitLoc){
 
       if (dyn_cast<Instruction>(CI) !=
           dyn_cast<Instruction>(BB->begin())){
+
+        // split on the instruction        
         BasicBlock *NewBB = BB->splitBasicBlock(CI);
 
         // save to data structure for later use
@@ -113,13 +114,25 @@ void SplitBB::splitOnFunction(Function *F, int splitLoc){
                << CI->getCalledFunction()->getName() << " in "
                << CI->getParent()->getParent()->getName() << "\n";
       }
-      // DEBUG
       else{
+        // else, push the original BB to data structure
+        if (F->getName() == PRIVRAISE){
+          PrivBB.push_back(BB);
+        }
+        else{
+          CallSiteBB.push_back(BB);
+          BBFuncTable[BB] = F;
+        }
+
+        // DEBUG
         errs() << CI->getCalledFunction()->getName()
                <<" is the start of a block in " 
                << CI->getParent()->getParent()->getName() 
                << " I'm not splitting you\n";
+        ////////////////////////
+
       }
+      
     }
 
     // if split on next of the calling instruction
