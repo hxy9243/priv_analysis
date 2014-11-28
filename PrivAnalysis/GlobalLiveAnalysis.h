@@ -30,8 +30,6 @@ namespace globalLiveAnalysis{
   public:
     static char ID;
 
-    std::vector<BasicBlock *>ReturnBBs;
-
     BBCAPTable_t BBCAPTable_drop;
 
     GlobalLiveAnalysis();

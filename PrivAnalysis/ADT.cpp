@@ -72,6 +72,7 @@ namespace privAnalysis{
     }
   }
 
+  
   // Union two arrays, save result to dest
   // param: dest - dest CAPArray
   //        src  - src CAPArray
@@ -87,6 +88,19 @@ namespace privAnalysis{
     return ischanged;
   }
 
+
+  // Diff two arrays, save result
+  // param: dest - dest CAPArray
+  //        A - the CAPArray to subtract from
+  //        B - the CAPArray to subtract
+  void DiffCAPArrays(CAPArray_t &dest, CAPArray_t &A, CAPArray_t &B) {
+   
+    for (unsigned int i = 0; i < A.size(); ++i){
+      dest[i] = A[i] & (~B[i]);
+    }
+
+    return;
+  } 
 
   // dump CAPTable for Debugging purpose
   // param: CT - the CAPTable to dump
