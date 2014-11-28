@@ -9,7 +9,6 @@
 #ifndef __GLOBALLIVEANALYSIS__
 #define __GLOBALLIVEANALYSIS__
 
-#include "llvm/Transforms/Utils/UnifyFunctionExitNodes.h"
 #include "llvm/ADT/Statistic.h"
 #include "llvm/IR/Instructions.h"
 #include "llvm/IR/Module.h"
