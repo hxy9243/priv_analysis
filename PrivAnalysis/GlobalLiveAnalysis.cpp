@@ -95,7 +95,7 @@ bool GlobalLiveAnalysis::runOnModule(Module &M){
       BasicBlock *ReturnBB = UnifyExitNode.getReturnBlock();
 
 
-      // Push information to the entry of function live
+      // Push information to the entry of function live table
       BasicBlock &EntryBB = F->getEntryBlock();
       ischanged |= UnionCAPArrays(FuncLiveCAPTable_in[F], FuncUseCAPTable[F]);
       ischanged |= UnionCAPArrays(FuncLiveCAPTable_in[F], FuncLiveCAPTable_out[F]);
