@@ -83,9 +83,7 @@ bool GlobalLiveAnalysis::runOnModule(Module &M){
     ischanged = false;
 
     // iterate through all functions
-    for (Module::iterator FI = M.begin(), FE = M.end();
-         FI != FE;
-         ++ FI){
+    for (Module::iterator FI = M.begin(), FE = M.end(); FI != FE; ++ FI){
       Function *F = dyn_cast<Function>(FI);
       if (F == NULL || F->empty()){
         continue;
