@@ -56,6 +56,8 @@ bool GlobalLiveAnalysis::doInitialization(Module &M){
 // Run on Module
 bool GlobalLiveAnalysis::runOnModule(Module &M){
 
+  errs() << "\nRunning Global Live Analysis pass\n\n";
+
   PropagateAnalysis &PA = getAnalysis<PropagateAnalysis>();
 
   // retrieve all data structures

@@ -30,6 +30,9 @@ bool SplitBB::doInitialization(Module &M){
 
 // run on Basic Block
 bool SplitBB::runOnModule(Module &M){
+
+  errs() << "\nRunning Split BB Pass\n\n";
+
   // split on PrivRaise calls
   Function *FRaise = M.getFunction(PRIVRAISE);
   if (FRaise != NULL){

@@ -53,6 +53,8 @@ void LocalAnalysis::RetrieveAllCAP(CallInst *CI, CAPArray_t &CAParray){
 // param: Module
 bool LocalAnalysis::runOnModule(Module &M){
 
+  errs() << "\nRunning Local Analysis Pass\n\n";
+
   // retrieve all data for later use
   SplitBB &SB = getAnalysis<SplitBB>();
   BBFuncTable = SB.BBFuncTable;

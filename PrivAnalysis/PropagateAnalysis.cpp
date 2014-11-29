@@ -47,6 +47,8 @@ bool PropagateAnalysis::doInitialization(Module &M){
 // param: M - the program Module
 bool PropagateAnalysis::runOnModule(Module &M){
 
+  errs() << "\nRunning CallGraph propagation pass\n\n";
+
   LocalAnalysis &LA = getAnalysis<LocalAnalysis>();
 
   // Get all data structures for propagation analysis
