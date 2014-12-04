@@ -96,10 +96,10 @@ bool GlobalLiveAnalysis::runOnModule(Module &M){
 
 
       // Push information to the entry of function live table
-      BasicBlock &EntryBB = F->getEntryBlock();
+//      BasicBlock &EntryBB = F->getEntryBlock();
       ischanged |= UnionCAPArrays(FuncLiveCAPTable_in[F], FuncUseCAPTable[F]);
-      ischanged |= UnionCAPArrays(FuncLiveCAPTable_in[F], FuncLiveCAPTable_out[F]);
-      ischanged |= UnionCAPArrays(FuncLiveCAPTable_in[F], BBCAPTable_in[&EntryBB]);
+//      ischanged |= UnionCAPArrays(FuncLiveCAPTable_in[F], FuncLiveCAPTable_out[F]);
+//      ischanged |= UnionCAPArrays(FuncLiveCAPTable_in[F], BBCAPTable_in[&EntryBB]);
 
       // iterate all BBs
       for (Function::iterator BI = F->begin(), BE = F->end();
@@ -185,14 +185,43 @@ bool GlobalLiveAnalysis::runOnModule(Module &M){
   errs() << "BBCAPTable_in size " << BBCAPTable_drop.size() << "\n";
 
   int count = 0;
-  for (auto bi = BBCAPTable_drop.begin(); bi != BBCAPTable_drop.end(); ++bi){
+  for (auto bi = BBCAPTable_in.begin(); bi != BBCAPTable_in.end(); ++bi){
     BasicBlock *B = bi->first;
-    CAPArray_t &CAPArray_drop = bi->second;
-    
+    CAPArray_t &CAPArray_in = bi->second;
+    CAPArray_t &CAPArray_out = BBCAPTable_out[B];
     ++count;
     
     errs() << "BB" << count
            << " in " << B->getParent()->getName() << ":  \t";
+
+    for (unsigned int i = 0; i < CAPArray_in.size(); ++i){
+      if(CAPArray_in[i]){
+        errs() << i << "\t";
+      }
+    }
+    errs() << "\n";
+    
+    errs() << "BB" << count
+           << " out " << B->getParent()->getName() << ":  \t";
+
+    for (unsigned int i = 0; i < CAPArray_in.size(); ++i){
+      if(CAPArray_out[i]){
+        errs() << i << "\t";
+      }
+    }
+    errs() << "\n";
+
+  }
+  errs() << "\n";
+
+
+  for (auto bi = BBCAPTable_drop.begin(); bi != BBCAPTable_drop.end(); ++bi){
+    BasicBlock *B = bi->first;
+    CAPArray_t &CAPArray_drop = bi->second;
+    ++count;
+    
+    errs() << "BB" << count
+           << " drop " << B->getParent()->getName() << ":  \t";
 
     for (unsigned int i = 0; i < CAPArray_drop.size(); ++i){
       if(CAPArray_drop[i]){
@@ -200,6 +229,7 @@ bool GlobalLiveAnalysis::runOnModule(Module &M){
       }
     }
     errs() << "\n";
+
   }
   errs() << "\n";
 

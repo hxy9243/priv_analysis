@@ -153,7 +153,7 @@ void SplitBB::splitOnFunction(Function *F, int splitLoc){
       }
       else {
         errs() << CI->getCalledFunction()->getName()
-               <<" is the start of a block in " 
+               <<" is the end of a block in " 
                << CI->getParent()->getParent()->getName() 
                << " I'm not splitting you\n";
 
