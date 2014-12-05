@@ -22,117 +22,116 @@ using namespace llvm::localAnalysis;
 using namespace llvm::propagateAnalysis;
 
 // PropagateAnalysis constructor
-PropagateAnalysis::PropagateAnalysis() : ModulePass(ID) {}
+PropagateAnalysis::PropagateAnalysis() : ModulePass(ID) { }
 
 
 // Require Analysis Usage
-void PropagateAnalysis::getAnalysisUsage(AnalysisUsage &AU) const{
-  errs() << "getting analysis usage\n";
+void PropagateAnalysis::getAnalysisUsage(AnalysisUsage &AU) const
+{
+    errs() << "getting analysis usage\n";
 
-  AU.setPreservesCFG();
-  AU.addRequired<LocalAnalysis>();
+    AU.setPreservesCFG();
+    AU.addRequired<LocalAnalysis>();
 
-  // preserve usage
-  AU.setPreservesAll();
+    // preserve usage
+    AU.setPreservesAll();
 }
 
 
 // Do initialization
-bool PropagateAnalysis::doInitialization(Module &M){
-  return false;
+bool PropagateAnalysis::doInitialization(Module &M)
+{
+    return false;
 }
 
 
 // Run on Module
 // param: M - the program Module
-bool PropagateAnalysis::runOnModule(Module &M){
+bool PropagateAnalysis::runOnModule(Module &M)
+{
+    errs() << "\nRunning CallGraph propagation pass\n\n";
 
-  errs() << "\nRunning CallGraph propagation pass\n\n";
+    LocalAnalysis &LA = getAnalysis<LocalAnalysis>();
 
-  LocalAnalysis &LA = getAnalysis<LocalAnalysis>();
+    // Get all data structures for propagation analysis
+    FuncCAPTable = LA.FuncCAPTable;
+    BBCAPTable = LA.BBCAPTable;
+    BBFuncTable = LA.BBFuncTable;
 
-  // Get all data structures for propagation analysis
-  FuncCAPTable = LA.FuncCAPTable;
-  BBCAPTable = LA.BBCAPTable;
-  BBFuncTable = LA.BBFuncTable;
+    // DEBUG
+    errs() << "Dump table before propagation\n";
+    dumpCAPTable(FuncCAPTable);
 
-  // DEBUG
-  errs() << "Dump table before propagation\n";
-  dumpCAPTable(FuncCAPTable);
+    // Depth First Search Analysis for data propagation
+    Propagate(M, FuncCAPTable);
 
-  // Depth First Search Analysis for data propagation
-  Propagate(M, FuncCAPTable);
+    errs() << "Dump table after propagation\n";
 
-  errs() << "Dump table after propagation\n";
+    dumpCAPTable(FuncCAPTable);
 
-  dumpCAPTable(FuncCAPTable);
-
-  return false;
+    return false;
 }
 
 
 // Depth First Search data propagation analysis
 // param: M - the program module
 //        FuncCAPTable - the captable to store live analysis data
-void PropagateAnalysis::Propagate(Module &M, FuncCAPTable_t &FuncCAPTable){
+void PropagateAnalysis::Propagate(Module &M, FuncCAPTable_t &FuncCAPTable)
+{
+    // The ins and outs of function
+    FuncCAPTable_t FuncCAPTable_in;
+    FuncCAPTable_t FuncCAPTable_out;
+    CallGraph CG(M);
+    bool ischanged = true;
 
-  // The ins and outs of function
-  FuncCAPTable_t FuncCAPTable_in;
-  FuncCAPTable_t FuncCAPTable_out;
+    // copy to FuncCAPTable_in
+    // TODO: Is FuncCAPTable_in really needed here?
+    // TODO: Could be using FuncCAPTable directly?
+    CopyTableKeys(FuncCAPTable_in, FuncCAPTable);
+    CopyTableKeys(FuncCAPTable_out, FuncCAPTable);
 
-  CopyTableKeys(FuncCAPTable_in, FuncCAPTable);
-  CopyTableKeys(FuncCAPTable_out, FuncCAPTable);
+    // Keep iterating until converged
+    while (ischanged) {
+        ischanged = false;
 
-  bool ischanged = true;
+        // Iterate through the callgraph
+        for (CallGraph::iterator CI = CG.begin(), CE = CG.end();
+             CI != CE;
+             ++ CI) {
+            // Get CallgraphNode
+            CallGraphNode *N = CI->second;
+            Function *FCaller = N->getFunction();
+            // protector
+            if (!FCaller) {
+                continue;
+            }
 
-  // Get Callgraph
-  CallGraph CG(M);
+            // Get Caller mapped array in FuncCAPTables
+            CAPArray_t &callerIn = FuncCAPTable_in[FCaller];
+            CAPArray_t &callerOut = FuncCAPTable_out[FCaller];
+            // Iterate through Callgraphnode for callees
+            for (CallGraphNode::iterator RI = N->begin(), RE = N->end();
+                 RI != RE;
+                 ++ RI) {
+                // Get callee
+                Function *FCallee = RI->second->getFunction();
+                if (!FCallee) {
+                    continue;
+                }
 
-  // Keep iterating until converged
-  while (ischanged){
-    ischanged = false;
+                CAPArray_t &calleeIn = FuncCAPTable_in[FCallee];
+                // Propagate all information from callee to caller_out 
+                ischanged |= UnionCAPArrays(callerOut, calleeIn);
+            } // Iterate through Callgraphnode for callees
 
-    // Iterate through the callgraph
-    for (CallGraph::iterator CI = CG.begin(), CE = CG.end();
-         CI != CE;
-         ++ CI){
-      // Get CallgraphNode
-      CallGraphNode *N = CI->second;
-      Function *FCaller = N->getFunction();
-      // protector
-      if (!FCaller){
-        continue;
-      }
+            // Propagate all information from caller_out to caller_in
+            ischanged |= UnionCAPArrays(callerOut, FuncCAPTable[FCaller]);
+            ischanged |= UnionCAPArrays(callerIn, callerOut);
 
-      // Get Caller mapped array in FuncCAPTables
-      CAPArray_t &callerIn = FuncCAPTable_in[FCaller];
-      CAPArray_t &callerOut = FuncCAPTable_out[FCaller];
-      // Iterate through Callgraphnode for callees
-      for (CallGraphNode::iterator RI = N->begin(), RE = N->end();
-           RI != RE;
-           ++ RI){
-        // Get callee
-        Function *FCallee = RI->second->getFunction();
-        if (!FCallee){
-          continue;
-        }
+        } // iterator for caller nodes
+    } // main loop
 
-        CAPArray_t &calleeIn = FuncCAPTable_in[FCallee];
-        // Propagate all information from callee to caller_out 
-        ischanged |= UnionCAPArrays(callerOut, calleeIn);
-
-      } // Iterate through Callgraphnode for callees
-
-      // Propagate all information from caller_out to caller_in
-      ischanged |= UnionCAPArrays(callerOut, FuncCAPTable[FCaller]);
-      ischanged |= UnionCAPArrays(callerIn, callerOut);
-
-    } // iterator for caller nodes
-
-  } // main loop
-
-  FuncCAPTable = FuncCAPTable_in;
-
+    FuncCAPTable = FuncCAPTable_in;
 }
 
 

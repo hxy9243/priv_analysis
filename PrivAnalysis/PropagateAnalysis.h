@@ -21,12 +21,13 @@
 
 using namespace llvm::privAnalysis;
 
-namespace llvm{
-namespace propagateAnalysis{
+namespace llvm {
+namespace propagateAnalysis {
 
-  // PropagateAnalysis class
-  struct PropagateAnalysis : public ModulePass {
-  public:
+// PropagateAnalysis class
+struct PropagateAnalysis : public ModulePass 
+{
+public:
     // pass ID
     static char ID;
 
@@ -52,11 +53,11 @@ namespace propagateAnalysis{
     // Run on CallGraph SCC
     virtual bool runOnModule(Module &M);
 
-  private:
+private:
     // Data propagation analysis
     void Propagate(Module &M, FuncCAPTable_t &CAPTable);
 
-  };
+};
 
 } // namespace propagateAnalysis
 } // namespace llvm

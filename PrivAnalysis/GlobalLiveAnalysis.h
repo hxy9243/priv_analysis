@@ -23,11 +23,12 @@
 
 using namespace llvm::privAnalysis;
 
-namespace llvm{
-namespace globalLiveAnalysis{
+namespace llvm {
+namespace globalLiveAnalysis {
 
-  struct GlobalLiveAnalysis : public ModulePass{
-  public:
+struct GlobalLiveAnalysis : public ModulePass
+{
+public:
     static char ID;
 
     BBCAPTable_t BBCAPTable_drop;
@@ -43,10 +44,10 @@ namespace globalLiveAnalysis{
     // Preserve analysis usage
     void getAnalysisUsage(AnalysisUsage &AU) const;
 
-  private:
+private:
     void getAllReturnBBs(std::vector<BasicBlock *> &ReturnBBs);
 
-  };
+};
 
 } // namespace globalLiveAnalysis
 } // namespace llvm

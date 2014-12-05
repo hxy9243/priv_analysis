@@ -24,8 +24,9 @@ LocalAnalysis::LocalAnalysis() : ModulePass(ID) {}
 
 // Do initialization
 // param: Module
-bool LocalAnalysis::doInitialization(Module &M){
-  return false;
+bool LocalAnalysis::doInitialization(Module &M)
+{
+    return false;
 }
 
 
@@ -33,80 +34,81 @@ bool LocalAnalysis::doInitialization(Module &M){
 // Retrieve all capabilities from params of function call
 // param: CI - call instruction to retrieve from
 //        CAParray - the array of capability to save to
-void LocalAnalysis::RetrieveAllCAP(CallInst *CI, CAPArray_t &CAParray){
-  int numArgs = (int) CI->getNumArgOperands();
+void LocalAnalysis::RetrieveAllCAP(CallInst *CI, CAPArray_t &CAParray)
+{
+    int numArgs = (int) CI->getNumArgOperands();
 
-  // Note: Skip the first param of priv_lower for it's num of args
-  for (int i = 1; i < numArgs; i ++){
-    // retrieve integer value
-    Value *v = CI->getArgOperand(i);
-    ConstantInt *I = dyn_cast<ConstantInt>(v);
-    unsigned int iarg = I->getZExtValue();
+    // Note: Skip the first param of priv_lower for it's num of args
+    for (int i = 1; i < numArgs; i ++) {
+        // retrieve integer value
+        Value *v = CI->getArgOperand(i);
+        ConstantInt *I = dyn_cast<ConstantInt>(v);
+        unsigned int iarg = I->getZExtValue();
 
-    // Add it to the array
-    CAParray[iarg] = 1;
-  }
+        // Add it to the array
+        CAParray[iarg] = 1;
+    }
 }
 
 
 // Run on Module start
 // param: Module
-bool LocalAnalysis::runOnModule(Module &M){
+bool LocalAnalysis::runOnModule(Module &M)
+{
+    errs() << "\nRunning Local Analysis Pass\n\n";
 
-  errs() << "\nRunning Local Analysis Pass\n\n";
-
-  // retrieve all data for later use
-  SplitBB &SB = getAnalysis<SplitBB>();
-  BBFuncTable = SB.BBFuncTable;
+    // retrieve all data for later use
+    SplitBB &SB = getAnalysis<SplitBB>();
+    BBFuncTable = SB.BBFuncTable;
   
-  // find all users of Targeted function
-  Function *F = M.getFunction(PRIVRAISE);
+    // find all users of Targeted function
+    Function *F = M.getFunction(PRIVRAISE);
 
-  // Protector: didn't find any function TARGET_FUNC
-  if (F == NULL){
-    errs() << "Didn't find function " << PRIVRAISE << "\n";
-    return false;
-  }
-
-  // Find all user instructions of function in the module
-  for (Value::user_iterator UI = F->user_begin(), UE = F->user_end();
-       UI != UE;
-       ++UI){
-    // If it's a call Inst calling the targeted function
-    CallInst *CI = dyn_cast<CallInst>(*UI);
-    if (CI == NULL || CI->getCalledFunction() != F){
-      continue;
+    // Protector: didn't find any function TARGET_FUNC
+    if (F == NULL){
+        errs() << "Didn't find function " << PRIVRAISE << "\n";
+        return false;
     }
 
-    // Retrieve all capabilities from params of function call
-    CAPArray_t CAParray = {0};
-    RetrieveAllCAP(CI, CAParray);
+    // Find all user instructions of function in the module
+    for (Value::user_iterator UI = F->user_begin(), UE = F->user_end();
+         UI != UE;
+         ++UI) {
+        // If it's a call Inst calling the targeted function
+        CallInst *CI = dyn_cast<CallInst>(*UI);
+        if (CI == NULL || CI->getCalledFunction() != F) {
+            continue;
+        }
 
-    // Get the function where the Instr is in
-    // Add CAP to Map (Function* => array of CAPs)
-    // and Map (BB * => array of CAPs)
-    AddToBBCAPTable(BBCAPTable, CI->getParent(), CAParray);
-    AddToFuncCAPTable(FuncCAPTable, CI->getParent()->getParent(), CAParray);
+        // Retrieve all capabilities from params of function call
+        CAPArray_t CAParray = {0};
+        RetrieveAllCAP(CI, CAParray);
 
-  }
+        // Get the function where the Instr is in
+        // Add CAP to Map (Function* => array of CAPs)
+        // and Map (BB * => array of CAPs)
+        AddToBBCAPTable(BBCAPTable, CI->getParent(), CAParray);
+        AddToFuncCAPTable(FuncCAPTable, CI->getParent()->getParent(), CAParray);
 
-  // DEBUG purpose: dump map table
-  // ---------------------//
-  dumpCAPTable (FuncCAPTable);
-  // ----------------------//
+    }
 
-  return false;
+    // DEBUG purpose: dump map table
+    // ---------------------//
+    dumpCAPTable (FuncCAPTable);
+    // ----------------------//
+
+    return false;
 }
 
 
 // getAnalysisUsage function
 // preserve all analyses
 // param: AU
-void LocalAnalysis::getAnalysisUsage(AnalysisUsage &AU) const {
+void LocalAnalysis::getAnalysisUsage(AnalysisUsage &AU) const 
+{
+    AU.addRequired<SplitBB>();
 
-  AU.addRequired<SplitBB>();
-
-  AU.setPreservesAll();
+    AU.setPreservesAll();
 }
 
 

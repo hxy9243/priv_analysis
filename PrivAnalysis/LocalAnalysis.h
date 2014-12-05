@@ -22,9 +22,10 @@ using namespace llvm::privAnalysis;
 namespace llvm{
 namespace localAnalysis {
 
-  // LocalAnlysis pass
-  struct LocalAnalysis : public ModulePass {
-  public:
+// LocalAnlysis pass
+struct LocalAnalysis : public ModulePass 
+{
+public:
     static char ID;
     // Data structure for local priv capability use in each function
     // Maps from InstCalls to -> Array of Capabilities
@@ -49,11 +50,11 @@ namespace localAnalysis {
     // Preserve all analysis usage
     void getAnalysisUsage(AnalysisUsage &AU) const;
 
-  private:
+private:
     // Retrieve all capabilities from params of function call
     void RetrieveAllCAP(CallInst *CI, CAPArray_t &CAParray);
 
-  }; // endof struct PrivAnalysis
+}; // endof struct PrivAnalysis
 
 
 } // namespace localanalysis
