@@ -106,6 +106,7 @@ bool LocalAnalysis::runOnModule(Module &M)
 // param: AU
 void LocalAnalysis::getAnalysisUsage(AnalysisUsage &AU) const 
 {
+    // TODO: Separate SplitBB as an individual Transformation Pass?
     AU.addRequired<SplitBB>();
 
     AU.setPreservesAll();

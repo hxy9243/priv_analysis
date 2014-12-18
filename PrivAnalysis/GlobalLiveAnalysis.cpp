@@ -92,6 +92,7 @@ bool GlobalLiveAnalysis::runOnModule(Module &M)
       }
 
       // Find the exit node of the Function
+      // TODO: Separate UnifyExitNodes as an individual transformation pass?
       UnifyFunctionExitNodes &UnifyExitNode = getAnalysis<UnifyFunctionExitNodes>(*F);
       UnifyExitNode.runOnFunction(*F);
       BasicBlock *ReturnBB = UnifyExitNode.getReturnBlock();
