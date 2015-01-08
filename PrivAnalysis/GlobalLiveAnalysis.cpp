@@ -38,195 +38,194 @@ GlobalLiveAnalysis::GlobalLiveAnalysis() : ModulePass(ID) {}
 // Require Analysis usage
 void GlobalLiveAnalysis::getAnalysisUsage(AnalysisUsage &AU) const
 {
-  AU.setPreservesAll();
+    AU.setPreservesAll();
 
-  AU.addRequired<UnifyFunctionExitNodes>();
-  AU.addRequired<PropagateAnalysis>();
-  AU.addRequired<SplitBB>();
-
+    AU.addRequired<UnifyFunctionExitNodes>();
+    AU.addRequired<PropagateAnalysis>();
+    AU.addRequired<SplitBB>();
 }
 
 
 // Do initialization
 bool GlobalLiveAnalysis::doInitialization(Module &M)
 {
-  return false;
+    return false;
 }
 
 
 // Run on Module
 bool GlobalLiveAnalysis::runOnModule(Module &M)
 {
-  errs() << "\nRunning Global Live Analysis pass\n\n";
+    errs() << "\nRunning Global Live Analysis pass\n\n";
 
-  PropagateAnalysis &PA = getAnalysis<PropagateAnalysis>();
+    PropagateAnalysis &PA = getAnalysis<PropagateAnalysis>();
 
-  // retrieve all data structures
-  FuncCAPTable_t &FuncUseCAPTable = PA.FuncCAPTable;
-  // TODO: retrieve information directly from LocalAnalysis?
-  BBCAPTable_t &BBCAPTable = PA.BBCAPTable;
-  BBFuncTable_t &BBFuncTable = PA.BBFuncTable;
+    // retrieve all data structures
+    FuncCAPTable_t &FuncUseCAPTable = PA.FuncCAPTable;
+    // TODO: retrieve information directly from LocalAnalysis?
+    BBCAPTable_t &BBCAPTable = PA.BBCAPTable;
+    BBFuncTable_t &BBFuncTable = PA.BBFuncTable;
 
-  // init data structure
-  bool ischanged = true;
+    // init data structure
+    bool ischanged = true;
 
-  // FuncLiveCAPTable maps from Functions to the
-  // live CAP in the Functions
-  FuncCAPTable_t FuncLiveCAPTable_in;
-  FuncCAPTable_t FuncLiveCAPTable_out;
-  BBCAPTable_t BBCAPTable_in;
-  BBCAPTable_t BBCAPTable_out;
+    // FuncLiveCAPTable maps from Functions to the
+    // live CAP in the Functions
+    FuncCAPTable_t FuncLiveCAPTable_in;
+    FuncCAPTable_t FuncLiveCAPTable_out;
+    BBCAPTable_t BBCAPTable_in;
+    BBCAPTable_t BBCAPTable_out;
 
-  int i = 0;
+    int i = 0;
 
-  // iterate till convergence
-  while (ischanged) {
+    // iterate till convergence
+    while (ischanged) {
 
-    ischanged = false;
+        ischanged = false;
 
-    // iterate through all functions
-    for (Module::iterator FI = M.begin(), FE = M.end(); FI != FE; ++ FI) {
-      Function *F = dyn_cast<Function>(FI);
-      if (F == NULL || F->empty()) {
-        continue;
-      }
+        // iterate through all functions
+        for (Module::iterator FI = M.begin(), FE = M.end(); FI != FE; ++ FI) {
+            Function *F = dyn_cast<Function>(FI);
+            if (F == NULL || F->empty()) {
+                continue;
+            }
 
-      // Find the exit node of the Function
-      // TODO: Separate UnifyExitNodes as an individual transformation pass?
-      UnifyFunctionExitNodes &UnifyExitNode = getAnalysis<UnifyFunctionExitNodes>(*F);
-      UnifyExitNode.runOnFunction(*F);
-      BasicBlock *ReturnBB = UnifyExitNode.getReturnBlock();
+            // Find the exit node of the Function
+            // TODO: Separate UnifyExitNodes as an individual transformation pass?
+            UnifyFunctionExitNodes &UnifyExitNode = getAnalysis<UnifyFunctionExitNodes>(*F);
+            UnifyExitNode.runOnFunction(*F);
+            BasicBlock *ReturnBB = UnifyExitNode.getReturnBlock();
 
-      // Push information to the entry of function live table
-      //      BasicBlock &EntryBB = F->getEntryBlock();
-      ischanged |= UnionCAPArrays(FuncLiveCAPTable_in[F], FuncUseCAPTable[F]);
+            // Push information to the entry of function live table
+            //      BasicBlock &EntryBB = F->getEntryBlock();
+            ischanged |= UnionCAPArrays(FuncLiveCAPTable_in[F], FuncUseCAPTable[F]);
       
-      // TODO: The following code should not be here
-      // TODO: The func_in should only intake uses of information
-      // ischanged |= UnionCAPArrays(FuncLiveCAPTable_in[F], FuncLiveCAPTable_out[F]);
-      // ischanged |= UnionCAPArrays(FuncLiveCAPTable_in[F], BBCAPTable_in[&EntryBB]);
+            // TODO: The following code should not be here
+            // TODO: The func_in should only intake uses of information
+            // ischanged |= UnionCAPArrays(FuncLiveCAPTable_in[F], FuncLiveCAPTable_out[F]);
+            // ischanged |= UnionCAPArrays(FuncLiveCAPTable_in[F], BBCAPTable_in[&EntryBB]);
 
-      // iterate all BBs
-      for (Function::iterator BI = F->begin(), BE = F->end();
-           BI != BE;
-           ++ BI) {
+            // iterate all BBs
+            for (Function::iterator BI = F->begin(), BE = F->end();
+                 BI != BE;
+                 ++ BI) {
 
-        ++i;
+                ++i;
 
-        BasicBlock *B = dyn_cast<BasicBlock>(BI);
-        if (B == NULL) {
-          continue;
+                BasicBlock *B = dyn_cast<BasicBlock>(BI);
+                if (B == NULL) {
+                    continue;
+                }
+                //////////////////////////////////
+                // Propagate information in each BB
+                //////////////////////////////////
+
+                // if it's a terminating BB, propagate the info
+                // from func live CAPTable to BB[out]
+                if (ReturnBB == B) {
+                    ischanged |= UnionCAPArrays(BBCAPTable_out[B], 
+                                                FuncLiveCAPTable_out[F]);
+                }
+
+                // if it's a FunCall BB (found as key in BBFuncTable), add the live
+                // info to func live CAPTable for callee processing
+                if (BBFuncTable.find(B) != BBFuncTable.end()) {
+                    ischanged |= UnionCAPArrays(BBCAPTable_in[B],
+                                                FuncUseCAPTable[BBFuncTable[B]]);
+
+                    ischanged |= UnionCAPArrays(FuncLiveCAPTable_out[BBFuncTable[B]],
+                                                BBCAPTable_out[B]);
+                }
+
+                // if it's a Priv Call BB
+                if (BBCAPTable.find(B) != BBCAPTable.end()) {
+                    ischanged |= UnionCAPArrays(BBCAPTable_in[B], BBCAPTable[B]);
+                }
+
+                //propagate from all its successors
+                TerminatorInst *BBTerm = B->getTerminator();
+                for(unsigned BSI = 0, BSE = BBTerm->getNumSuccessors(); 
+                    BSI != BSE;
+                    ++ BSI) {
+                    BasicBlock *SuccessorBB = BBTerm->getSuccessor(BSI);
+                    ischanged |= UnionCAPArrays(BBCAPTable_out[B], 
+                                                BBCAPTable_in[SuccessorBB]);
+                }
+                // propagate live info to in[B]
+                ischanged |= UnionCAPArrays(BBCAPTable_in[B], BBCAPTable_out[B]);
+            } // iterate all BBs
+        } // iterate all functions
+
+    } // while change
+
+
+    ////////////////////////////////////////
+    // DEBUG
+    ////////////////////////////////////////
+    errs() << "converged with " << i << " iterations\n";
+
+    errs() << "BBCAPTable_in size " << BBCAPTable_in.size() << "\n";
+    ////////////////////////////////////////
+
+    // Find Difference of BB in and out CAPArrays
+    // Save it to the output 
+    for (auto bi = BBCAPTable_out.begin(); bi != BBCAPTable_out.end(); ++bi) {
+        BasicBlock *B = bi->first;
+        CAPArray_t &CAPArray_out = bi->second;
+        CAPArray_t &CAPArray_in = BBCAPTable_in[B];
+        DiffCAPArrays(BBCAPTable_drop[B], CAPArray_in, CAPArray_out);
+    }
+
+    ////////////////////////////////////////
+    // DEBUG
+    ////////////////////////////////////////
+    errs() << "BBCAPTable size " << BBCAPTable_drop.size() << "\n";
+    // Dump in and out for each BB
+    int count = 0;
+    for (auto bi = BBCAPTable_in.begin(); bi != BBCAPTable_in.end(); ++bi) {
+        BasicBlock *B = bi->first;
+        CAPArray_t &CAPArray_in = bi->second;
+        CAPArray_t &CAPArray_out = BBCAPTable_out[B];
+        ++count;
+        // In 
+        errs() << "BB" << count
+               << " in " << B->getParent()->getName() << ":  \t";
+        for (unsigned int i = 0; i < CAPArray_in.size(); ++i) {
+            if(CAPArray_in[i]){
+                errs() << i << "\t";
+            }
         }
-        //////////////////////////////////
-        // Propagate information in each BB
-        //////////////////////////////////
-
-        // if it's a terminating BB, propagate the info
-        // from func live CAPTable to BB[out]
-        if (ReturnBB == B) {
-          ischanged |= UnionCAPArrays(BBCAPTable_out[B], 
-                                      FuncLiveCAPTable_out[F]);
+        errs() << "\n";
+        errs() << "BB" << count
+               << " out " << B->getParent()->getName() << ":  \t";
+        // Out
+        for (unsigned int i = 0; i < CAPArray_in.size(); ++i) {
+            if(CAPArray_out[i]){
+                errs() << i << "\t";
+            }
         }
-
-        // if it's a FunCall BB (found as key in BBFuncTable), add the live
-        // info to func live CAPTable for callee processing
-        if (BBFuncTable.find(B) != BBFuncTable.end()) {
-          ischanged |= UnionCAPArrays(BBCAPTable_in[B],
-                                      FuncUseCAPTable[BBFuncTable[B]]);
-
-          ischanged |= UnionCAPArrays(FuncLiveCAPTable_out[BBFuncTable[B]],
-                                      BBCAPTable_out[B]);
-        }
-
-        // if it's a Priv Call BB
-        if (BBCAPTable.find(B) != BBCAPTable.end()) {
-          ischanged |= UnionCAPArrays(BBCAPTable_in[B], BBCAPTable[B]);
-        }
-
-        //propagate from all its successors
-        TerminatorInst *BBTerm = B->getTerminator();
-        for(unsigned BSI = 0, BSE = BBTerm->getNumSuccessors(); 
-            BSI != BSE;
-            ++ BSI) {
-          BasicBlock *SuccessorBB = BBTerm->getSuccessor(BSI);
-          ischanged |= UnionCAPArrays(BBCAPTable_out[B], 
-                                      BBCAPTable_in[SuccessorBB]);
-        }
-        // propagate live info to in[B]
-        ischanged |= UnionCAPArrays(BBCAPTable_in[B], BBCAPTable_out[B]);
-      } // iterate all BBs
-    } // iterate all functions
-
-  } // while change
-
-
-  ////////////////////////////////////////
-  // DEBUG
-  ////////////////////////////////////////
-  errs() << "converged with " << i << " iterations\n";
-
-  errs() << "BBCAPTable_in size " << BBCAPTable_in.size() << "\n";
-  ////////////////////////////////////////
-
-  // Find Difference of BB in and out CAPArrays
-  // Save it to the output 
-  for (auto bi = BBCAPTable_out.begin(); bi != BBCAPTable_out.end(); ++bi) {
-    BasicBlock *B = bi->first;
-    CAPArray_t &CAPArray_out = bi->second;
-    CAPArray_t &CAPArray_in = BBCAPTable_in[B];
-    DiffCAPArrays(BBCAPTable_drop[B], CAPArray_in, CAPArray_out);
-  }
-
-  ////////////////////////////////////////
-  // DEBUG
-  ////////////////////////////////////////
-  errs() << "BBCAPTable size " << BBCAPTable_drop.size() << "\n";
-  // Dump in and out for each BB
-  int count = 0;
-  for (auto bi = BBCAPTable_in.begin(); bi != BBCAPTable_in.end(); ++bi) {
-    BasicBlock *B = bi->first;
-    CAPArray_t &CAPArray_in = bi->second;
-    CAPArray_t &CAPArray_out = BBCAPTable_out[B];
-    ++count;
-    // In 
-    errs() << "BB" << count
-           << " in " << B->getParent()->getName() << ":  \t";
-    for (unsigned int i = 0; i < CAPArray_in.size(); ++i) {
-      if(CAPArray_in[i]){
-        errs() << i << "\t";
-      }
+        errs() << "\n";
     }
     errs() << "\n";
-    errs() << "BB" << count
-           << " out " << B->getParent()->getName() << ":  \t";
-    // Out
-    for (unsigned int i = 0; i < CAPArray_in.size(); ++i) {
-      if(CAPArray_out[i]){
-        errs() << i << "\t";
-      }
+
+    // Dump the drop for each BB
+    for (auto bi = BBCAPTable_drop.begin(); bi != BBCAPTable_drop.end(); ++bi) {
+        BasicBlock *B = bi->first;
+        CAPArray_t &CAPArray_drop = bi->second;
+        ++count;
+        errs() << "BB" << count
+               << " drop " << B->getParent()->getName() << ":  \t";
+        for (unsigned int i = 0; i < CAPArray_drop.size(); ++i) {
+            if(CAPArray_drop[i]){
+                errs() << i << "\t";
+            }
+        }
+        errs() << "\n";
     }
     errs() << "\n";
-  }
-  errs() << "\n";
+    ////////////////////////////////////////
 
-  // Dump the drop for each BB
-  for (auto bi = BBCAPTable_drop.begin(); bi != BBCAPTable_drop.end(); ++bi) {
-    BasicBlock *B = bi->first;
-    CAPArray_t &CAPArray_drop = bi->second;
-    ++count;
-    errs() << "BB" << count
-           << " drop " << B->getParent()->getName() << ":  \t";
-    for (unsigned int i = 0; i < CAPArray_drop.size(); ++i) {
-      if(CAPArray_drop[i]){
-        errs() << i << "\t";
-      }
-    }
-    errs() << "\n";
-  }
-  errs() << "\n";
-  ////////////////////////////////////////
-
-  return false;
+    return false;
 }
 
 
