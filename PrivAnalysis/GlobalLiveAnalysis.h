@@ -35,10 +35,10 @@ public:
 
     GlobalLiveAnalysis();
 
-    // initialization
+    // Initialization
     virtual bool doInitialization(Module &M);
 
-    // Run on BasicBlock Start
+    // Run on Module Start
     virtual bool runOnModule(Module &M);
 
     // Preserve analysis usage
