@@ -76,8 +76,6 @@ bool GlobalLiveAnalysis::runOnModule(Module &M)
     BBCAPTable_t BBCAPTable_in;
     BBCAPTable_t BBCAPTable_out;
 
-    int i = 0;
-
     // iterate till convergence
     while (ischanged) {
 
@@ -100,18 +98,10 @@ bool GlobalLiveAnalysis::runOnModule(Module &M)
             //      BasicBlock &EntryBB = F->getEntryBlock();
             ischanged |= UnionCAPArrays(FuncLiveCAPTable_in[F], FuncUseCAPTable[F]);
       
-            // TODO: The following code should not be here
-            // TODO: The func_in should only intake uses of information
-            // ischanged |= UnionCAPArrays(FuncLiveCAPTable_in[F], FuncLiveCAPTable_out[F]);
-            // ischanged |= UnionCAPArrays(FuncLiveCAPTable_in[F], BBCAPTable_in[&EntryBB]);
-
             // iterate all BBs
             for (Function::iterator BI = F->begin(), BE = F->end();
                  BI != BE;
                  ++ BI) {
-
-                ++i;
-
                 BasicBlock *B = dyn_cast<BasicBlock>(BI);
                 if (B == NULL) {
                     continue;
@@ -142,7 +132,7 @@ bool GlobalLiveAnalysis::runOnModule(Module &M)
                     ischanged |= UnionCAPArrays(BBCAPTable_in[B], BBCAPTable[B]);
                 }
 
-                //propagate from all its successors
+                // propagate from all its successors
                 TerminatorInst *BBTerm = B->getTerminator();
                 for(unsigned BSI = 0, BSE = BBTerm->getNumSuccessors(); 
                     BSI != BSE;
@@ -162,13 +152,12 @@ bool GlobalLiveAnalysis::runOnModule(Module &M)
     ////////////////////////////////////////
     // DEBUG
     ////////////////////////////////////////
-    errs() << "converged with " << i << " iterations\n";
 
     errs() << "BBCAPTable_in size " << BBCAPTable_in.size() << "\n";
     ////////////////////////////////////////
-
     // Find Difference of BB in and out CAPArrays
     // Save it to the output 
+    ////////////////////////////////////////
     for (auto bi = BBCAPTable_out.begin(); bi != BBCAPTable_out.end(); ++bi) {
         BasicBlock *B = bi->first;
         CAPArray_t &CAPArray_out = bi->second;
@@ -227,7 +216,6 @@ bool GlobalLiveAnalysis::runOnModule(Module &M)
 
     return false;
 }
-
 
 
 // register pass
