@@ -147,12 +147,6 @@ bool GlobalLiveAnalysis::runOnModule(Module &M)
 
     } // while change
 
-
-    ////////////////////////////////////////
-    // DEBUG
-    ////////////////////////////////////////
-
-    errs() << "BBCAPTable_in size " << BBCAPTable_in.size() << "\n";
     ////////////////////////////////////////
     // Find Difference of BB in and out CAPArrays
     // Save it to the output 
@@ -161,8 +155,16 @@ bool GlobalLiveAnalysis::runOnModule(Module &M)
         BasicBlock *B = bi->first;
         CAPArray_t &CAPArray_out = bi->second;
         CAPArray_t &CAPArray_in = BBCAPTable_in[B];
-        DiffCAPArrays(BBCAPTable_drop[B], CAPArray_in, CAPArray_out);
+        if (DiffCAPArrays(BBCAPTable_drop[B], CAPArray_in, CAPArray_out) == 0) {
+            BBCAPTable_drop.erase(B);
+        }
     }
+
+    ////////////////////////////////////////
+    // DEBUG
+    ////////////////////////////////////////
+
+    errs() << "BBCAPTable_in size " << BBCAPTable_in.size() << "\n";
 
     ////////////////////////////////////////
     // DEBUG

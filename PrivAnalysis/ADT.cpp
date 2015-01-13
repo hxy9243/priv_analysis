@@ -95,16 +95,20 @@ bool UnionCAPArrays(CAPArray_t &dest, CAPArray_t &src)
 // param: dest - dest CAPArray
 //        A - the CAPArray to subtract from
 //        B - the CAPArray to subtract
-void DiffCAPArrays(CAPArray_t &dest, CAPArray_t &A, CAPArray_t &B) 
+// return: if the array has content (not all 0s),
+//         return 0 if all capabilities are 0
+bool DiffCAPArrays(CAPArray_t &dest, CAPArray_t &A, CAPArray_t &B) 
 {
+    bool hasContent = false;
     for (unsigned int i = 0; i < A.size(); ++i){
         dest[i] = A[i] & (~B[i]);
+        hasContent |= dest[i];
 
         if (~A[i] & B[i]){
             errs() << "\nBUG in Diff CAPArrays!\n\n";
         }
     }
-    return;
+    return hasContent;
 } 
 
 
