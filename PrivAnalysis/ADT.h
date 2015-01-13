@@ -51,7 +51,8 @@ void CopyTableKeys(FuncCAPTable_t &dest, FuncCAPTable_t &src);
 bool UnionCAPArrays(CAPArray_t &dest, CAPArray_t &src);
 
 // Diff two arrays, save result
-void DiffCAPArrays(CAPArray_t &dest, CAPArray_t &A, CAPArray_t &B); 
+// return if the difference has content (not all 0s)
+bool DiffCAPArrays(CAPArray_t &dest, CAPArray_t &A, CAPArray_t &B); 
 
 // for debugging purpose
 void dumpCAPTable(FuncCAPTable_t &CT);
