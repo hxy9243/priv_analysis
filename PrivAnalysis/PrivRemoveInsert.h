@@ -18,6 +18,9 @@
 
 #include "ADT.h"
 
+#define PRIV_REMOVE_CALL "priv_remove"
+
+
 using namespace llvm::privAnalysis;
 
 namespace llvm {
