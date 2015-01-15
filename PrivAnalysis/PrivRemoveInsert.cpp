@@ -48,22 +48,13 @@ bool PrivRemoveInsert::doInitialization(Module &M)
 bool PrivRemoveInsert::runOnModule(Module &M)
 {
     GlobalLiveAnalysis &GA = getAnalysis<GlobalLiveAnalysis>();
-
     BBCAPTable_t BBCAPTable_drop = GA.BBCAPTable_drop;
-
-    // Make function
-    LLVMContext Context;
     Function *PrivRemoveCall = M.getFunction(PRIV_REMOVE_CALL);
-    errs() << "Address of PrivRemove function is " << PrivRemoveCall << "\n";
-    // Function *PrivRemoveCall = M.getOrInsertFunction(PRIV_REMOVE_CALL,
-    //                                                  Type::getInt32Ty(Context),
-    //                                                  Type::getInt32Ty(Context),
-    //                                                  (Type *) NULL);
 
     // find all BBs with removable capabilities  
     for (auto BI = BBCAPTable_drop.begin(), BE = BBCAPTable_drop.end();
-          BI != BE;
-          ++BI) {
+         BI != BE;
+         ++BI) {
         BasicBlock *BB = BI->first;
         CAPArray_t &CAPArray = BI->second;
         std::vector<Value *> Args;
@@ -81,24 +72,24 @@ bool PrivRemoveInsert::runOnModule(Module &M)
          
             // add to args vector
             cap_num++;
-            Constant *arg = ConstantInt::get(IntegerType::get(getGlobalContext(), 32),
-                                             cap);
+            Constant *arg = 
+                ConstantInt::get(IntegerType::get(getGlobalContext(), 32), cap);
             Args.push_back(arg);
         }
 
         // Add the number of args to the front
-        ConstantInt *arg_num = ConstantInt::get(IntegerType::get(getGlobalContext(), 32),
-                                                cap_num);
+        ConstantInt *arg_num = 
+            ConstantInt::get(IntegerType::get(getGlobalContext(), 32), cap_num);
         Args.insert(Args.begin(), arg_num);
 
         // DEBUG
         errs() << "arg size " << Args.size() << "\n";
-
         errs() << "Adding remove call to BB in "
                << BB->getParent()->getName()
                << "\n";
 
-        CallInst::Create(PrivRemoveCall, ArrayRef<Value *>(Args), PRIV_REMOVE_CALL, BB->getTerminator());
+        CallInst::Create(PrivRemoveCall, ArrayRef<Value *>(Args), 
+                         PRIV_REMOVE_CALL, BB->getTerminator());
     }
 
     return true;
