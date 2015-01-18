@@ -43,6 +43,7 @@ public:
     void getAnalysisUsage(AnalysisUsage &AU) const;
 
 private:
+    Function *getRemoveCall(Module &M);
 };
 
 } // namespace privremoveinsert
