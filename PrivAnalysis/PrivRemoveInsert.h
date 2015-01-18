@@ -43,7 +43,13 @@ public:
     void getAnalysisUsage(AnalysisUsage &AU) const;
 
 private:
+    // get remove call
     Function *getRemoveCall(Module &M);
+
+    // add args to function call
+    void addToArgs(std::vector<Value *>& Args,
+                   const CAPArray_t &CAPArray);
+
 };
 
 } // namespace privremoveinsert

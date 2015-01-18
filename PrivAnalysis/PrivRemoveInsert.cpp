@@ -45,7 +45,8 @@ bool PrivRemoveInsert::doInitialization(Module &M)
 
 
 // Get PrivRemove function 
-Function *PrivRemoveInsert::getRemoveCall(Module &M) {
+Function *PrivRemoveInsert::getRemoveCall(Module &M)
+{
     std::vector<Type *> Params;
     Type *TypeInt = IntegerType::get(getGlobalContext(), 32);
 
@@ -59,7 +60,34 @@ Function *PrivRemoveInsert::getRemoveCall(Module &M) {
     return dyn_cast<Function>(PrivRemoveCall);
 }
 
+// Insert params to function type
+void PrivRemoveInsert::addToArgs(std::vector<Value *>& Args,
+                                 const CAPArray_t &CAPArray)
+{
+    int cap_num = 0;
+    for (auto ci = CAPArray.begin(), ce = CAPArray.end();
+         ci != ce; ++ci) {
+        int cap = *ci;
+        if (cap == 0) {
+            continue;
+        }
+         
+        // add to args vector
+        cap_num++;
+        Constant *arg = ConstantInt::get
+            (IntegerType::
+             get(getGlobalContext(), 32), cap);
+        Args.push_back(arg);
+    }
 
+    // Add the number of args to the front
+    ConstantInt *arg_num = ConstantInt::get
+        (IntegerType::get(getGlobalContext(), 32), 
+         cap_num);
+    Args.insert(Args.begin(), arg_num);
+
+    return;
+}
 
 
 // Run on Module
@@ -76,29 +104,8 @@ bool PrivRemoveInsert::runOnModule(Module &M)
         BasicBlock *BB = BI->first;
         CAPArray_t &CAPArray = BI->second;
         std::vector<Value *> Args;
-        
-        // Add to the arg list
-        int cap_num = 0;
-        for (auto ci = CAPArray.begin(), ce = CAPArray.end();
-             ci != ce; ++ci) {
-            int cap = *ci;
-            if (cap == 0) {
-                continue;
-            }
-         
-            // add to args vector
-            cap_num++;
-            Constant *arg = ConstantInt::get
-                (IntegerType::
-                 get(getGlobalContext(), 32), cap);
-            Args.push_back(arg);
-        }
 
-        // Add the number of args to the front
-        ConstantInt *arg_num = ConstantInt::get
-            (IntegerType::get(getGlobalContext(), 32), 
-             cap_num);
-        Args.insert(Args.begin(), arg_num);
+        addToArgs(Args, CAPArray);
 
         // DEBUG
         errs() << "arg size " << Args.size() << "\n";
@@ -106,6 +113,7 @@ bool PrivRemoveInsert::runOnModule(Module &M)
                << BB->getParent()->getName()
                << "\n";
 
+        // create call instruction
         assert(BB->getTerminator() != NULL && "BB has a NULL teminator!");
         CallInst::Create(PrivRemoveCall, ArrayRef<Value *>(Args), 
                          PRIV_REMOVE_CALL, BB->getTerminator());
