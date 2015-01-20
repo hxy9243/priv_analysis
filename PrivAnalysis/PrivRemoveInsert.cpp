@@ -24,9 +24,7 @@ using namespace llvm::privremoveinsert;
 
 // PrivRemoveInsert constructor
 PrivRemoveInsert::PrivRemoveInsert() : ModulePass(ID)
-{
-
-}
+{ }
 
 
 // Preserve analysis usage
@@ -37,14 +35,15 @@ void PrivRemoveInsert::getAnalysisUsage(AnalysisUsage &AU) const
 
 
 // Initialization
+// param M: the Module class
 bool PrivRemoveInsert::doInitialization(Module &M)
 {
-
     return false;
 }
 
 
 // Get PrivRemove function 
+// param M: the Module class
 Function *PrivRemoveInsert::getRemoveCall(Module &M)
 {
     std::vector<Type *> Params;
@@ -60,7 +59,10 @@ Function *PrivRemoveInsert::getRemoveCall(Module &M)
     return dyn_cast<Function>(PrivRemoveCall);
 }
 
+
 // Insert params to function type
+// param: Args - the Args vector to insert into
+//        CAPArray - the array of CAP to 
 void PrivRemoveInsert::addToArgs(std::vector<Value *>& Args,
                                  const CAPArray_t &CAPArray)
 {
