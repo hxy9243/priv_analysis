@@ -1,4 +1,4 @@
-// ====----------  PrivRemoveInsert.h ------------*- C++ -*---====
+// ====----------  PrivRemoveInsert.cpp ----------*- C++ -*---====
 //
 // Based on the information from GlobalLiveAnalysis, insert 
 // privRemove calls at the end of BasicBlocks, to remove 
@@ -65,19 +65,23 @@ void PrivRemoveInsert::addToArgs(std::vector<Value *>& Args,
                                  const CAPArray_t &CAPArray)
 {
     int cap_num = 0;
+    int cap = 0;
+
     for (auto ci = CAPArray.begin(), ce = CAPArray.end();
          ci != ce; ++ci) {
-        int cap = *ci;
-        if (cap == 0) {
+        cap++;
+
+        if (*ci == 0) {
             continue;
         }
-         
+
         // add to args vector
-        cap_num++;
         Constant *arg = ConstantInt::get
             (IntegerType::
              get(getGlobalContext(), 32), cap);
         Args.push_back(arg);
+
+        cap_num++;
     }
 
     // Add the number of args to the front
