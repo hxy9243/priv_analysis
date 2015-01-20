@@ -111,6 +111,15 @@ bool DiffCAPArrays(CAPArray_t &dest, CAPArray_t &A, CAPArray_t &B)
     return hasContent;
 } 
 
+// Find the reverse of cap array
+// param: the CAParray to reverse
+void ReverseCAPArray(CAPArray_t &A) 
+{
+    for (auto i = A.begin(), e = A.end(); i != e; ++i) {
+        *i = !(*i);
+    }
+}
+
 
 // dump CAPTable for Debugging purpose
 // param: CT - the CAPTable to dump

@@ -54,6 +54,10 @@ bool UnionCAPArrays(CAPArray_t &dest, CAPArray_t &src);
 // return if the difference has content (not all 0s)
 bool DiffCAPArrays(CAPArray_t &dest, CAPArray_t &A, CAPArray_t &B); 
 
+// Find the reverse of cap array
+void ReverseCAPArray(CAPArray_t &A);
+
+
 // for debugging purpose
 void dumpCAPTable(FuncCAPTable_t &CT);
 

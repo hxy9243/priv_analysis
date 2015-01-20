@@ -70,8 +70,8 @@ bool GlobalLiveAnalysis::runOnModule(Module &M)
 
     // FuncLiveCAPTable maps from Functions to the
     // live CAP in the Functions
-    FuncCAPTable_t FuncLiveCAPTable_in;
-    FuncCAPTable_t FuncLiveCAPTable_out;
+//    FuncCAPTable_t FuncLiveCAPTable_in;
+//    FuncCAPTable_t FuncLiveCAPTable_out;
     BBCAPTable_t BBCAPTable_in;
     BBCAPTable_t BBCAPTable_out;
 

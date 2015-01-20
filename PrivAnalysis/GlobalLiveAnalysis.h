@@ -32,6 +32,8 @@ public:
     static char ID;
 
     BBCAPTable_t BBCAPTable_drop;
+    FuncCAPTable_t FuncLiveCAPTable_in;
+    FuncCAPTable_t FuncLiveCAPTable_out;
 
     GlobalLiveAnalysis();
 
