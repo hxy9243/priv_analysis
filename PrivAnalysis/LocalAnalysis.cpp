@@ -38,13 +38,13 @@ void LocalAnalysis::RetrieveAllCAP(CallInst *CI, CAPArray_t &CAParray)
 {
     int numArgs = (int) CI->getNumArgOperands();
 
+    assert(CI != NULL && "The CallInst is NULL!\n");
     // Note: Skip the first param of priv_lower for it's num of args
-    for (int i = 1; i < numArgs; i ++) {
+    for (int i = 1; i < numArgs; ++i) {
         // retrieve integer value
         Value *v = CI->getArgOperand(i);
         ConstantInt *I = dyn_cast<ConstantInt>(v);
         unsigned int iarg = I->getZExtValue();
-
         // Add it to the array
         CAParray[iarg] = 1;
     }
@@ -72,8 +72,8 @@ bool LocalAnalysis::runOnModule(Module &M)
 
     // Find all user instructions of function in the module
     for (Value::user_iterator UI = F->user_begin(), UE = F->user_end();
-         UI != UE;
-         ++UI) {
+         UI != UE; ++UI) {
+
         // If it's a call Inst calling the targeted function
         CallInst *CI = dyn_cast<CallInst>(*UI);
         if (CI == NULL || CI->getCalledFunction() != F) {
@@ -89,7 +89,6 @@ bool LocalAnalysis::runOnModule(Module &M)
         // and Map (BB * => array of CAPs)
         AddToBBCAPTable(BBCAPTable, CI->getParent(), CAParray);
         AddToFuncCAPTable(FuncCAPTable, CI->getParent()->getParent(), CAParray);
-
     }
 
     // DEBUG purpose: dump map table

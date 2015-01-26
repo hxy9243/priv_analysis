@@ -7,7 +7,7 @@
  * dependency: libcap
  * link flag: -lcap
  *
- * author:  Hu Xiaoyu
+ * author:  Kevin Hu
  * created: Sep. 20 2014
  */
 
@@ -25,7 +25,8 @@
  * return: 0 on success
  *         -1 on any error
  */
-int priv_raise (const int count, ...) {
+int priv_raise(const int count, ...)
+{
   int i;
 
   cap_t cap;
@@ -35,41 +36,41 @@ int priv_raise (const int count, ...) {
   va_list arglist;
 
   // alloca mem for cap_v_list, return error if count is oversized
-  if (count > CAP_LAST_CAP){
+  if (count > CAP_LAST_CAP) {
     return -1;
   }
-  cap_v_list = (cap_value_t *)alloca (sizeof (cap_value_t) * count);
+  cap_v_list = (cap_value_t *)alloca(sizeof (cap_value_t) * count);
 
   // get the capability of the current process
-  if ( (cap = cap_get_proc ()) == NULL ){
+  if ( (cap = cap_get_proc ()) == NULL ) {
     return -1;
   }
 
   // set cap_v_list to effective flag of capability variable
   va_start (arglist, count);
-  for (i = 0; i < count; i ++){
+  for (i = 0; i < count; i ++) {
     cap_v = va_arg (arglist, int);
     cap_v_list[i] = cap_v;
   }
   va_end (arglist);
 
   // set the flag of cap to value in cap_v_list
-  if ( cap_set_flag (cap,
-		     CAP_EFFECTIVE,
-		     count,
-		     cap_v_list,
-		     CAP_SET) != 0){
+  if ( cap_set_flag(cap,
+                    CAP_EFFECTIVE,
+                    count,
+                    cap_v_list,
+                    CAP_SET) != 0) {
     cap_free (cap);
     return -1;
   }
 
   // set the capability to current proc
-  if ( cap_set_proc (cap) < 0){
-    cap_free (cap);
+  if ( cap_set_proc (cap) < 0) {
+    cap_free(cap);
     return -1;
   }
 
-  cap_free (cap);
+  cap_free(cap);
   return 0;
 }
 
@@ -85,7 +86,8 @@ int priv_raise (const int count, ...) {
  * return: 0 on success
  *         -1 on any error
  */
-int priv_lower (const int count, ...) {
+int priv_lower(const int count, ...)
+{
   int i;
 
   cap_t cap;
@@ -95,30 +97,30 @@ int priv_lower (const int count, ...) {
   va_list arglist;
 
   // alloca mem for cap_v_list, return error if count is oversized
-  if (count > CAP_LAST_CAP){
+  if (count > CAP_LAST_CAP) {
     return -1;
   }
-  cap_v_list = (cap_value_t *)alloca (sizeof (cap_value_t) * count);
+  cap_v_list = (cap_value_t *)alloca(sizeof(cap_value_t) * count);
 
   // get the capability of the current process
-  if ( (cap = cap_get_proc ()) == NULL ){
+  if ( (cap = cap_get_proc ()) == NULL ) {
     return -1;
   }
 
   // set cap_v_list to effective flag of capability variable
   va_start (arglist, count);
-  for (i = 0; i < count; i ++){
-    cap_v = va_arg (arglist, int);
+  for (i = 0; i < count; i ++) {
+    cap_v = va_arg(arglist, int);
     cap_v_list[i] = cap_v;
   }
   va_end (arglist);
 
   // set the flag of cap to value in cap_v_list
-  if ( cap_set_flag (cap,
-		     CAP_EFFECTIVE,
-		     count,
-		     cap_v_list,
-		     CAP_CLEAR) != 0){
+  if ( cap_set_flag(cap,
+                    CAP_EFFECTIVE,
+                    count,
+                    cap_v_list,
+                    CAP_CLEAR) != 0) {
     cap_free (cap);
     return -1;
   }
@@ -145,7 +147,8 @@ int priv_lower (const int count, ...) {
  * return: 0 on success
  *         -1 on any error
  */
-int priv_drop (const int count, ...) {
+int priv_remove(const int count, ...)
+{
   int i;
 
   cap_t cap;
@@ -155,46 +158,46 @@ int priv_drop (const int count, ...) {
   va_list arglist;
 
   // alloca mem for cap_v_list, return error if count is oversized
-  if (count > CAP_LAST_CAP){
+  if (count > CAP_LAST_CAP) {
     return -1;
   }
-  cap_v_list = (cap_value_t *)alloca (sizeof (cap_value_t) * count);
+  cap_v_list = (cap_value_t *)alloca(sizeof (cap_value_t) * count);
 
   // get the capability of the current process
-  if ( (cap = cap_get_proc ()) == NULL ){
+  if ( (cap = cap_get_proc ()) == NULL ) {
     return -1;
   }
 
   // set cap_v_list to effective flag of capability variable
   va_start (arglist, count);
-  for (i = 0; i < count; i ++){
-    cap_v = va_arg (arglist, int);
+  for (i = 0; i < count; i ++) {
+    cap_v = va_arg(arglist, int);
     cap_v_list[i] = cap_v;
   }
-  va_end (arglist);
+  va_end(arglist);
 
   // set the flag of cap to value in cap_v_list
-  if ( cap_set_flag (cap,
-		     CAP_EFFECTIVE,
-		     count,
-		     cap_v_list,
-		     CAP_CLEAR) != 0){
-    cap_free (cap);
+  if ( cap_set_flag(cap,
+                    CAP_EFFECTIVE,
+                    count,
+                    cap_v_list,
+                    CAP_CLEAR) != 0) {
+    cap_free(cap);
     return -1;
   }
 
-  if ( cap_set_flag (cap,
-		     CAP_PERMITTED,
-		     count,
-		     cap_v_list,
-		     CAP_CLEAR) != 0){
-    cap_free (cap);
+  if ( cap_set_flag(cap,
+                    CAP_PERMITTED,
+                    count,
+                    cap_v_list,
+                    CAP_CLEAR) != 0){
+    cap_free(cap);
     return -1;
   }
 
   // set the capability to current proc
-  if ( cap_set_proc (cap) < 0){
-    cap_free (cap);
+  if ( cap_set_proc (cap) < 0) {
+    cap_free(cap);
     return -1;
   }
 
@@ -209,7 +212,8 @@ int priv_drop (const int count, ...) {
  * return: 0 on success
  *         -1 on any error
  */
-int priv_lowerall () {
+int priv_lowerall ()
+{
   int i;
 
   cap_t cap;
@@ -219,32 +223,32 @@ int priv_lowerall () {
   va_list arglist;
 
   // get the capability of the current process
-  if ( (cap = cap_get_proc ()) == NULL ){
+  if ( (cap = cap_get_proc()) == NULL ) {
     return -1;
   }
 
-  cap_v_list = (cap_value_t *)alloca (sizeof (cap_value_t) * CAP_NUM);
+  cap_v_list = (cap_value_t *)alloca(sizeof(cap_value_t) * CAP_NUM);
 
   // set cap_v_list to effective flag of capability variable
-  for (i = 0; i < CAP_NUM; i ++){
+  for (i = 0; i < CAP_NUM; i ++) {
     cap_v_list[i] = i;
   }
 
   // set the flag of cap to value in cap_v_list
-  if ( cap_set_flag (cap,
-		     CAP_EFFECTIVE,
-		     CAP_NUM,
-		     cap_v_list,
-		     CAP_CLEAR) != 0){
+  if ( cap_set_flag(cap,
+                    CAP_EFFECTIVE,
+                    CAP_NUM,
+                    cap_v_list,
+                    CAP_CLEAR) != 0){
     cap_free (cap);
     return -1;
   }
   // set the capability to current proc
-  if ( cap_set_proc (cap) < 0){
-    cap_free (cap);
+  if ( cap_set_proc(cap) < 0){
+    cap_free(cap);
     return -1;
   }
 
-  cap_free (cap);
+  cap_free(cap);
   return 0;
 }

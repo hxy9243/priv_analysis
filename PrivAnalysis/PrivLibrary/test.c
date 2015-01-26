@@ -26,29 +26,39 @@ int main (int argc, char** argv){
   		  CAP_DAC_OVERRIDE,
   		  CAP_DAC_READ_SEARCH
   		  ) != 0 ){
-    fprintf (stderr, "Error dropping cap 0\n");
+    fprintf (stderr, "Error lower cap 0\n");
   }
 
 
-  if ( priv_drop (3,
-  		  CAP_SYS_ADMIN,
-  		  CAP_AUDIT_WRITE,
-  		  CAP_SYS_BOOT) != 0){
-    fprintf (stderr, "Error raising cap 1\n");
+  if ( priv_remove (3,
+                    CAP_SYS_ADMIN,
+                    CAP_AUDIT_WRITE,
+                    CAP_SYS_BOOT) != 0){
+    fprintf (stderr, "Error removing cap 1\n");
   }
 
-  if ( priv_raise (9,
-  		  CAP_AUDIT_CONTROL,
-  		  CAP_SYSLOG,
-  		  CAP_FOWNER,
-  		  CAP_FSETID,
-  		  CAP_SYS_BOOT,
-  		  CAP_CHOWN,
-  		  CAP_SYS_CHROOT,
-  		  CAP_AUDIT_WRITE,
-  		  CAP_SYS_BOOT) != 0){
-    fprintf (stderr, "Error raising cap 2\n");
+  /* if ( priv_raise (9, */
+  /* 		  CAP_AUDIT_CONTROL, */
+  /* 		  CAP_SYSLOG, */
+  /* 		  CAP_FOWNER, */
+  /* 		  CAP_FSETID, */
+  /* 		  CAP_SYS_BOOT, */
+  /* 		  CAP_CHOWN, */
+  /* 		  CAP_SYS_CHROOT, */
+  /* 		  CAP_AUDIT_WRITE, */
+  /* 		  CAP_SYS_BOOT) != 0){ */
+  /*   fprintf (stderr, "Error raising cap\n"); */
+  /* } */
+
+
+  if ( priv_remove (4,
+                    CAP_FSETID,
+                    CAP_AUDIT_CONTROL,
+                    CAP_SYS_ADMIN,
+                    CAP_SYS_BOOT) != 0){
+    fprintf (stderr, "Error removing cap again\n");
   }
+
 
   if ( priv_lowerall() < 0 ){
     fprintf (stderr, "Error lowering all privs\n");
