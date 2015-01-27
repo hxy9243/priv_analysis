@@ -96,8 +96,7 @@ void PropagateAnalysis::Propagate(Module &M, FuncCAPTable_t &FuncCAPTable)
 
         // Iterate through the callgraph
         for (CallGraph::iterator CI = CG.begin(), CE = CG.end();
-             CI != CE;
-             ++ CI) {
+             CI != CE; ++ CI) {
             // Get CallgraphNode
             CallGraphNode *N = CI->second;
             Function *FCaller = N->getFunction();
@@ -111,8 +110,7 @@ void PropagateAnalysis::Propagate(Module &M, FuncCAPTable_t &FuncCAPTable)
             CAPArray_t &callerOut = FuncCAPTable_out[FCaller];
             // Iterate through Callgraphnode for callees
             for (CallGraphNode::iterator RI = N->begin(), RE = N->end();
-                 RI != RE;
-                 ++ RI) {
+                 RI != RE; ++ RI) {
                 // Get callee
                 Function *FCallee = RI->second->getFunction();
                 if (!FCallee) {
