@@ -34,14 +34,23 @@ bool ExternFunCall::runOnModule(Module &M)
         if (F == NULL) {
             continue;
         }
-
         if (F->begin() == F->end()) {
-            errs() << F->getName() << "\n";
+            extern_funcs.push_back(F);
         }
-
     }
-
     return false;
+}
+
+
+// Print out the 
+void ExternFunCall::print(raw_ostream & O,
+                          const Module * M) const{
+
+    for (auto FI = extern_funcs.begin(), FE = extern_funcs.end();
+         FI != FE; ++FI) {
+        O << ((*FI)->getName()) << "\n";
+        // O << (*FI) << "\n";
+    }
 }
 
 

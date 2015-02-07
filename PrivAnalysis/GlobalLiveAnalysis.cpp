@@ -81,7 +81,7 @@ bool GlobalLiveAnalysis::runOnModule(Module &M)
         ischanged = false;
 
         // iterate through all functions
-        for (Module::iterator FI = M.begin(), FE = M.end(); FI != FE; ++ FI) {
+        for (Module::iterator FI = M.begin(), FE = M.end(); FI != FE; ++FI) {
             Function *F = dyn_cast<Function>(FI);
             if (F == NULL || F->empty()) {
                 continue;
@@ -126,7 +126,7 @@ bool GlobalLiveAnalysis::runOnModule(Module &M)
                                                 BBCAPTable_out[B]);
                 }
 
-                // if it's a Priv Call BB
+                // if it's a Priv Call BB, Propagate privilege to the in of BB
                 if (BBCAPTable.find(B) != BBCAPTable.end()) {
                     ischanged |= UnionCAPArrays(BBCAPTable_in[B], BBCAPTable[B]);
                 }
@@ -140,7 +140,7 @@ bool GlobalLiveAnalysis::runOnModule(Module &M)
                     ischanged |= UnionCAPArrays(BBCAPTable_out[B], 
                                                 BBCAPTable_in[SuccessorBB]);
                 }
-                // propagate live info to in[B]
+                // propagate live info from out[B] to in[B] for each BB
                 ischanged |= UnionCAPArrays(BBCAPTable_in[B], BBCAPTable_out[B]);
             } // iterate all BBs
         } // iterate all functions
@@ -158,6 +158,40 @@ bool GlobalLiveAnalysis::runOnModule(Module &M)
         if (DiffCAPArrays(BBCAPTable_drop[B], CAPArray_in, CAPArray_out) == 0) {
             BBCAPTable_drop.erase(B);
         }
+
+        // OUTPUT Live Set change info
+        else {
+            errs() << "// ---------------------- //\n"
+                   << "Debug output for Live CAP set change in function "
+                   << B->getParent()->getName()
+                   << "\n// ---------------------- //\n";
+
+            errs() << "BB in:\n";
+            for (unsigned i = 0; i < CAPArray_in.size(); ++i) {
+                if (CAPArray_in[i]) {
+                    errs() << i << "\t";
+                }
+            }
+
+            errs() << "\nBB out:\n";
+            for (unsigned i = 0; i < CAPArray_out.size(); ++i) {
+                if (CAPArray_out[i]) {
+                    errs() << i << "\t";
+                }
+            }
+
+            errs() << "\nBB change:\n";
+            for (unsigned i = 0; i < BBCAPTable_drop[B].size(); ++i) {
+                if (BBCAPTable_drop[B][i]) {
+                    errs() << i << "\t";
+                }
+            }
+            errs() << "\n// ---------------------- //\n"
+                   << "Debug output for Live CAP set change\n"
+                   << "// ---------------------- //\n";
+
+        }
+
     }
 
     ////////////////////////////////////////

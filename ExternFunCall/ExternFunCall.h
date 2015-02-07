@@ -15,6 +15,7 @@
 #include "llvm/Pass.h"
 #include "llvm/Support/raw_ostream.h"
 
+#include <vector>
 
 namespace llvm{
 namespace externfuncall {
@@ -37,8 +38,10 @@ public:
     // Preserve all analysis usage
     void getAnalysisUsage(AnalysisUsage &AU) const;
 
-private:
+    void print(raw_ostream & O, const Module * M) const;
 
+private:
+    std::vector<Function *> extern_funcs;
 };
 
 
