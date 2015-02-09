@@ -70,8 +70,8 @@ bool GlobalLiveAnalysis::runOnModule(Module &M)
 
     // FuncLiveCAPTable maps from Functions to the
     // live CAP in the Functions
-//    FuncCAPTable_t FuncLiveCAPTable_in;
-//    FuncCAPTable_t FuncLiveCAPTable_out;
+    // FuncCAPTable_t FuncLiveCAPTable_in;
+    // FuncCAPTable_t FuncLiveCAPTable_out;
     BBCAPTable_t BBCAPTable_in;
     BBCAPTable_t BBCAPTable_out;
 
@@ -134,8 +134,7 @@ bool GlobalLiveAnalysis::runOnModule(Module &M)
                 // propagate from all its successors
                 TerminatorInst *BBTerm = B->getTerminator();
                 for(unsigned BSI = 0, BSE = BBTerm->getNumSuccessors(); 
-                    BSI != BSE;
-                    ++ BSI) {
+                    BSI != BSE; ++ BSI) {
                     BasicBlock *SuccessorBB = BBTerm->getSuccessor(BSI);
                     ischanged |= UnionCAPArrays(BBCAPTable_out[B], 
                                                 BBCAPTable_in[SuccessorBB]);
@@ -155,44 +154,69 @@ bool GlobalLiveAnalysis::runOnModule(Module &M)
         BasicBlock *B = bi->first;
         CAPArray_t &CAPArray_out = bi->second;
         CAPArray_t &CAPArray_in = BBCAPTable_in[B];
-        if (DiffCAPArrays(BBCAPTable_drop[B], CAPArray_in, CAPArray_out) == 0) {
-            BBCAPTable_drop.erase(B);
+
+        // compare the in and the out of the same BB
+        if (DiffCAPArrays(BBCAPTable_dropEnd[B], CAPArray_in, CAPArray_out) == 0) {
+            BBCAPTable_dropEnd.erase(B);
         }
 
-        // OUTPUT Live Set change info
-        else {
-            errs() << "// ---------------------- //\n"
-                   << "Debug output for Live CAP set change in function "
-                   << B->getParent()->getName()
-                   << "\n// ---------------------- //\n";
+        // compare the out with all ins of the child BB, put in drop start of children
+        TerminatorInst *BBTerm = B->getTerminator();
+        for(unsigned BSI = 0, BSE = BBTerm->getNumSuccessors(); 
+            BSI != BSE; ++ BSI) {
+            BasicBlock *SuccessorBB = BBTerm->getSuccessor(BSI);
+            CAPArray_t CAPSuccessor_in = BBCAPTable_in[SuccessorBB];
 
-            errs() << "BB in:\n";
-            for (unsigned i = 0; i < CAPArray_in.size(); ++i) {
-                if (CAPArray_in[i]) {
-                    errs() << i << "\t";
-                }
+            if (DiffCAPArrays(BBCAPTable_dropStart[SuccessorBB], 
+                              CAPArray_out, CAPSuccessor_in)) {
+                errs() << "Got it !\n";
             }
-
-            errs() << "\nBB out:\n";
-            for (unsigned i = 0; i < CAPArray_out.size(); ++i) {
-                if (CAPArray_out[i]) {
-                    errs() << i << "\t";
-                }
-            }
-
-            errs() << "\nBB change:\n";
-            for (unsigned i = 0; i < BBCAPTable_drop[B].size(); ++i) {
-                if (BBCAPTable_drop[B][i]) {
-                    errs() << i << "\t";
-                }
-            }
-            errs() << "\n// ---------------------- //\n"
-                   << "Debug output for Live CAP set change\n"
-                   << "// ---------------------- //\n";
-
         }
+
+        // // OUTPUT Live Set change info
+        // else {
+        //     errs() << "// ---------------------- //\n"
+        //            << "Debug output for Live CAP set change in function "
+        //            << B->getParent()->getName()
+        //            << "\n// ---------------------- //\n";
+
+        //     errs() << "BB in:\n";
+        //     for (unsigned i = 0; i < CAPArray_in.size(); ++i) {
+        //         if (CAPArray_in[i]) {
+        //             errs() << i << "\t";
+        //         }
+        //     }
+
+        //     errs() << "\nBB out:\n";
+        //     for (unsigned i = 0; i < CAPArray_out.size(); ++i) {
+        //         if (CAPArray_out[i]) {
+        //             errs() << i << "\t";
+        //         }
+        //     }
+
+        //     errs() << "\nBB change:\n";
+        //     for (unsigned i = 0; i < BBCAPTable_drop[B].size(); ++i) {
+        //         if (BBCAPTable_drop[B][i]) {
+        //             errs() << i << "\t";
+        //         }
+        //     }
+        //     errs() << "\n// ---------------------- //\n"
+        //            << "Debug output for Live CAP set change\n"
+        //            << "// ---------------------- //\n";
+
+        // }
 
     }
+
+    // Remove unnecessary BBDropstart
+    for (auto bi = BBCAPTable_dropStart.begin(); 
+         bi != BBCAPTable_dropStart.end(); ++bi) {
+
+        if (IsCAPArrayEmpty(bi->second)) {
+            BBCAPTable_dropStart.erase(bi->first);
+        }
+    }
+
 
     ////////////////////////////////////////
     // DEBUG
@@ -203,7 +227,7 @@ bool GlobalLiveAnalysis::runOnModule(Module &M)
     ////////////////////////////////////////
     // DEBUG
     ////////////////////////////////////////
-    errs() << "BBCAPTable size " << BBCAPTable_drop.size() << "\n";
+    errs() << "BBCAPTable size " << BBCAPTable_dropEnd.size() << "\n";
     // Dump in and out for each BB
     int count = 0;
     for (auto bi = BBCAPTable_in.begin(); bi != BBCAPTable_in.end(); ++bi) {
@@ -233,12 +257,27 @@ bool GlobalLiveAnalysis::runOnModule(Module &M)
     errs() << "\n";
 
     // Dump the drop for each BB
-    for (auto bi = BBCAPTable_drop.begin(); bi != BBCAPTable_drop.end(); ++bi) {
+    for (auto bi = BBCAPTable_dropEnd.begin(); bi != BBCAPTable_dropEnd.end(); ++bi) {
         BasicBlock *B = bi->first;
         CAPArray_t &CAPArray_drop = bi->second;
         ++count;
         errs() << "BB" << count
-               << " drop " << B->getParent()->getName() << ":  \t";
+               << " drop End " << B->getParent()->getName() << ":  \t";
+        for (unsigned int i = 0; i < CAPArray_drop.size(); ++i) {
+            if(CAPArray_drop[i]){
+                errs() << i << "\t";
+            }
+        }
+        errs() << "\n";
+    }
+    errs() << "\n";
+
+    for (auto bi = BBCAPTable_dropStart.begin(); bi != BBCAPTable_dropStart.end(); ++bi) {
+        BasicBlock *B = bi->first;
+        CAPArray_t &CAPArray_drop = bi->second;
+        ++count;
+        errs() << "BB" << count
+               << " drop Start " << B->getParent()->getName() << ":  \t";
         for (unsigned int i = 0; i < CAPArray_drop.size(); ++i) {
             if(CAPArray_drop[i]){
                 errs() << i << "\t";

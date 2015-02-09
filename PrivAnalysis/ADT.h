@@ -57,6 +57,9 @@ bool DiffCAPArrays(CAPArray_t &dest, CAPArray_t &A, CAPArray_t &B);
 // Find the reverse of cap array
 void ReverseCAPArray(CAPArray_t &A);
 
+// If the CAPArray is empty
+bool IsCAPArrayEmpty(CAPArray_t &A);
+
 
 // for debugging purpose
 void dumpCAPTable(FuncCAPTable_t &CT);

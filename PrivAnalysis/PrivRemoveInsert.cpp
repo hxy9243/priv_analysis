@@ -100,7 +100,9 @@ void PrivRemoveInsert::addToArgs(std::vector<Value *>& Args,
 bool PrivRemoveInsert::runOnModule(Module &M)
 {
     GlobalLiveAnalysis &GA = getAnalysis<GlobalLiveAnalysis>();
-    BBCAPTable_t BBCAPTable_drop = GA.BBCAPTable_drop;
+    BBCAPTable_t BBCAPTable_dropEnd = GA.BBCAPTable_dropEnd;
+    BBCAPTable_t BBCAPTable_dropStart = GA.BBCAPTable_dropStart;
+
     FuncCAPTable_t FuncLiveCAPTable_in = GA.FuncLiveCAPTable_in;
     Function *PrivRemoveCall = getRemoveCall(M);
     std::vector<Value *> Args = {};
@@ -109,6 +111,7 @@ bool PrivRemoveInsert::runOnModule(Module &M)
     Function *mainFunc = M.getFunction("main");
     CAPArray_t &FirstCAPArray = FuncLiveCAPTable_in[mainFunc];
 
+    // Find all CAPs that's not alive - reverse of FuncLiveIn
     ReverseCAPArray(FirstCAPArray);
     addToArgs(Args, FirstCAPArray);
 
@@ -118,9 +121,8 @@ bool PrivRemoveInsert::runOnModule(Module &M)
                      PRIV_REMOVE_CALL, firstInst);
 
     // Insert call to all BBs with removable capabilities  
-    for (auto BI = BBCAPTable_drop.begin(), BE = BBCAPTable_drop.end();
-         BI != BE;
-         ++BI) {
+    for (auto BI = BBCAPTable_dropEnd.begin(), BE = BBCAPTable_dropEnd.end();
+         BI != BE; ++BI) {
         BasicBlock *BB = BI->first;
         CAPArray_t &CAPArray = BI->second;
         Args.clear();
@@ -137,6 +139,27 @@ bool PrivRemoveInsert::runOnModule(Module &M)
         assert(BB->getTerminator() != NULL && "BB has a NULL teminator!");
         CallInst::Create(PrivRemoveCall, ArrayRef<Value *>(Args), 
                          PRIV_REMOVE_CALL, BB->getTerminator());
+    }
+
+
+    // Insert at the start of the dropStart
+    for (auto BI = BBCAPTable_dropStart.begin(), BE = BBCAPTable_dropStart.end();
+         BI != BE; ++BI) {
+        BasicBlock *BB = BI->first;
+        CAPArray_t &CAPArray = BI->second;
+        Args.clear();
+
+        addToArgs(Args, CAPArray);
+
+        // DEBUG
+        errs() << "arg size " << Args.size() << "\n";
+        errs() << "Adding remove call to BB in "
+               << BB->getParent()->getName()
+               << "\n";
+
+        // create call instruction
+        CallInst::Create(PrivRemoveCall, ArrayRef<Value *>(Args), 
+                         PRIV_REMOVE_CALL, BB->getFirstNonPHI());
     }
 
     return true;

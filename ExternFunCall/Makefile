@@ -2,7 +2,7 @@
 ##===----------------------------------------------------------------------===##
 
 LEVEL = ../../..
-LIBRARYNAME = ExternFunCall
+LIBRARYNAME = LLVMExternFunCall
 LOADABLE_MODULE = 1
 USEDLIBS =
 

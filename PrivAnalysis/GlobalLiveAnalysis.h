@@ -31,7 +31,8 @@ struct GlobalLiveAnalysis : public ModulePass
 public:
     static char ID;
 
-    BBCAPTable_t BBCAPTable_drop;
+    BBCAPTable_t BBCAPTable_dropEnd;
+    BBCAPTable_t BBCAPTable_dropStart;
     FuncCAPTable_t FuncLiveCAPTable_in;
     FuncCAPTable_t FuncLiveCAPTable_out;
 

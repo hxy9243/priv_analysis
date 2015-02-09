@@ -101,15 +101,14 @@ bool DiffCAPArrays(CAPArray_t &dest, CAPArray_t &A, CAPArray_t &B)
 {
     bool hasContent = false;
     for (unsigned int i = 0; i < A.size(); ++i){
-        dest[i] = A[i] & (~B[i]);
-        hasContent |= dest[i];
+        assert( (A[i] | ~B[i]) && "\nBUG in Diff CAPArrays!\n\n");
 
-        if (~A[i] & B[i]){
-            errs() << "\nBUG in Diff CAPArrays!\n\n";
-        }
+        dest[i] |= A[i] & (~B[i]);
+        hasContent |= dest[i];
     }
     return hasContent;
 } 
+
 
 // Find the reverse of cap array
 // param: the CAParray to reverse
@@ -118,6 +117,18 @@ void ReverseCAPArray(CAPArray_t &A)
     for (auto i = A.begin(), e = A.end(); i != e; ++i) {
         *i = !(*i);
     }
+}
+
+// If the CAPArray is empty
+// @A: the CAPArray to examine
+// return: if it's empty
+bool IsCAPArrayEmpty(CAPArray_t &A)
+{
+    bool notEmpty = false;
+    for (auto i = A.begin(), e = A.end(); i != e; ++i) {
+        notEmpty |= *i;
+    }
+    return !notEmpty;
 }
 
 

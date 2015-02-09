@@ -39,6 +39,8 @@ void LocalAnalysis::RetrieveAllCAP(CallInst *CI, CAPArray_t &CAParray)
     int numArgs = (int) CI->getNumArgOperands();
 
     assert(CI != NULL && "The CallInst is NULL!\n");
+    errs() << "Retrieving CAPs: \t";
+
     // Note: Skip the first param of priv_lower for it's num of args
     for (int i = 1; i < numArgs; ++i) {
         // retrieve integer value
@@ -47,7 +49,10 @@ void LocalAnalysis::RetrieveAllCAP(CallInst *CI, CAPArray_t &CAParray)
         unsigned int iarg = I->getZExtValue();
         // Add it to the array
         CAParray[iarg] = 1;
+
+        errs() << iarg << "\t"; 
     }
+    errs() << "\n";
 }
 
 
