@@ -99,8 +99,7 @@ bool GlobalLiveAnalysis::runOnModule(Module &M)
       
             // iterate all BBs
             for (Function::iterator BI = F->begin(), BE = F->end();
-                 BI != BE;
-                 ++ BI) {
+                 BI != BE; ++ BI) {
                 BasicBlock *B = dyn_cast<BasicBlock>(BI);
                 if (B == NULL) {
                     continue;
@@ -167,45 +166,9 @@ bool GlobalLiveAnalysis::runOnModule(Module &M)
             BasicBlock *SuccessorBB = BBTerm->getSuccessor(BSI);
             CAPArray_t CAPSuccessor_in = BBCAPTable_in[SuccessorBB];
 
-            if (DiffCAPArrays(BBCAPTable_dropStart[SuccessorBB], 
-                              CAPArray_out, CAPSuccessor_in)) {
-                errs() << "Got it !\n";
-            }
+            DiffCAPArrays(BBCAPTable_dropStart[SuccessorBB], 
+                          CAPArray_out, CAPSuccessor_in);
         }
-
-        // // OUTPUT Live Set change info
-        // else {
-        //     errs() << "// ---------------------- //\n"
-        //            << "Debug output for Live CAP set change in function "
-        //            << B->getParent()->getName()
-        //            << "\n// ---------------------- //\n";
-
-        //     errs() << "BB in:\n";
-        //     for (unsigned i = 0; i < CAPArray_in.size(); ++i) {
-        //         if (CAPArray_in[i]) {
-        //             errs() << i << "\t";
-        //         }
-        //     }
-
-        //     errs() << "\nBB out:\n";
-        //     for (unsigned i = 0; i < CAPArray_out.size(); ++i) {
-        //         if (CAPArray_out[i]) {
-        //             errs() << i << "\t";
-        //         }
-        //     }
-
-        //     errs() << "\nBB change:\n";
-        //     for (unsigned i = 0; i < BBCAPTable_drop[B].size(); ++i) {
-        //         if (BBCAPTable_drop[B][i]) {
-        //             errs() << i << "\t";
-        //         }
-        //     }
-        //     errs() << "\n// ---------------------- //\n"
-        //            << "Debug output for Live CAP set change\n"
-        //            << "// ---------------------- //\n";
-
-        // }
-
     }
 
     // Remove unnecessary BBDropstart
