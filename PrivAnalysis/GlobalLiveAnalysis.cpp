@@ -172,10 +172,10 @@ bool GlobalLiveAnalysis::runOnModule(Module &M)
     }
 
     // Remove unnecessary BBDropstart
-    for (auto bi = BBCAPTable_dropStart.begin(); 
-         bi != BBCAPTable_dropStart.end(); ++bi) {
+    for (auto bi = BBCAPTable_out.begin(); 
+         bi != BBCAPTable_out.end(); ++bi) {
 
-        if (IsCAPArrayEmpty(bi->second)) {
+        if (IsCAPArrayEmpty(BBCAPTable_dropStart[bi->first])) {
             BBCAPTable_dropStart.erase(bi->first);
         }
     }
