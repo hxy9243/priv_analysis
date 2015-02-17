@@ -252,3 +252,37 @@ int priv_lowerall ()
   cap_free(cap);
   return 0;
 }
+
+
+
+/*
+ * Print out the capability of the current process
+ */
+void print_cap()
+{
+    int i;
+    cap_t cap;
+    cap_flag_value_t value;
+    cap = cap_get_proc();
+
+    printf ("\nPERM\t");
+    for (i = 0; i <= CAP_LAST_CAP; i ++){
+        cap_get_flag (cap, i, CAP_PERMITTED, &value);
+        printf ("%d", value == CAP_SET);
+    }
+
+    printf ("\nINHERIT\t");
+    for (i = 0; i <= CAP_LAST_CAP; i ++){
+        cap_get_flag (cap, i, CAP_INHERITABLE, &value);
+        printf ("%d", value == CAP_SET);
+    }
+
+    printf ("\nEFFECT\t");
+    for (i = 0; i <= CAP_LAST_CAP; i ++){
+        cap_get_flag (cap, i, CAP_EFFECTIVE, &value);
+        printf ("%d", value == CAP_SET);
+    }
+    printf("\n");
+
+    cap_free(cap);
+}

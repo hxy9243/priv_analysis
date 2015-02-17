@@ -71,4 +71,9 @@ int priv_drop (const int count, ...);
 int priv_lowerall ();
 
 
+/*
+ * Print out the capability of the current process
+ */
+void print_cap();
+
 #endif

@@ -64,7 +64,7 @@ int main (int argc, char** argv){
     fprintf (stderr, "Error lowering all privs\n");
   }
 
-  if ( priv_raise (1, CAP_CHOWN) < 0 ){
+  if ( priv_raise (5, CAP_CHOWN, CAP_FOWNER, CAP_SETUID, CAP_SYS_CHROOT) < 0 ){
     fprintf (stderr, "Error raising priv again\n");
   }
 
@@ -90,7 +90,37 @@ int main (int argc, char** argv){
 
   }
 
+  printf("uid is %d, euid is %d\n", getuid(), geteuid());
+  setuid(getuid());
+  printf("uid is %d, euid is %d\n", getuid(), geteuid());
+
+
+  cap = cap_get_proc();
+  printf ("\tPERM\tINHERIT\tEFFECT\n");
+  for (i = 0; i <= CAP_LAST_CAP; i ++){
+
+    printf ("%d\t", i);
+
+    cap_get_flag (cap, i, CAP_PERMITTED, &value);
+    printf ("%d\t", value == CAP_SET);
+
+    cap_get_flag (cap, i, CAP_INHERITABLE, &value);
+    printf ("%d\t", value == CAP_SET);
+
+    cap_get_flag (cap, i, CAP_EFFECTIVE, &value);
+    printf ("%d\t", value == CAP_SET);
+
+    printf ("\n");
+
+  }
+
   cap_free (cap);
+
+  if (chroot("/") < 0) {
+      fprintf(stderr, "error chrooting\n");
+  }
+
+
   return 0;
 }
 
