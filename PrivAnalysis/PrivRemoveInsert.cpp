@@ -47,9 +47,8 @@ bool PrivRemoveInsert::doInitialization(Module &M)
 Function *PrivRemoveInsert::getRemoveFunc(Module &M)
 {
     std::vector<Type *> Params;
-    Type *TypeInt = IntegerType::get(getGlobalContext(), 32);
-
-    Params.push_back(TypeInt);
+    Type *IntType = IntegerType::get(getGlobalContext(), 32);
+    Params.push_back(IntType);
     FunctionType *RemoveCallType = FunctionType::get(TypeInt,
                                                      ArrayRef<Type *>(Params),
                                                      true);

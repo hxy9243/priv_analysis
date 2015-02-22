@@ -15,6 +15,9 @@
 #include "GlobalLiveAnalysis.h"
 
 
+#define ADD_COUNT_FUNC "addCount"
+
+
 using namespace llvm::privAnalysis;
 
 namespace llvm {
@@ -42,8 +45,11 @@ public:
     // Print out information for debugging purposes
     void print(raw_ostream &O, const Module *M) const;
 private:
-    
-    Function *
+    Function *getInitCountFunc(Module &M);
+
+    Function *getAddCountFunc(Module &M);
+
+    Function *getReportFunc(Module &M);
 };
 
 

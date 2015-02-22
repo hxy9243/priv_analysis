@@ -22,19 +22,74 @@ using namespace llvm::dynCount;
 // constructor
 DynCount::DynCount() : ModulePass(ID) { };
 
+// Preserve analysis usage
+void DynCount::getAnalysisUsage(AnalysisUsage &AU) const
+{
+    AU.addRequired<GlobalLiveAnalysis>();
+}
 
 
+// get add count function
+Function* DynCount::getAddCountFunc(Module &M)
+{
+    std::vector<Type *> Params;
+    Type* VoidType = Type::getVoidTy(getGlobalContext());
+    Type *IntType = IntegerType::get(getGlobalContext(), 32);
+    Params.push_back(IntType);
+
+    FunctionType *AddCountFuncType = FunctionType::get(VoidType,
+                                                       ArrayRef<Type *>(Params), false);
+    Constant *AddCountFunc = M.getOrInsertFunction(ADD_COUNT_FUNC,
+                                                   AddCountFuncType);
+
+    return dyn_cast<Function>(AddCountFunc);
+}
+
+
+// Insert params to function type
+// param: Args - the Args vector to insert into
+//        CAPArray - the array of CAP to 
+void DynCount::addToArgs(std::vector<Value *>& Args,
+                         const CAPArray_t &CAPArray)
+{
+    int cap_num = 0;
+    int cap = 0;
+
+    for (auto ci = CAPArray.begin(), ce = CAPArray.end();
+         ci != ce; ++ci) {
+        if (*ci == 0) {
+            cap++;
+            continue;
+        }
+
+        // add to args vector
+        Constant *arg = ConstantInt::get
+            (IntegerType::get(getGlobalContext(), 32), cap);
+        Args.push_back(arg);
+
+        cap++;
+        cap_num++;
+    }
+
+    // Add the number of args to the front
+    ConstantInt *arg_num = ConstantInt::get
+        (IntegerType::get(getGlobalContext(), 32), cap_num);
+    Args.insert(Args.begin(), arg_num);
+
+    return;
+}
 
 
 // run on module
 bool DynCount::runOnModule(Module &M)
 {
-    // StructType::create(M.getContext(), "CAPArray_t");
+    
 
     
 
     return false;
 }
+
 
 
 
