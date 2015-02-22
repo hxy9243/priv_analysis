@@ -4,5 +4,6 @@ add_llvm_loadable_module( LLVMPrivAnalysis
   PropagateAnalysis.cpp
   SplitBB.cpp
   GlobalPrivAnalysis.cpp
+  DynCount.cpp
   )
 

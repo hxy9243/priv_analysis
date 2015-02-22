@@ -44,7 +44,7 @@ bool PrivRemoveInsert::doInitialization(Module &M)
 
 // Get PrivRemove function 
 // param M: the Module class
-Function *PrivRemoveInsert::getRemoveCall(Module &M)
+Function *PrivRemoveInsert::getRemoveFunc(Module &M)
 {
     std::vector<Type *> Params;
     Type *TypeInt = IntegerType::get(getGlobalContext(), 32);
@@ -78,8 +78,7 @@ void PrivRemoveInsert::addToArgs(std::vector<Value *>& Args,
 
         // add to args vector
         Constant *arg = ConstantInt::get
-            (IntegerType::
-             get(getGlobalContext(), 32), cap);
+            (IntegerType::get(getGlobalContext(), 32), cap);
         Args.push_back(arg);
 
         cap++;
@@ -88,8 +87,7 @@ void PrivRemoveInsert::addToArgs(std::vector<Value *>& Args,
 
     // Add the number of args to the front
     ConstantInt *arg_num = ConstantInt::get
-        (IntegerType::get(getGlobalContext(), 32), 
-         cap_num);
+        (IntegerType::get(getGlobalContext(), 32), cap_num);
     Args.insert(Args.begin(), arg_num);
 
     return;
@@ -104,7 +102,7 @@ bool PrivRemoveInsert::runOnModule(Module &M)
     BBCAPTable_t BBCAPTable_dropStart = GA.BBCAPTable_dropStart;
 
     FuncCAPTable_t FuncLiveCAPTable_in = GA.FuncLiveCAPTable_in;
-    Function *PrivRemoveCall = getRemoveCall(M);
+    Function *PrivRemoveFunc = getRemoveFunc(M);
     std::vector<Value *> Args = {};
 
     // Insert remove call at the top of the main function
@@ -117,7 +115,7 @@ bool PrivRemoveInsert::runOnModule(Module &M)
 
     Instruction *firstInst = dyn_cast<Instruction>
         (mainFunc->begin()->begin());
-    CallInst::Create(PrivRemoveCall, ArrayRef<Value *>(Args), 
+    CallInst::Create(PrivRemoveFunc, ArrayRef<Value *>(Args), 
                      PRIV_REMOVE_CALL, firstInst);
 
     // Insert call to all BBs with removable capabilities  
@@ -131,7 +129,7 @@ bool PrivRemoveInsert::runOnModule(Module &M)
 
         // create call instruction
         assert(BB->getTerminator() != NULL && "BB has a NULL teminator!");
-        CallInst::Create(PrivRemoveCall, ArrayRef<Value *>(Args), 
+        CallInst::Create(PrivRemoveFunc, ArrayRef<Value *>(Args), 
                          PRIV_REMOVE_CALL, BB->getTerminator());
     }
 
@@ -146,7 +144,7 @@ bool PrivRemoveInsert::runOnModule(Module &M)
         addToArgs(Args, CAPArray);
 
         // create call instruction
-        CallInst::Create(PrivRemoveCall, ArrayRef<Value *>(Args), 
+        CallInst::Create(PrivRemoveFunc, ArrayRef<Value *>(Args), 
                          PRIV_REMOVE_CALL, BB->getFirstNonPHI());
     }
 

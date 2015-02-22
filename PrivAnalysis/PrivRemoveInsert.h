@@ -46,7 +46,7 @@ public:
     void print(raw_ostream &O, const Module *M) const;
 private:
     // get remove call
-    Function *getRemoveCall(Module &M);
+    Function *getRemoveFunc(Module &M);
 
     // add args to function call
     void addToArgs(std::vector<Value *>& Args,
