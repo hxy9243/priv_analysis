@@ -19,8 +19,6 @@
 #include "ADT.h"
 #include "SplitBB.h"
 
-#include <vector>
-
 using namespace llvm::privAnalysis;
 
 namespace llvm {
@@ -39,6 +37,9 @@ public:
     FuncCAPTable_t FuncLiveCAPTable_in;
     FuncCAPTable_t FuncLiveCAPTable_out;
 
+    // The unique capability set
+    CAPSet_t CAPSet;
+
     GlobalLiveAnalysis();
 
     // Initialization
@@ -53,8 +54,8 @@ public:
     // Print out information for debugging purposes
     void print(raw_ostream &O, const Module *M) const;
 private:
-    void getAllReturnBBs(std::vector<BasicBlock *> &ReturnBBs);
-
+    // get the unique privilege set 
+    void findUniqueSet();
 };
 
 } // namespace globalLiveAnalysis

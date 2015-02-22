@@ -12,7 +12,7 @@
 #include <linux/capability.h>
 #include <map>
 #include <array>
-#include <unordered_set>
+#include <unordered_map>
 #include <string>
 
 // Constant Definition
@@ -62,7 +62,7 @@ static const std::string CAPString[CAP_TOTALNUM] = {
     "CapMacAdmin",
     "CapSyslog",
     "CapWakeAlarm",
-    "CapBlockSuspend",
+    "CapBlockSuspend"
 };
 
 
@@ -79,8 +79,9 @@ typedef std::map<BasicBlock *, CAPArray_t> BBCAPTable_t;
 // The map from basicblock to CAPArray
 typedef std::map<BasicBlock *, Function*> BBFuncTable_t;
 
-// The set for CAPArray 
-typedef std::unordered_set<CAPArray_t> CAPSet_t;
+// The unique capabiltiy set for all basic blocks
+typedef std::map<CAPArray_t, BasicBlock *> CAPSet_t;
+
 
 // Data manipulation functions
 // Get the function where the CallInst is in, add to map
