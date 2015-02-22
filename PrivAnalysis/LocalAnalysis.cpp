@@ -37,9 +37,7 @@ bool LocalAnalysis::doInitialization(Module &M)
 void LocalAnalysis::RetrieveAllCAP(CallInst *CI, CAPArray_t &CAParray)
 {
     int numArgs = (int) CI->getNumArgOperands();
-
     assert(CI != NULL && "The CallInst is NULL!\n");
-    errs() << "Retrieving CAPs: \t";
 
     // Note: Skip the first param of priv_lower for it's num of args
     for (int i = 1; i < numArgs; ++i) {
@@ -47,12 +45,10 @@ void LocalAnalysis::RetrieveAllCAP(CallInst *CI, CAPArray_t &CAParray)
         Value *v = CI->getArgOperand(i);
         ConstantInt *I = dyn_cast<ConstantInt>(v);
         unsigned int iarg = I->getZExtValue();
+
         // Add it to the array
         CAParray[iarg] = 1;
-
-        errs() << iarg << "\t"; 
     }
-    errs() << "\n";
 }
 
 
@@ -60,8 +56,6 @@ void LocalAnalysis::RetrieveAllCAP(CallInst *CI, CAPArray_t &CAParray)
 // param: Module
 bool LocalAnalysis::runOnModule(Module &M)
 {
-    errs() << "\nRunning Local Analysis Pass\n\n";
-
     // retrieve all data for later use
     SplitBB &SB = getAnalysis<SplitBB>();
     BBFuncTable = SB.BBFuncTable;
@@ -86,7 +80,7 @@ bool LocalAnalysis::runOnModule(Module &M)
         }
 
         // Retrieve all capabilities from params of function call
-        CAPArray_t CAParray = {0};
+        CAPArray_t CAParray = {{0}};
         RetrieveAllCAP(CI, CAParray);
 
         // Get the function where the Instr is in
@@ -98,7 +92,7 @@ bool LocalAnalysis::runOnModule(Module &M)
 
     // DEBUG purpose: dump map table
     // ---------------------//
-    dumpCAPTable (FuncCAPTable);
+    // dumpCAPTable (FuncCAPTable);
     // ----------------------//
 
     return false;
@@ -116,6 +110,12 @@ void LocalAnalysis::getAnalysisUsage(AnalysisUsage &AU) const
     AU.setPreservesAll();
 }
 
+
+// Print out information for debugging purposes
+void LocalAnalysis::print(raw_ostream &O, const Module *M) const
+{
+    
+}
 
 // Pass registry
 char LocalAnalysis::ID = 0;

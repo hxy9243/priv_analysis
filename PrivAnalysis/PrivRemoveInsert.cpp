@@ -129,12 +129,6 @@ bool PrivRemoveInsert::runOnModule(Module &M)
 
         addToArgs(Args, CAPArray);
 
-        // DEBUG
-        errs() << "arg size " << Args.size() << "\n";
-        errs() << "Adding remove call to BB in "
-               << BB->getParent()->getName()
-               << "\n";
-
         // create call instruction
         assert(BB->getTerminator() != NULL && "BB has a NULL teminator!");
         CallInst::Create(PrivRemoveCall, ArrayRef<Value *>(Args), 
@@ -151,12 +145,6 @@ bool PrivRemoveInsert::runOnModule(Module &M)
 
         addToArgs(Args, CAPArray);
 
-        // DEBUG
-        errs() << "arg size " << Args.size() << "\n";
-        errs() << "Adding remove call to BB in "
-               << BB->getParent()->getName()
-               << "\n";
-
         // create call instruction
         CallInst::Create(PrivRemoveCall, ArrayRef<Value *>(Args), 
                          PRIV_REMOVE_CALL, BB->getFirstNonPHI());
@@ -164,6 +152,15 @@ bool PrivRemoveInsert::runOnModule(Module &M)
 
     return true;
 }
+
+
+// Print out information for debugging purposes
+void PrivRemoveInsert::print(raw_ostream &O, const Module *M) const
+{
+
+
+}
+
 
 
 // register pass

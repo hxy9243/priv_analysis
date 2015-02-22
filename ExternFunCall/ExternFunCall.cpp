@@ -43,8 +43,8 @@ bool ExternFunCall::runOnModule(Module &M)
 
 
 // Print out the 
-void ExternFunCall::print(raw_ostream & O,
-                          const Module * M) const{
+void ExternFunCall::print(raw_ostream &O, const Module *M) const
+{
 
     for (auto FI = extern_funcs.begin(), FE = extern_funcs.end();
          FI != FE; ++FI) {

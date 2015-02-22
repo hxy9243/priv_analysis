@@ -32,8 +32,6 @@ bool SplitBB::doInitialization(Module &M)
 // run on Basic Block
 bool SplitBB::runOnModule(Module &M)
 {
-    errs() << "\nRunning Split BB Pass\n\n";
-
     // split on PrivRaise calls
     Function *FRaise = M.getFunction(PRIVRAISE);
     if (FRaise != NULL) {
@@ -48,8 +46,7 @@ bool SplitBB::runOnModule(Module &M)
 
     // split on non-extern Function call sites
     for (Module::iterator FI = M.begin(), FE = M.end();
-         FI != FE;
-         ++ FI) {
+         FI != FE; ++ FI) {
         Function *F = dyn_cast<Function>(FI);
 
         // skip priv_* calls
@@ -59,19 +56,17 @@ bool SplitBB::runOnModule(Module &M)
         }
         // skip external functions
         if (F->empty()){
-            errs () << F->getName() << " is empty!\n";
             continue;
         }
 
         splitOnFunction(F, SPLIT_HERE | SPLIT_NEXT);
     }
 
-    // DEBUG
-    errs() << "Sizeof privBB is " << PrivBB.size() << "\n"
-           << "Sizeof CallSiteBB is " << CallSiteBB.size() << "\n"
-           << "Sizeof BBFuncTable is " << BBFuncTable.size() << "\n";
+    // // DEBUG
+    // errs() << "Sizeof privBB is " << PrivBB.size() << "\n"
+    //        << "Sizeof CallSiteBB is " << CallSiteBB.size() << "\n"
+    //        << "Sizeof BBFuncTable is " << BBFuncTable.size() << "\n";
 
-    // It modifies CFG
     return true;
 }
 
@@ -85,14 +80,12 @@ void SplitBB::splitOnFunction(Function *F, int splitLoc)
 {
     // iterate all uses for calling instruction
     for (Value::user_iterator UI = F->user_begin(), UE = F->user_end();
-         UI != UE;
-         ++ UI) {
+         UI != UE; ++ UI) {
         CallInst *CI = dyn_cast<CallInst>(*UI);
         if (CI == NULL || CI->getCalledFunction() != F) {
             continue;
         }
       
-
         // if split on the head of the calling instruction
         if (splitLoc & SPLIT_HERE){
             BasicBlock *BB = CI->getParent();
@@ -112,10 +105,10 @@ void SplitBB::splitOnFunction(Function *F, int splitLoc)
                     BBFuncTable[NewBB] = F;
                 }
 
-                // DEBUG
-                errs() << "split on " 
-                       << CI->getCalledFunction()->getName() << " in "
-                       << CI->getParent()->getParent()->getName() << "\n";
+                // // DEBUG
+                // errs() << "split on " 
+                //        << CI->getCalledFunction()->getName() << " in "
+                //        << CI->getParent()->getParent()->getName() << "\n";
             }
             else {
                 // else, push the original BB to data structure
@@ -127,11 +120,11 @@ void SplitBB::splitOnFunction(Function *F, int splitLoc)
                     BBFuncTable[BB] = F;
                 }
 
-                // DEBUG
-                errs() << CI->getCalledFunction()->getName()
-                       <<" is the start of a block in " 
-                       << CI->getParent()->getParent()->getName() 
-                       << " I'm not splitting you\n";
+                // // DEBUG
+                // errs() << CI->getCalledFunction()->getName()
+                //        <<" is the start of a block in " 
+                //        << CI->getParent()->getParent()->getName() 
+                //        << " I'm not splitting you\n";
                 ////////////////////////
 
             }
@@ -144,23 +137,13 @@ void SplitBB::splitOnFunction(Function *F, int splitLoc)
 
             if (dyn_cast<Instruction>(CI) !=
                 dyn_cast<Instruction>(BB->end())) {
-                //Instruction *splitPoint = CI->getNextNode();
+
                 BB->splitBasicBlock(CI->getNextNode());
-                errs() << "split on " 
-                       << CI->getCalledFunction()->getName() << " in "
-                       << CI->getParent()->getParent()->getName() << "\n";
-
-            }
-            else {
-                errs() << CI->getCalledFunction()->getName()
-                       <<" is the end of a block in " 
-                       << CI->getParent()->getParent()->getName() 
-                       << " I'm not splitting you\n";
-
             }
         }
-    }
-}
+
+    } // iterate all uses for calling instructions
+} // split on function
 
 
 // getAnalysisUsage function

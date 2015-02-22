@@ -53,6 +53,8 @@ public:
     // Run on CallGraph SCC
     virtual bool runOnModule(Module &M);
 
+    // Print out information for debugging purposes
+    void print(raw_ostream &O, const Module *M) const;
 private:
     // Data propagation analysis
     void Propagate(Module &M, FuncCAPTable_t &CAPTable);

@@ -63,7 +63,7 @@ void AddToBBCAPTable(BBCAPTable_t &CAPTable,
 //        src  - src CAPTable
 void CopyTableKeys(FuncCAPTable_t &dest, FuncCAPTable_t &src)
 {
-    CAPArray_t emptyArray = {0};
+    CAPArray_t emptyArray = {{0}};
 
     for(auto MI = src.begin(), ME = src.end(); MI != ME; ++ MI) {
   

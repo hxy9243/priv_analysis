@@ -28,8 +28,6 @@ PropagateAnalysis::PropagateAnalysis() : ModulePass(ID) { }
 // Require Analysis Usage
 void PropagateAnalysis::getAnalysisUsage(AnalysisUsage &AU) const
 {
-    errs() << "getting analysis usage\n";
-
     AU.setPreservesCFG();
     AU.addRequired<LocalAnalysis>();
 
@@ -49,25 +47,12 @@ bool PropagateAnalysis::doInitialization(Module &M)
 // param: M - the program Module
 bool PropagateAnalysis::runOnModule(Module &M)
 {
-    errs() << "\nRunning CallGraph propagation pass\n\n";
-
     LocalAnalysis &LA = getAnalysis<LocalAnalysis>();
 
     // Get all data structures for propagation analysis
     FuncCAPTable = LA.FuncCAPTable;
     BBCAPTable = LA.BBCAPTable;
     BBFuncTable = LA.BBFuncTable;
-
-    // DEBUG
-    errs() << "Dump table before propagation\n";
-    dumpCAPTable(FuncCAPTable);
-
-    // Depth First Search Analysis for data propagation
-    Propagate(M, FuncCAPTable);
-
-    errs() << "Dump table after propagation\n";
-
-    dumpCAPTable(FuncCAPTable);
 
     return false;
 }
@@ -130,6 +115,14 @@ void PropagateAnalysis::Propagate(Module &M, FuncCAPTable_t &FuncCAPTable)
     } // main loop
 
     FuncCAPTable = FuncCAPTable_in;
+}
+
+
+// Print out information for debugging purposes
+void PropagateAnalysis::print(raw_ostream &O, const Module *M) const
+{
+
+
 }
 
 

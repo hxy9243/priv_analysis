@@ -50,6 +50,8 @@ public:
     // Preserve all analysis usage
     void getAnalysisUsage(AnalysisUsage &AU) const;
 
+    // Print out information for debugging purposes
+    void print(raw_ostream &O, const Module *M) const;
 private:
     // Retrieve all capabilities from params of function call
     void RetrieveAllCAP(CallInst *CI, CAPArray_t &CAParray);

@@ -47,6 +47,8 @@ public:
     // Preserve analysis usage
     void getAnalysisUsage(AnalysisUsage &AU) const;
 
+    // Print out information for debugging purposes
+    void print(raw_ostream &O, const Module *M) const;
 private:
     void getAllReturnBBs(std::vector<BasicBlock *> &ReturnBBs);
 
