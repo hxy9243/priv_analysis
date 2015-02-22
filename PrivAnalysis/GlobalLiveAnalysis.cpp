@@ -55,8 +55,6 @@ bool GlobalLiveAnalysis::doInitialization(Module &M)
 // Run on Module
 bool GlobalLiveAnalysis::runOnModule(Module &M)
 {
-    // errs() << "\nRunning Global Live Analysis pass\n\n";
-
     PropagateAnalysis &PA = getAnalysis<PropagateAnalysis>();
 
     // retrieve all data structures
@@ -67,11 +65,6 @@ bool GlobalLiveAnalysis::runOnModule(Module &M)
 
     // init data structure
     bool ischanged = true;
-
-    // FuncLiveCAPTable maps from Functions to the
-    // live CAP in the Functions
-    BBCAPTable_t BBCAPTable_in;
-    BBCAPTable_t BBCAPTable_out;
 
     // iterate till convergence
     while (ischanged) {
@@ -255,7 +248,22 @@ bool GlobalLiveAnalysis::runOnModule(Module &M)
 // Print out information for debugging purposes
 void GlobalLiveAnalysis::print(raw_ostream &O, const Module *M) const
 {
+    errs() << "Dumping information for unique capability set.\n\n";
 
+    std::map<CAPArray_t, BasicBlock *> CAPSet;
+
+    // Analyze BBCAPTable_in
+    for (auto BI = BBCAPTable_in.begin(), BE = BBCAPTable_in.end();
+         BI != BE; ++BI) {
+        if (CAPSet.find(BI->second) == CAPSet.end()) {
+            CAPSet[BI->second] = BI->first;
+        }
+    }
+
+    // dump the uniq set of capabilities
+    for (auto BI = CAPSet.begin(), BE = CAPSet.end(); BI != BE; ++BI) {
+        dumpCAPArray(O, BI->first);
+    }
 
 }
 

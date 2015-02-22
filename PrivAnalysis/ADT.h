@@ -12,6 +12,8 @@
 #include <linux/capability.h>
 #include <map>
 #include <array>
+#include <unordered_set>
+#include <string>
 
 // Constant Definition
 #define TARGET_FUNC "priv_raise"
@@ -21,6 +23,48 @@
 
 namespace llvm {
 namespace privAnalysis {
+
+// capability number to string for ROSA
+static const std::string CAPString[CAP_TOTALNUM] = {
+    "CapChown",
+    "CapDacOverride",
+    "CapDacReadSearch",
+    "CapFowner",
+    "CapFsetid",
+    "CapKill",
+    "CapSetgid",
+    "CapSetuid",
+    "CapSetpCap",
+    "CapLinuxImmutable",
+    "CapNetBindService",
+    "CapNetBroadcast",
+    "CapNetAdmin",
+    "CapNetRaw",
+    "CapIpcLock",
+    "CapIpcOwner",
+    "CapSysModule",
+    "CapSysRawio",
+    "CapSysChroot",
+    "CapSysPtrace",
+    "CapSysPacct",
+    "CapSysAdmin",
+    "CapSysBoot",
+    "CapSysNice",
+    "CapSysResource",
+    "CapSysTime",
+    "CapSysTtyConfig",
+    "CapMknod",
+    "CapLease",
+    "CapAuditWrite",
+    "CapAuditControl",
+    "CapSetfCap",
+    "CapMacOverride",
+    "CapMacAdmin",
+    "CapSyslog",
+    "CapWakeAlarm",
+    "CapBlockSuspend",
+};
+
 
 // type definition
 // The array of bool representing all Capabilities
@@ -34,6 +78,9 @@ typedef std::map<BasicBlock *, CAPArray_t> BBCAPTable_t;
 
 // The map from basicblock to CAPArray
 typedef std::map<BasicBlock *, Function*> BBFuncTable_t;
+
+// The set for CAPArray 
+typedef std::unordered_set<CAPArray_t> CAPSet_t;
 
 // Data manipulation functions
 // Get the function where the CallInst is in, add to map
@@ -62,7 +109,12 @@ bool IsCAPArrayEmpty(CAPArray_t &A);
 
 
 // for debugging purpose
+void dumpCAPArray(raw_ostream &O, const CAPArray_t &A);
+
+void dumpCAPArray(const CAPArray_t &A);
+
 void dumpCAPTable(FuncCAPTable_t &CT);
+
 
 } // namespace privAnalysis
 } // namepsace llvm

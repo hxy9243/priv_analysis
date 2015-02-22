@@ -132,6 +132,37 @@ bool IsCAPArrayEmpty(CAPArray_t &A)
 }
 
 
+// dump CAPArray for debugging purpose
+void dumpCAPArray(raw_ostream &O, const CAPArray_t &A) {
+    int cap = 0;
+    bool isempty = true;
+
+    for (auto i = A.begin(), e = A.end(); i != e; ++i) {
+        if (*i) {
+            if(!isempty) {
+                O << ",";
+            }
+            isempty &= false;
+            O << CAPString[cap];
+        }
+        cap++;
+    }
+
+    if (isempty) {
+        O << "empty";
+    }
+
+    errs() << "\n";
+}
+
+void dumpCAPArray(const CAPArray_t &A) {
+    
+    dumpCAPArray(errs(), A);
+
+}
+
+
+
 // dump CAPTable for Debugging purpose
 // param: CT - the CAPTable to dump
 void dumpCAPTable(FuncCAPTable_t &CT)

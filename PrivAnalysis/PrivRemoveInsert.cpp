@@ -157,8 +157,6 @@ bool PrivRemoveInsert::runOnModule(Module &M)
 // Print out information for debugging purposes
 void PrivRemoveInsert::print(raw_ostream &O, const Module *M) const
 {
-
-
 }
 
 
