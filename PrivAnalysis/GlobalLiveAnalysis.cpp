@@ -19,10 +19,13 @@
 #include "PropagateAnalysis.h"
 #include "LocalAnalysis.h"
 
+#include <utility>
+#include <algorithm>
 #include <array>
 #include <vector>
 #include <map>
 
+#include <cstdlib>
 
 using namespace llvm;
 using namespace llvm::propagateAnalysis;
@@ -254,9 +257,17 @@ void GlobalLiveAnalysis::findUniqueSet()
     for (auto BI = BBCAPTable_in.begin(), BE = BBCAPTable_in.end();
          BI != BE; ++BI) {
         if (CAPSet.find(BI->second) == CAPSet.end()) {
-            CAPSet[BI->second] = BI->first;
+            CAPSet[BI->second] = findCAPArraySize(BI->second);
         }
     }
+}
+
+
+
+bool compareSet(const std::pair<CAPArray_t, int> A,
+                const std::pair<CAPArray_t, int> B)
+{
+    return (A.second > B.second);
 }
 
 
@@ -265,11 +276,22 @@ void GlobalLiveAnalysis::print(raw_ostream &O, const Module *M) const
 {
     errs() << "Dumping information for unique capability set.\n\n";
 
+    std::vector<std::pair<CAPArray_t, int> >Setcopy(CAPSet.begin(), CAPSet.end());
+
+    std::sort(Setcopy.begin(), Setcopy.end(), compareSet);
+    
+    int line = 0;
+
     // dump the uniq set of capabilities
-    for (auto BI = CAPSet.begin(), BE = CAPSet.end(); BI != BE; ++BI) {
+    for (auto BI = Setcopy.begin(), BE = Setcopy.end(); BI != BE; ++BI) {
+        O << line++ << ": ";
+
         dumpCAPArray(O, BI->first);
     }
 }
+
+
+
 
 
 // register pass
