@@ -171,7 +171,7 @@ void dumpCAPArray(raw_ostream &O, const CAPArray_t &A) {
         O << "empty";
     }
 
-    errs() << "\n";
+    O << "\n";
 }
 
 void dumpCAPArray(const CAPArray_t &A) {
