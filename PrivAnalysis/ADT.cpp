@@ -9,6 +9,8 @@
 
 #include <map>
 #include <array>
+#include <algorithm>
+#include <utility>
 
 
 namespace llvm {
@@ -72,6 +74,23 @@ void CopyTableKeys(FuncCAPTable_t &dest, FuncCAPTable_t &src)
         dest[tf] = emptyArray;
     }
 }
+
+
+// Find the size of the input array
+// param: A - the input array
+// return the number of the capablities inside CAPArray 
+int findCAPArraySize(CAPArray_t &A)
+{
+    int size = 0;
+    for (auto I = A.begin(), E = A.end(); I != E; ++I) {
+        if (*I) {
+            size++;
+        }
+    }
+
+    return size;
+}
+
 
   
 // Union two arrays, save result to dest

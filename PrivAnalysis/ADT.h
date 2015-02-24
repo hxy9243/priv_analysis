@@ -79,8 +79,8 @@ typedef std::map<BasicBlock *, CAPArray_t> BBCAPTable_t;
 // The map from basicblock to CAPArray
 typedef std::map<BasicBlock *, Function*> BBFuncTable_t;
 
-// The unique capabiltiy set for all basic blocks
-typedef std::map<CAPArray_t, BasicBlock *> CAPSet_t;
+// The unique capabiltiy set for all basic blocks mapped to the number of its CAPs
+typedef std::map<CAPArray_t, int> CAPSet_t;
 
 
 // Data manipulation functions
@@ -94,6 +94,9 @@ void AddToBBCAPTable(BBCAPTable_t &CAPTable,
 
 // Copy CAPTable keys from src to dest, with array empty
 void CopyTableKeys(FuncCAPTable_t &dest, FuncCAPTable_t &src);
+
+// Find the size of the input array
+int findCAPArraySize(CAPArray_t &A);
 
 // Union two arrays, save result to dest and test dest ischanged
 bool UnionCAPArrays(CAPArray_t &dest, CAPArray_t &src);
@@ -109,7 +112,6 @@ void ReverseCAPArray(CAPArray_t &A);
 bool IsCAPArrayEmpty(CAPArray_t &A);
 
 
-// for debugging purpose
 void dumpCAPArray(raw_ostream &O, const CAPArray_t &A);
 
 void dumpCAPArray(const CAPArray_t &A);
