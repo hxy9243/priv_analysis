@@ -31,6 +31,7 @@ void DynCount::getAnalysisUsage(AnalysisUsage &AU) const
 {
     AU.addRequired<GlobalLiveAnalysis>();
     AU.addRequired<SplitBB>();
+    AU.addRequired<UnifyFunctionExitNodes>();
 }
 
 
@@ -130,9 +131,23 @@ bool DynCount::runOnModule(Module &M)
                 CallInst::Create(addCountFunction, ArrayRef<Value *>(Args),
                                  ADD_COUNT_FUNC, BB->getTerminator());
             }
-            
         }
     }
+
+
+    // Insert init function call and report function call
+    // Add initCount to entry block of main
+    Function *mainFunc = M.getFunction("main");
+    BasicBlock *entryBB = mainFunc.getEntryBlock();
+
+    
+
+    // Add reportCount to returnBB of main
+    UnifyFunctionExitNodes &UnifyExitNode = getAnalysis<UnifyFunctionExitNodes>(*mainFunc);
+    BasicBlock *returnBB = UnifyExitNode.getReturnBlock();
+
+
+
 
     return false;
 }
