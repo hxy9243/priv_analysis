@@ -93,7 +93,7 @@ bool DynCount::doInitialization(Module &M)
 // run on module
 bool DynCount::runOnModule(Module &M)
 {
-    //    SplitBB &SB = getAnalysis<SplitBB>();
+    SplitBB &SB = getAnalysis<SplitBB>();
     GlobalLiveAnalysis &GA = getAnalysis<GlobalLiveAnalysis>();
 
     // Add function to module 
@@ -110,18 +110,48 @@ bool DynCount::runOnModule(Module &M)
             // Insert callinst to all BBs 
             std::vector<Value *>Args = {};
 
-            CAPArray_t CAPArray = GA.BBCAPTable_in[BB];
+            // Get rid of the final JMP instruction, as its CAP set may 
+            // be different than rest of the BasicBlock
+            unsigned long size = BB->size() - 1;
 
-            getAddCountArgs(Args, (unsigned int)BB->size(), CAPArray);
-
+            // Insert addcount for all instructions in BB except terminator
+            getAddCountArgs(Args, size, GA.BBCAPTable_in[BB]);
             CallInst::Create(addCountFunction, ArrayRef<Value *>(Args),
                              ADD_COUNT_FUNC, BB->getTerminator());
+
+            // Insert addcount for terminator if it's not redundant jmp
+            // created by splitBB
+            if (findVector<BasicBlock *>(SB.ExtraJMPBB, BB)) {
+                continue;
+            }
+            else {
+                Args = {};
+                getAddCountArgs(Args, 1, GA.BBCAPTable_out[BB]);
+                CallInst::Create(addCountFunction, ArrayRef<Value *>(Args),
+                                 ADD_COUNT_FUNC, BB->getTerminator());
+            }
+            
         }
     }
 
     return false;
 }
 
+
+// find element in the element
+// V - the vector to search in
+// elem - the element to find
+// return: true if found, false otherwise
+template<typename T>
+bool findVector(std::vector<T> V, T elem)
+{
+    for (auto I = V.begin(), E = V.end(); I != E; ++I) {
+        if (elem == (*I)) {
+            return true;
+        }
+    }
+    return false;
+}
 
 
 

@@ -62,7 +62,8 @@ private:
     Function *getReportFunc(Module &M);
 };
 
-
+template<typename T>
+bool findVector(std::vector<T> V, T elem);
 
 } // namespace dynCount
 } // namespace namespace
