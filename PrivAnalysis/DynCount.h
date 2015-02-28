@@ -20,7 +20,9 @@
 #include "GlobalLiveAnalysis.h"
 
 
+#define INIT_COUNT_FUNC "initCount"
 #define ADD_COUNT_FUNC "addCount"
+#define REPORT_COUNT_FUNC "reportCount"
 
 
 using namespace llvm::privAnalysis;
@@ -54,7 +56,8 @@ private:
 
     Function *getAddCountFunc(Module &M);
 
-    void getAddCountArgs(std::vector<Value *>& Args, const CAPArray_t &CAPArray);
+    void getAddCountArgs(std::vector<Value *>& Args, unsigned int LOC, 
+                         const CAPArray_t &CAPArray);
 
     Function *getReportFunc(Module &M);
 };

@@ -39,8 +39,14 @@ Function* DynCount::getAddCountFunc(Module &M)
 {
     std::vector<Type *> Params;
     Type* VoidType = Type::getVoidTy(getGlobalContext());
-    Type *IntType = IntegerType::get(getGlobalContext(), 32);
-    Params.push_back(IntType);
+    Type *LOCType = IntegerType::get(getGlobalContext(), 32);
+    Type *CAPArrayType = IntegerType::get(getGlobalContext(), 64);
+
+    // First param for LOC
+    Params.push_back(LOCType);
+
+    // Second param for CAP set
+    Params.push_back(CAPArrayType);
 
     FunctionType *AddCountFuncType = FunctionType::get(VoidType,
                                                        ArrayRef<Type *>(Params), false);
@@ -54,32 +60,24 @@ Function* DynCount::getAddCountFunc(Module &M)
 // Insert arguments to function type
 // param: Args - the Args vector to insert into
 //        CAPArray - the array of CAP to 
-void DynCount::getAddCountArgs(std::vector<Value *>& Args,
+void DynCount::getAddCountArgs(std::vector<Value *>& Args, unsigned int LOC,
                                const CAPArray_t &CAPArray)
 {
-    int cap_num = 0;
-    int cap = 0;
+    uint64_t cap = 0;
 
     for (auto ci = CAPArray.begin(), ce = CAPArray.end();
          ci != ce; ++ci) {
-        if (*ci == 0) {
-            cap++;
-            continue;
-        }
-
-        // add to args vector
-        Constant *arg = ConstantInt::get
-            (IntegerType::get(getGlobalContext(), 32), cap);
-        Args.push_back(arg);
-
-        cap++;
-        cap_num++;
+        cap |= 1 << (*ci);
     }
 
-    // Add the number of args to the front
-    ConstantInt *arg_num = ConstantInt::get
-        (IntegerType::get(getGlobalContext(), 32), cap_num);
-    Args.insert(Args.begin(), arg_num);
+    // add to args vector
+    Constant *LOCArg = ConstantInt::get
+        (IntegerType::get(getGlobalContext(), 32), LOC);
+    Args.push_back(LOCArg);
+
+    Constant *CAPArrayArg = ConstantInt::get
+        (IntegerType::get(getGlobalContext(), 64), cap);
+    Args.push_back(CAPArrayArg);
 
     return;
 }
@@ -96,7 +94,30 @@ bool DynCount::doInitialization(Module &M)
 bool DynCount::runOnModule(Module &M)
 {
     //    SplitBB &SB = getAnalysis<SplitBB>();
-    //    GlobalLiveAnalysis &GA = getAnalysis<GlobalLiveAnalysis>();
+    GlobalLiveAnalysis &GA = getAnalysis<GlobalLiveAnalysis>();
+
+    // Add function to module 
+    Function *addCountFunction = getAddCountFunc(M);
+
+    // iterate through all functions
+    for (Module::iterator FI = M.begin(), FE = M.end(); FI != FE; ++FI) {
+        Function *F = dyn_cast<Function>(FI);
+
+        // iterate through all BBs to insert function
+        for (Function::iterator BI = F->begin(), BE = F->end(); BI != BE; ++BI) {
+            BasicBlock *BB = dyn_cast<BasicBlock>(BI);
+
+            // Insert callinst to all BBs 
+            std::vector<Value *>Args = {};
+
+            CAPArray_t CAPArray = GA.BBCAPTable_in[BB];
+
+            getAddCountArgs(Args, (unsigned int)BB->size(), CAPArray);
+
+            CallInst::Create(addCountFunction, ArrayRef<Value *>(Args),
+                             ADD_COUNT_FUNC, BB->getTerminator());
+        }
+    }
 
     return false;
 }
