@@ -17,15 +17,20 @@
 
 
 using namespace llvm;
+using namespace llvm::splitBB;
+using namespace llvm::globalLiveAnalysis;
 using namespace llvm::dynCount;
+
 
 // constructor
 DynCount::DynCount() : ModulePass(ID) { };
+
 
 // Preserve analysis usage
 void DynCount::getAnalysisUsage(AnalysisUsage &AU) const
 {
     AU.addRequired<GlobalLiveAnalysis>();
+    AU.addRequired<SplitBB>();
 }
 
 
@@ -46,11 +51,11 @@ Function* DynCount::getAddCountFunc(Module &M)
 }
 
 
-// Insert params to function type
+// Insert arguments to function type
 // param: Args - the Args vector to insert into
 //        CAPArray - the array of CAP to 
-void DynCount::addToArgs(std::vector<Value *>& Args,
-                         const CAPArray_t &CAPArray)
+void DynCount::getAddCountArgs(std::vector<Value *>& Args,
+                               const CAPArray_t &CAPArray)
 {
     int cap_num = 0;
     int cap = 0;
@@ -80,12 +85,18 @@ void DynCount::addToArgs(std::vector<Value *>& Args,
 }
 
 
+// Initialization
+bool DynCount::doInitialization(Module &M)
+{
+    return true;
+}
+
+
 // run on module
 bool DynCount::runOnModule(Module &M)
 {
-    
-
-    
+    //    SplitBB &SB = getAnalysis<SplitBB>();
+    //    GlobalLiveAnalysis &GA = getAnalysis<GlobalLiveAnalysis>();
 
     return false;
 }
@@ -93,6 +104,15 @@ bool DynCount::runOnModule(Module &M)
 
 
 
+void DynCount::print(raw_ostream &O, const Module *M) const
+{
+    SplitBB &SB = getAnalysis<SplitBB>();
+
+    O << SB.ExtraJMPBB.size() << "\n";
+}
+
+
+
 // register pass
-char DynCount::ID = 1;
+char DynCount::ID = 0;
 static RegisterPass<DynCount> D("DynCount", "Dynamically count LOC in privilege set.", true, true);

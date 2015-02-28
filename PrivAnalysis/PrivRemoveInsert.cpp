@@ -49,7 +49,7 @@ Function *PrivRemoveInsert::getRemoveFunc(Module &M)
     std::vector<Type *> Params;
     Type *IntType = IntegerType::get(getGlobalContext(), 32);
     Params.push_back(IntType);
-    FunctionType *RemoveCallType = FunctionType::get(TypeInt,
+    FunctionType *RemoveCallType = FunctionType::get(IntType,
                                                      ArrayRef<Type *>(Params),
                                                      true);
     Constant *PrivRemoveCall = M.getOrInsertFunction(PRIV_REMOVE_CALL,
@@ -101,10 +101,10 @@ bool PrivRemoveInsert::runOnModule(Module &M)
     BBCAPTable_t BBCAPTable_dropStart = GA.BBCAPTable_dropStart;
 
     FuncCAPTable_t FuncLiveCAPTable_in = GA.FuncLiveCAPTable_in;
-    Function *PrivRemoveFunc = getRemoveFunc(M);
-    std::vector<Value *> Args = {};
 
     // Insert remove call at the top of the main function
+    Function *PrivRemoveFunc = getRemoveFunc(M);
+    std::vector<Value *> Args = {};
     Function *mainFunc = M.getFunction("main");
     CAPArray_t &FirstCAPArray = FuncLiveCAPTable_in[mainFunc];
 

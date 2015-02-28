@@ -32,19 +32,19 @@ bool SplitBB::doInitialization(Module &M)
 // run on Basic Block
 bool SplitBB::runOnModule(Module &M)
 {
-    // split on PrivRaise calls
+    // Split on PrivRaise calls
     Function *FRaise = M.getFunction(PRIVRAISE);
     if (FRaise != NULL) {
         splitOnFunction(FRaise, SPLIT_HERE);
     }
 
-    // split on PrivLower calls
+    // Split on PrivLower calls
     Function *FLower = M.getFunction(PRIVLOWER);
     if (FLower != NULL) {
         splitOnFunction(FLower, SPLIT_NEXT);
     }
 
-    // split on non-extern Function call sites
+    // Split on non-extern Function call sites
     for (Module::iterator FI = M.begin(), FE = M.end();
          FI != FE; ++ FI) {
         Function *F = dyn_cast<Function>(FI);
@@ -78,7 +78,7 @@ bool SplitBB::runOnModule(Module &M)
 //                   SPLIT_HERE | SPLIT_NEXT split both locations
 void SplitBB::splitOnFunction(Function *F, int splitLoc)
 {
-    // iterate all uses for calling instruction
+    // Iterate all uses for calling instruction
     for (Value::user_iterator UI = F->user_begin(), UE = F->user_end();
          UI != UE; ++ UI) {
         CallInst *CI = dyn_cast<CallInst>(*UI);
@@ -86,17 +86,23 @@ void SplitBB::splitOnFunction(Function *F, int splitLoc)
             continue;
         }
       
-        // if split on the head of the calling instruction
+        // If split on the head of the calling instruction
         if (splitLoc & SPLIT_HERE){
             BasicBlock *BB = CI->getParent();
 
             if (dyn_cast<Instruction>(CI) !=
                 dyn_cast<Instruction>(BB->begin())) {
 
-                // split on the instruction        
+                // Split on the instruction
+                // Old BB now has an extra jmp as terminator,
+                // save Old BB for later counting
                 BasicBlock *NewBB = BB->splitBasicBlock(CI);
 
-                // save to data structure for later use
+                ExtraJMPBB.push_back(BB);
+
+                // Save to data structure for later use
+                // If instruction is priv_raise, save to PrivBB
+                // Else if a function call, save to CallSiteBB and BBFuncTable
                 if (F->getName() == PRIVRAISE) {
                     PrivBB.push_back(NewBB);
                 }
@@ -119,19 +125,16 @@ void SplitBB::splitOnFunction(Function *F, int splitLoc)
                     CallSiteBB.push_back(BB);
                     BBFuncTable[BB] = F;
                 }
-
                 // // DEBUG
                 // errs() << CI->getCalledFunction()->getName()
                 //        <<" is the start of a block in " 
                 //        << CI->getParent()->getParent()->getName() 
                 //        << " I'm not splitting you\n";
                 ////////////////////////
-
             }
-      
         }
 
-        // if split on next of the calling instruction
+        // If split on next of the calling instruction
         if (splitLoc & SPLIT_NEXT) {
             BasicBlock *BB = CI->getParent();
 
@@ -139,11 +142,23 @@ void SplitBB::splitOnFunction(Function *F, int splitLoc)
                 dyn_cast<Instruction>(BB->end())) {
 
                 BB->splitBasicBlock(CI->getNextNode());
+
+                ExtraJMPBB.push_back(BB);
             }
         }
 
     } // iterate all uses for calling instructions
 } // split on function
+
+
+void SplitBB::print(raw_ostream &O, const Module *M) const
+{
+
+    errs() << ExtraJMPBB.size();
+
+}
+
+
 
 
 // getAnalysisUsage function

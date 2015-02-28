@@ -29,10 +29,10 @@ using namespace llvm::privAnalysis;
 namespace llvm {
 namespace splitBB {
 
-  // SplitBB pass
-  // Separate Priv related Insts to Single BBs
-  struct SplitBB : public ModulePass {
-  public:
+// SplitBB pass
+// Separate Priv related Insts to Single BBs
+struct SplitBB : public ModulePass {
+public:
     static char ID;
     SplitBB();
 
@@ -41,6 +41,9 @@ namespace splitBB {
 
     // Vector to store BB info for analysis
     std::vector<BasicBlock *> CallSiteBB;
+
+    // Vector to store new direct JMP as terminator
+    std::vector<BasicBlock *> ExtraJMPBB;
 
     // Map from BB to its non-external Function Calls
     BBFuncTable_t BBFuncTable;
@@ -54,11 +57,12 @@ namespace splitBB {
     // Preserve analysis usage
     void getAnalysisUsage(AnalysisUsage &AU) const;
 
-  private:
+    void print(raw_ostream &O, const Module *M) const;
+private:
     // Split instruction on all the Function calling sites
     void splitOnFunction(Function *F, int splitLoc);
 
-  }; // struct splitBB
+}; // struct splitBB
 
 } // namespace slitBB
 } // namespace llvm

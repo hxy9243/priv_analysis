@@ -8,10 +8,15 @@
 #include "llvm/Transforms/Utils/BasicBlockUtils.h"
 #include "llvm/IR/Function.h"
 #include "llvm/IR/Instructions.h"
+#include "llvm/Support/raw_ostream.h"
+
 
 #include <map>
+#include <cstdint>
+
 
 #include "ADT.h"
+#include "SplitBB.h"
 #include "GlobalLiveAnalysis.h"
 
 
@@ -48,6 +53,8 @@ private:
     Function *getInitCountFunc(Module &M);
 
     Function *getAddCountFunc(Module &M);
+
+    void getAddCountArgs(std::vector<Value *>& Args, const CAPArray_t &CAPArray);
 
     Function *getReportFunc(Module &M);
 };
