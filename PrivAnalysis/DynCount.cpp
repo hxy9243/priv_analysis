@@ -42,17 +42,16 @@ void DynCount::getAnalysisUsage(AnalysisUsage &AU) const
 Function* DynCount::getAddCountFunc(Module &M)
 {
     std::vector<Type *> Params;
-    Type* VoidType = Type::getVoidTy(getGlobalContext());
-    Type *LOCType = IntegerType::get(getGlobalContext(), 32);
-    Type *CAPArrayType = IntegerType::get(getGlobalContext(), 64);
+    Type *IntType = IntegerType::get(M.getContext(), 32);
+    Type *Int64Type = IntegerType::get(M.getContext(), 64);
 
     // First param for LOC
-    Params.push_back(LOCType);
+    Params.push_back(IntType);
 
     // Second param for CAP set
-    Params.push_back(CAPArrayType);
+    Params.push_back(Int64Type);
 
-    FunctionType *AddCountFuncType = FunctionType::get(VoidType,
+    FunctionType *AddCountFuncType = FunctionType::get(IntType,
                                                        ArrayRef<Type *>(Params), false);
     Constant *AddCountFunc = M.getOrInsertFunction(ADD_COUNT_FUNC,
                                                    AddCountFuncType);
@@ -67,15 +66,12 @@ Function* DynCount::getAddCountFunc(Module &M)
 Function* DynCount::getInitCountFunc(Module &M)
 {
     std::vector<Type *> Params;
-    Type* VoidType = Type::getVoidTy(getGlobalContext());
+    Type *IntType = IntegerType::get(M.getContext(), 32);
 
-    // First param for LOC
-    Params.push_back(VoidType);
-
-    FunctionType *AddCountFuncType = FunctionType::get(VoidType,
-                                     ArrayRef<Type *>(Params), false);
+    FunctionType *InitCountFuncType = FunctionType::get(IntType,
+                                                        ArrayRef<Type *>(Params), false);
     Constant *InitCountFunc = M.getOrInsertFunction(INIT_COUNT_FUNC, 
-                                                    AddCountFuncType);
+                                                    InitCountFuncType);
     return dyn_cast<Function>(InitCountFunc);
 }
 
@@ -86,15 +82,12 @@ Function* DynCount::getInitCountFunc(Module &M)
 Function* DynCount::getReportCountFunc(Module &M)
 {
     std::vector<Type *> Params;
-    Type* VoidType = Type::getVoidTy(getGlobalContext());
+    Type *IntType = IntegerType::get(M.getContext(), 32);
 
-    // First param for LOC
-    Params.push_back(VoidType);
-
-    FunctionType *AddCountFuncType = FunctionType::get(VoidType,
-                                     ArrayRef<Type *>(Params), false);
+    FunctionType *ReportCountFuncType = FunctionType::get(IntType,
+                                                          ArrayRef<Type *>(Params), false);
     Constant *ReportCountFunc = M.getOrInsertFunction(REPORT_COUNT_FUNC,
-                                                   AddCountFuncType);
+                                                      ReportCountFuncType);
     return dyn_cast<Function>(ReportCountFunc);
 }
 
@@ -140,6 +133,10 @@ bool DynCount::runOnModule(Module &M)
 
     // Add function to module 
     Function *addCountFunction = getAddCountFunc(M);
+    // Insert callinst to all BBs 
+    std::vector<Value *>Args;
+
+    assert(addCountFunction && "The addCount function is NULL!\n");
 
     // iterate through all functions
     for (Module::iterator FI = M.begin(), FE = M.end(); FI != FE; ++FI) {
@@ -149,8 +146,7 @@ bool DynCount::runOnModule(Module &M)
         for (Function::iterator BI = F->begin(), BE = F->end(); BI != BE; ++BI) {
             BasicBlock *BB = dyn_cast<BasicBlock>(BI);
 
-            // Insert callinst to all BBs 
-            std::vector<Value *>Args = {};
+            Args.clear();
 
             // Get rid of the final JMP instruction, as its CAP set may 
             // be different than rest of the BasicBlock
@@ -163,11 +159,11 @@ bool DynCount::runOnModule(Module &M)
 
             // Insert addcount for terminator if it's not redundant jmp
             // created by splitBB
-            if (findVector<BasicBlock *>(SB.ExtraJMPBB, BB)) {
+            if (findVector<BasicBlock*>(SB.ExtraJMPBB, BB)) {
                 continue;
             }
             else {
-                Args = {};
+                Args.clear();
                 getAddCountArgs(Args, 1, GA.BBCAPTable_out[BB]);
                 CallInst::Create(addCountFunction, ArrayRef<Value *>(Args),
                                  ADD_COUNT_FUNC, BB->getTerminator());
@@ -176,7 +172,7 @@ bool DynCount::runOnModule(Module &M)
     }
 
     // Insert init function call and report function call
-    std::vector<Value *>Args = {};
+    Args.clear();
 
     // Add initCount to entry block of main
     Function *mainFunc = M.getFunction("main");
@@ -190,7 +186,6 @@ bool DynCount::runOnModule(Module &M)
     BasicBlock *returnBB = UnifyExitNode.getReturnBlock();
     CallInst::Create(getReportCountFunc(M), ArrayRef<Value *>(Args),
                      REPORT_COUNT_FUNC, returnBB->getTerminator());
-
     return false;
 }
 
@@ -200,7 +195,7 @@ bool DynCount::runOnModule(Module &M)
 // elem - the element to find
 // return: true if found, false otherwise
 template<typename T>
-bool findVector(std::vector<T> V, T elem)
+bool DynCount::findVector(std::vector<T> V, T elem)
 {
     for (auto I = V.begin(), E = V.end(); I != E; ++I) {
         if (elem == (*I)) {

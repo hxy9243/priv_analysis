@@ -65,11 +65,14 @@ private:
     void getAddCountArgs(std::vector<Value *>& Args, unsigned int LOC, 
                          const CAPArray_t &CAPArray);
 
-    Function *getReportFunc(Module &M);
+    template<typename T>
+    bool findVector(std::vector<T> V, T elem);
 };
 
-template<typename T>
-bool findVector(std::vector<T> V, T elem);
+// template<typename T>
+// bool findVector(std::vector<T> V, T elem);
+
+    
 
 } // namespace dynCount
 } // namespace namespace
