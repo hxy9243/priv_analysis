@@ -20,9 +20,13 @@
 #include "GlobalLiveAnalysis.h"
 
 
-#define INIT_COUNT_FUNC "initCount"
-#define ADD_COUNT_FUNC "addCount"
-#define REPORT_COUNT_FUNC "reportCount"
+// The dynamic counting library API:
+// void initCount();
+// void addCount(int LOC, uint64_t CAPArray);
+// void reportCount();
+#define INIT_COUNT_FUNC "initCount"     
+#define ADD_COUNT_FUNC "addCount"       
+#define REPORT_COUNT_FUNC "reportCount" 
 
 
 using namespace llvm::privAnalysis;
@@ -55,6 +59,8 @@ private:
     Function *getInitCountFunc(Module &M);
 
     Function *getAddCountFunc(Module &M);
+
+    Function *getReportCountFunc(Module &M);
 
     void getAddCountArgs(std::vector<Value *>& Args, unsigned int LOC, 
                          const CAPArray_t &CAPArray);

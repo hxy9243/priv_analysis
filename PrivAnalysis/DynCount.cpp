@@ -6,6 +6,7 @@
 
 #include "llvm/Pass.h"
 #include "llvm/Transforms/Utils/BasicBlockUtils.h"
+#include "llvm/Transforms/Utils/UnifyFunctionExitNodes.h"
 #include "llvm/IR/Function.h"
 #include "llvm/IR/Instructions.h"
 #include "llvm/IR/Value.h"
@@ -36,6 +37,8 @@ void DynCount::getAnalysisUsage(AnalysisUsage &AU) const
 
 
 // get add count function
+// param: M - module
+// return: pointer to addcount function
 Function* DynCount::getAddCountFunc(Module &M)
 {
     std::vector<Type *> Params;
@@ -55,6 +58,44 @@ Function* DynCount::getAddCountFunc(Module &M)
                                                    AddCountFuncType);
 
     return dyn_cast<Function>(AddCountFunc);
+}
+
+
+// get init count function
+// param: M - module
+// return: pointer to initCount function
+Function* DynCount::getInitCountFunc(Module &M)
+{
+    std::vector<Type *> Params;
+    Type* VoidType = Type::getVoidTy(getGlobalContext());
+
+    // First param for LOC
+    Params.push_back(VoidType);
+
+    FunctionType *AddCountFuncType = FunctionType::get(VoidType,
+                                     ArrayRef<Type *>(Params), false);
+    Constant *InitCountFunc = M.getOrInsertFunction(INIT_COUNT_FUNC, 
+                                                    AddCountFuncType);
+    return dyn_cast<Function>(InitCountFunc);
+}
+
+
+// get report count function
+// param: M - module
+// return: pointer to initCount function
+Function* DynCount::getReportCountFunc(Module &M)
+{
+    std::vector<Type *> Params;
+    Type* VoidType = Type::getVoidTy(getGlobalContext());
+
+    // First param for LOC
+    Params.push_back(VoidType);
+
+    FunctionType *AddCountFuncType = FunctionType::get(VoidType,
+                                     ArrayRef<Type *>(Params), false);
+    Constant *ReportCountFunc = M.getOrInsertFunction(REPORT_COUNT_FUNC,
+                                                   AddCountFuncType);
+    return dyn_cast<Function>(ReportCountFunc);
 }
 
 
@@ -104,7 +145,7 @@ bool DynCount::runOnModule(Module &M)
     for (Module::iterator FI = M.begin(), FE = M.end(); FI != FE; ++FI) {
         Function *F = dyn_cast<Function>(FI);
 
-        // iterate through all BBs to insert function
+        // iterate through all BBs to insert call instruction
         for (Function::iterator BI = F->begin(), BE = F->end(); BI != BE; ++BI) {
             BasicBlock *BB = dyn_cast<BasicBlock>(BI);
 
@@ -134,20 +175,21 @@ bool DynCount::runOnModule(Module &M)
         }
     }
 
-
     // Insert init function call and report function call
+    std::vector<Value *>Args = {};
+
     // Add initCount to entry block of main
     Function *mainFunc = M.getFunction("main");
-    BasicBlock *entryBB = mainFunc.getEntryBlock();
-
+    BasicBlock &entryBB = mainFunc->getEntryBlock();
+    CallInst::Create(getInitCountFunc(M), ArrayRef<Value *>(Args),
+                     INIT_COUNT_FUNC, entryBB.getFirstNonPHI());
     
 
     // Add reportCount to returnBB of main
     UnifyFunctionExitNodes &UnifyExitNode = getAnalysis<UnifyFunctionExitNodes>(*mainFunc);
     BasicBlock *returnBB = UnifyExitNode.getReturnBlock();
-
-
-
+    CallInst::Create(getReportCountFunc(M), ArrayRef<Value *>(Args),
+                     REPORT_COUNT_FUNC, returnBB->getTerminator());
 
     return false;
 }
