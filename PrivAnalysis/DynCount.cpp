@@ -102,7 +102,8 @@ void DynCount::getAddCountArgs(std::vector<Value *>& Args, unsigned int LOC,
 
     for (auto ci = CAPArray.begin(), ce = CAPArray.end();
          ci != ce; ++ci) {
-        cap |= 1 << (*ci);
+        cap |= *ci;
+        cap <<= 1;
     }
 
     // add to args vector
