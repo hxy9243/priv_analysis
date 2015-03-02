@@ -13,6 +13,9 @@
 #include <cstdlib>
 #include <string>
 #include <map>
+#include <utility>
+#include <vector>
+#include <algorithm>
 
 
 static const char *CAPString[CAP_NUM] = {
@@ -83,6 +86,28 @@ void printCAP(uint64_t CAPArray)
 }
 
 
+// Internal method for counting live capability in uint64_t CAPArray
+int countCAP(uint64_t CAPArray)
+{
+    // TODO: This is naive and inefficient. Find a quicker way
+    int count = 0;
+
+    while(CAPArray) {
+        count += CAPArray & 1;
+        CAPArray >>= 1;
+    }
+
+    return count;
+}
+
+
+
+// Internal method for sorting map, compare CAPSetLOCCount by live CAPs in CAPArray 
+bool compareCAPLOC(const std::pair<uint64_t, int> A,
+                  const std::pair<uint64_t, int> B)
+{
+    return countCAP(A.first) > countCAP(B.first);
+}
 
 
 
@@ -113,8 +138,13 @@ int addCount(int LOC, uint64_t CAPArray)
 /* report the counting data structure */
 int reportCount()
 {
-    for (std::map<uint64_t, int>::
-             iterator i = CAPSetLOCCount.begin(), e = CAPSetLOCCount.end();
+    // copy origin map to sort
+    std::vector<std::pair<uint64_t, int> >CAPSetLOCCopy(CAPSetLOCCount.begin(),
+                                                        CAPSetLOCCount.end());
+    std::sort(CAPSetLOCCopy.begin(), CAPSetLOCCopy.end(), compareCAPLOC);
+
+    for (std::vector<std::pair<uint64_t, int> >::iterator 
+             i = CAPSetLOCCopy.begin(), e = CAPSetLOCCopy.end();
          i != e; ++i) {
 
         printCAP((*i).first);

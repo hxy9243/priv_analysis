@@ -21,13 +21,13 @@ int main()
 
     for (i = 0; i < 10; ++i) {
 
-        addCount(3, (uint64_t)(0x00001000));
+        addCount(3, (uint64_t)(0xA0000000));
 
-        addCount(3, (uint64_t)(0x00001A0B));
+        addCount(3, (uint64_t)(0x80000000));
 
     }
 
-    addCount(4, (uint64_t)(0x00001000));
+    addCount(4, (uint64_t)(0xA0000000));
 
 
     reportCount();
