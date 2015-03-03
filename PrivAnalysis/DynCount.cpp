@@ -142,10 +142,16 @@ bool DynCount::runOnModule(Module &M)
     // iterate through all functions
     for (Module::iterator FI = M.begin(), FE = M.end(); FI != FE; ++FI) {
         Function *F = dyn_cast<Function>(FI);
+        if (F == NULL) {
+            continue;
+        }
 
         // iterate through all BBs to insert call instruction
         for (Function::iterator BI = F->begin(), BE = F->end(); BI != BE; ++BI) {
             BasicBlock *BB = dyn_cast<BasicBlock>(BI);
+            if (BB == NULL) {
+                continue;
+            }
 
             Args.clear();
 
@@ -185,6 +191,9 @@ bool DynCount::runOnModule(Module &M)
     // Add reportCount to returnBB of main
     UnifyFunctionExitNodes &UnifyExitNode = getAnalysis<UnifyFunctionExitNodes>(*mainFunc);
     BasicBlock *returnBB = UnifyExitNode.getReturnBlock();
+
+    assert(returnBB != NULL && "Return BB is NULL\n");
+
     CallInst::Create(getReportCountFunc(M), ArrayRef<Value *>(Args),
                      REPORT_COUNT_FUNC, returnBB->getTerminator());
     return false;

@@ -86,10 +86,25 @@ bool GlobalLiveAnalysis::runOnModule(Module &M)
             UnifyFunctionExitNodes &UnifyExitNode = getAnalysis<UnifyFunctionExitNodes>(*F);
             UnifyExitNode.runOnFunction(*F);
             BasicBlock *ReturnBB = UnifyExitNode.getReturnBlock();
+            BasicBlock *UnReachableBB = UnifyExitNode.getUnreachableBlock();
+            
+            if (ReturnBB == NULL && UnReachableBB == NULL) {
+                bool haveReturn = 0;
+                for (Function::iterator I = F->begin(), E = F->end(); I != E; ++I) {
+                    BasicBlock *RetBB = dyn_cast<BasicBlock>(I);
+                    
+                    if (isa<ReturnInst>(RetBB->getTerminator())){
+                        errs() << "I have a terminator\n";
+                        haveReturn = 1;
+                    }
+                }
+            }
+
+            assert((ReturnBB != NULL || UnReachableBB != NULL) && "Return BB is NULL\n");
 
             // Push information to the entry of function live table
             //      BasicBlock &EntryBB = F->getEntryBlock();
-            ischanged |= UnionCAPArrays(FuncLiveCAPTable_in[F], FuncUseCAPTable[F]);
+            //ischanged |= UnionCAPArrays(FuncLiveCAPTable_in[F], FuncUseCAPTable[F]);
       
             // iterate all BBs
             for (Function::iterator BI = F->begin(), BE = F->end();
@@ -102,8 +117,9 @@ bool GlobalLiveAnalysis::runOnModule(Module &M)
                 // Propagate information in each BB
                 //////////////////////////////////
 
-                // if it's a terminating BB, propagate the info
-                // from func live CAPTable to BB[out]
+                // if it's a terminating BB, propagate the info from func live CAPTable
+                // to BB[out]. Note that only returnBBs are considered in data propagation
+                // UnreachableBBs are not.
                 if (ReturnBB == B) {
                     ischanged |= UnionCAPArrays(BBCAPTable_out[B], 
                                                 FuncLiveCAPTable_out[F]);
@@ -212,7 +228,7 @@ bool GlobalLiveAnalysis::runOnModule(Module &M)
     // }
     // errs() << "\n";
 
-    // // Dump the drop for each BB
+    // Dump the drop for each BB
     // for (auto bi = BBCAPTable_dropEnd.begin(); bi != BBCAPTable_dropEnd.end(); ++bi) {
     //     BasicBlock *B = bi->first;
     //     CAPArray_t &CAPArray_drop = bi->second;

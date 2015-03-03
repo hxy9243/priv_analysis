@@ -54,6 +54,8 @@ bool PropagateAnalysis::runOnModule(Module &M)
     BBCAPTable = LA.BBCAPTable;
     BBFuncTable = LA.BBFuncTable;
 
+    Propagate(M);
+
     return false;
 }
 
@@ -61,7 +63,7 @@ bool PropagateAnalysis::runOnModule(Module &M)
 // Depth First Search data propagation analysis
 // param: M - the program module
 //        FuncCAPTable - the captable to store live analysis data
-void PropagateAnalysis::Propagate(Module &M, FuncCAPTable_t &FuncCAPTable)
+void PropagateAnalysis::Propagate(Module &M)
 {
     // The ins and outs of function
     FuncCAPTable_t FuncCAPTable_in;
@@ -121,8 +123,15 @@ void PropagateAnalysis::Propagate(Module &M, FuncCAPTable_t &FuncCAPTable)
 // Print out information for debugging purposes
 void PropagateAnalysis::print(raw_ostream &O, const Module *M) const
 {
+    for (auto I = FuncCAPTable.begin(), E = FuncCAPTable.end();
+         I != E; ++I) {
+        Function *F = (*I).first;
+        CAPArray_t A = (*I).second;
 
-
+        O << F->getName() << ": ";
+        dumpCAPArray(O, A);
+        O << "\n";
+    }
 }
 
 

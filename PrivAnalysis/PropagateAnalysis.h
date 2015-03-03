@@ -57,7 +57,7 @@ public:
     void print(raw_ostream &O, const Module *M) const;
 private:
     // Data propagation analysis
-    void Propagate(Module &M, FuncCAPTable_t &CAPTable);
+    void Propagate(Module &M);
 
 };
 
