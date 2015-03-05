@@ -16,6 +16,49 @@
 namespace llvm {
 namespace privAnalysis {
 
+
+// capability number to string for ROSA
+const char *CAPString[CAP_TOTALNUM] = {
+    "CapChown",
+    "CapDacOverride",
+    "CapDacReadSearch",
+    "CapFowner",
+    "CapFsetid",
+    "CapKill",
+    "CapSetgid",
+    "CapSetuid",
+    "CapSetpCap",
+    "CapLinuxImmutable",
+    "CapNetBindService",
+    "CapNetBroadcast",
+    "CapNetAdmin",
+    "CapNetRaw",
+    "CapIpcLock",
+    "CapIpcOwner",
+    "CapSysModule",
+    "CapSysRawio",
+    "CapSysChroot",
+    "CapSysPtrace",
+    "CapSysPacct",
+    "CapSysAdmin",
+    "CapSysBoot",
+    "CapSysNice",
+    "CapSysResource",
+    "CapSysTime",
+    "CapSysTtyConfig",
+    "CapMknod",
+    "CapLease",
+    "CapAuditWrite",
+    "CapAuditControl",
+    "CapSetfCap",
+    "CapMacOverride",
+    "CapMacAdmin",
+    "CapSyslog",
+    "CapWakeAlarm",
+    "CapBlockSuspend"
+};
+
+
 // Add to the FuncCAPTable, if Func exists, merge the CAPArray
 // param: CAPTable - ref to the FuncCAPTable
 //        F - the function to add
@@ -63,7 +106,7 @@ void AddToBBCAPTable(BBCAPTable_t &CAPTable,
 // has, with empty CAPArrays mapping to each keys
 // param: dest - dest CAPTable
 //        src  - src CAPTable
-void CopyTableKeys(FuncCAPTable_t &dest, FuncCAPTable_t &src)
+void CopyTableKeys(FuncCAPTable_t &dest, const FuncCAPTable_t &src)
 {
     CAPArray_t emptyArray = {{0}};
 
@@ -97,7 +140,7 @@ int findCAPArraySize(CAPArray_t &A)
 // param: dest - dest CAPArray
 //        src  - src CAPArray
 // return: ischanged - if the dest's value is changed
-bool UnionCAPArrays(CAPArray_t &dest, CAPArray_t &src)
+bool UnionCAPArrays(CAPArray_t &dest, const CAPArray_t &src)
 {
     bool ischanged = false;
 
@@ -116,7 +159,7 @@ bool UnionCAPArrays(CAPArray_t &dest, CAPArray_t &src)
 //        B - the CAPArray to subtract
 // return: if the array has content (not all 0s),
 //         return 0 if all capabilities are 0
-bool DiffCAPArrays(CAPArray_t &dest, CAPArray_t &A, CAPArray_t &B) 
+bool DiffCAPArrays(CAPArray_t &dest, const CAPArray_t &A, const CAPArray_t &B) 
 {
     bool hasContent = false;
     for (unsigned int i = 0; i < A.size(); ++i){
@@ -141,7 +184,7 @@ void ReverseCAPArray(CAPArray_t &A)
 // If the CAPArray is empty
 // @A: the CAPArray to examine
 // return: if it's empty
-bool IsCAPArrayEmpty(CAPArray_t &A)
+bool IsCAPArrayEmpty(const CAPArray_t &A)
 {
     bool notEmpty = false;
     for (auto i = A.begin(), e = A.end(); i != e; ++i) {
@@ -184,7 +227,7 @@ void dumpCAPArray(const CAPArray_t &A) {
 
 // dump CAPTable for Debugging purpose
 // param: CT - the CAPTable to dump
-void dumpCAPTable(FuncCAPTable_t &CT)
+void dumpCAPTable(const FuncCAPTable_t &CT)
 {
 
     // iterate through captable, a map from func to array
@@ -202,7 +245,6 @@ void dumpCAPTable(FuncCAPTable_t &CT)
         errs() << "\n";
     }
     errs() << "\n";
-
 }
 
 

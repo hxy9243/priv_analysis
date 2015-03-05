@@ -24,47 +24,6 @@
 namespace llvm {
 namespace privAnalysis {
 
-// capability number to string for ROSA
-static const std::string CAPString[CAP_TOTALNUM] = {
-    "CapChown",
-    "CapDacOverride",
-    "CapDacReadSearch",
-    "CapFowner",
-    "CapFsetid",
-    "CapKill",
-    "CapSetgid",
-    "CapSetuid",
-    "CapSetpCap",
-    "CapLinuxImmutable",
-    "CapNetBindService",
-    "CapNetBroadcast",
-    "CapNetAdmin",
-    "CapNetRaw",
-    "CapIpcLock",
-    "CapIpcOwner",
-    "CapSysModule",
-    "CapSysRawio",
-    "CapSysChroot",
-    "CapSysPtrace",
-    "CapSysPacct",
-    "CapSysAdmin",
-    "CapSysBoot",
-    "CapSysNice",
-    "CapSysResource",
-    "CapSysTime",
-    "CapSysTtyConfig",
-    "CapMknod",
-    "CapLease",
-    "CapAuditWrite",
-    "CapAuditControl",
-    "CapSetfCap",
-    "CapMacOverride",
-    "CapMacAdmin",
-    "CapSyslog",
-    "CapWakeAlarm",
-    "CapBlockSuspend"
-};
-
 
 // type definition
 // The array of bool representing all Capabilities
@@ -93,30 +52,28 @@ void AddToBBCAPTable(BBCAPTable_t &CAPTable,
                      BasicBlock *B, CAPArray_t CAParray);
 
 // Copy CAPTable keys from src to dest, with array empty
-void CopyTableKeys(FuncCAPTable_t &dest, FuncCAPTable_t &src);
+void CopyTableKeys(FuncCAPTable_t &dest, const FuncCAPTable_t &src);
 
 // Find the size of the input array
-int findCAPArraySize(CAPArray_t &A);
+int findCAPArraySize(const CAPArray_t &A);
 
 // Union two arrays, save result to dest and test dest ischanged
-bool UnionCAPArrays(CAPArray_t &dest, CAPArray_t &src);
+bool UnionCAPArrays(CAPArray_t &dest, const CAPArray_t &src);
 
 // Diff two arrays, save result
 // return if the difference has content (not all 0s)
-bool DiffCAPArrays(CAPArray_t &dest, CAPArray_t &A, CAPArray_t &B); 
+bool DiffCAPArrays(CAPArray_t &dest, const CAPArray_t &A, const CAPArray_t &B); 
 
 // Find the reverse of cap array
 void ReverseCAPArray(CAPArray_t &A);
 
 // If the CAPArray is empty
-bool IsCAPArrayEmpty(CAPArray_t &A);
+bool IsCAPArrayEmpty(const CAPArray_t &A);
 
 
 void dumpCAPArray(raw_ostream &O, const CAPArray_t &A);
 
 void dumpCAPArray(const CAPArray_t &A);
-
-void dumpCAPTable(FuncCAPTable_t &CT);
 
 
 } // namespace privAnalysis
