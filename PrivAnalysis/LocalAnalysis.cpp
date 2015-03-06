@@ -5,6 +5,7 @@
 //
 // ====-------------------------------------------------------====
 
+
 #include "LocalAnalysis.h"
 #include "SplitBB.h"
 
@@ -19,7 +20,7 @@ using namespace llvm::localAnalysis;
 
 
 // Constructor
-LocalAnalysis::LocalAnalysis() : ModulePass(ID) {}
+LocalAnalysis::LocalAnalysis() : ModulePass(ID) { }
 
 
 // Do initialization
@@ -119,5 +120,6 @@ void LocalAnalysis::print(raw_ostream &O, const Module *M) const
 
 // Pass registry
 char LocalAnalysis::ID = 0;
-static RegisterPass<LocalAnalysis> A("LocalAnalysis", "Local Privilege Analysis", true, true);
-
+static RegisterPass<LocalAnalysis> A("LocalAnalysis", "Local Privilege Analysis", 
+                                     true, /* CFG only? */
+                                     true /* Analysis pass? */);

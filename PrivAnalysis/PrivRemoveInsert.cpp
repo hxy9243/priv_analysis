@@ -160,5 +160,7 @@ void PrivRemoveInsert::print(raw_ostream &O, const Module *M) const
 
 // register pass
 char PrivRemoveInsert::ID = 0;
-static RegisterPass<PrivRemoveInsert> I("PrivRemoveInsert", "Insert PrivRemove calls", true, true);
+static RegisterPass<PrivRemoveInsert> I("PrivRemoveInsert", "Insert PrivRemove calls", 
+                                        true, /* CFG only? */
+                                        false /* Analysis pass? */);
 

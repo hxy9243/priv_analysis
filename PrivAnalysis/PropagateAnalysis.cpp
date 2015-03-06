@@ -137,4 +137,6 @@ void PropagateAnalysis::print(raw_ostream &O, const Module *M) const
 
 // register pass
 char PropagateAnalysis::ID = 0;
-static RegisterPass<PropagateAnalysis> X("PropagateAnalysis", "Privilege Propagate Analysis.");
+static RegisterPass<PropagateAnalysis> X("PropagateAnalysis", "Privilege Propagate Analysis.",
+                                         true, /* CFG only? */
+                                         true /* Analysis Pass? */);

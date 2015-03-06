@@ -62,11 +62,6 @@ bool SplitBB::runOnModule(Module &M)
         splitOnFunction(F, SPLIT_HERE | SPLIT_NEXT);
     }
 
-    // // DEBUG
-    // errs() << "Sizeof privBB is " << PrivBB.size() << "\n"
-    //        << "Sizeof CallSiteBB is " << CallSiteBB.size() << "\n"
-    //        << "Sizeof BBFuncTable is " << BBFuncTable.size() << "\n";
-
     return true;
 }
 
@@ -110,11 +105,6 @@ void SplitBB::splitOnFunction(Function *F, int splitLoc)
                     CallSiteBB.push_back(NewBB);
                     BBFuncTable[NewBB] = F;
                 }
-
-                // // DEBUG
-                // errs() << "split on " 
-                //        << CI->getCalledFunction()->getName() << " in "
-                //        << CI->getParent()->getParent()->getName() << "\n";
             }
             else {
                 // else, push the original BB to data structure
@@ -125,12 +115,6 @@ void SplitBB::splitOnFunction(Function *F, int splitLoc)
                     CallSiteBB.push_back(BB);
                     BBFuncTable[BB] = F;
                 }
-                // // DEBUG
-                // errs() << CI->getCalledFunction()->getName()
-                //        <<" is the start of a block in " 
-                //        << CI->getParent()->getParent()->getName() 
-                //        << " I'm not splitting you\n";
-                ////////////////////////
             }
         }
 
@@ -169,5 +153,5 @@ void SplitBB::getAnalysisUsage(AnalysisUsage &AU) const { }
 // Pass registry
 char SplitBB::ID = 0;
 static RegisterPass<SplitBB> B("SplitBB", "Split BasicBlock pass", 
-                               false /* Modifies the CFG */,
+                               false, /* Modifies the CFG */
                                false /* Modify the program */);

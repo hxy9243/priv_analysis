@@ -312,4 +312,6 @@ void GlobalLiveAnalysis::print(raw_ostream &O, const Module *M) const
 
 // register pass
 char GlobalLiveAnalysis::ID = 1;
-static RegisterPass<GlobalLiveAnalysis> L("GlobalLiveAnalysis", "Global privilege live analysis", true, true);
+static RegisterPass<GlobalLiveAnalysis> L("GlobalLiveAnalysis", "Global privilege live analysis", 
+                                          true, /* CFG only? */
+                                          true  /* Analysis Pass? */);

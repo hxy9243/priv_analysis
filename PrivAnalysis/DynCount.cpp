@@ -228,4 +228,6 @@ void DynCount::print(raw_ostream &O, const Module *M) const
 
 // register pass
 char DynCount::ID = 0;
-static RegisterPass<DynCount> D("DynCount", "Dynamically count LOC in privilege set.", true, true);
+static RegisterPass<DynCount> D("DynCount", "Dynamically count LOC in privilege set.", 
+                                true, /* CFG only? */
+                                false  /* If modifies the program? */);
