@@ -87,35 +87,21 @@ bool GlobalLiveAnalysis::runOnModule(Module &M)
             UnifyExitNode.runOnFunction(*F);
             BasicBlock *ReturnBB = UnifyExitNode.getReturnBlock();
             BasicBlock *UnReachableBB = UnifyExitNode.getUnreachableBlock();
-            
-            if (ReturnBB == NULL && UnReachableBB == NULL) {
-                bool haveReturn = 0;
-                for (Function::iterator I = F->begin(), E = F->end(); I != E; ++I) {
-                    BasicBlock *RetBB = dyn_cast<BasicBlock>(I);
-                    
-                    if (isa<ReturnInst>(RetBB->getTerminator())){
-                        errs() << "I have a terminator\n";
-                        haveReturn = 1;
-                    }
-                }
-            }
+            BasicBlock *UnwindBB = UnifyExitNode.getUnwindBlock();
 
+            assert(UnwindBB == NULL && "So far not dealing with unwind block\n");
             assert((ReturnBB != NULL || UnReachableBB != NULL) && "Return BB is NULL\n");
 
-            // Push information to the entry of function live table
-            //      BasicBlock &EntryBB = F->getEntryBlock();
-            //ischanged |= UnionCAPArrays(FuncLiveCAPTable_in[F], FuncUseCAPTable[F]);
-      
-            // iterate all BBs
+            // iterate through all BBs for information propagation
             for (Function::iterator BI = F->begin(), BE = F->end();
                  BI != BE; ++ BI) {
                 BasicBlock *B = dyn_cast<BasicBlock>(BI);
                 if (B == NULL) {
                     continue;
                 }
-                //////////////////////////////////
+                // ---------------------------------------------------------- //
                 // Propagate information in each BB
-                //////////////////////////////////
+                // ---------------------------------------------------------- //
 
                 // if it's a terminating BB, propagate the info from func live CAPTable
                 // to BB[out]. Note that only returnBBs are considered in data propagation

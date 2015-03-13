@@ -118,6 +118,7 @@ void LocalAnalysis::print(raw_ostream &O, const Module *M) const
     
 }
 
+
 // Pass registry
 char LocalAnalysis::ID = 0;
 static RegisterPass<LocalAnalysis> A("LocalAnalysis", "Local Privilege Analysis", 

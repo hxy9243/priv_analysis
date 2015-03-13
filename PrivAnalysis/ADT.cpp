@@ -122,7 +122,7 @@ void CopyTableKeys(FuncCAPTable_t &dest, const FuncCAPTable_t &src)
 // Find the size of the input array
 // param: A - the input array
 // return the number of the capablities inside CAPArray 
-int findCAPArraySize(CAPArray_t &A)
+int findCAPArraySize(const CAPArray_t &A)
 {
     int size = 0;
     for (auto I = A.begin(), E = A.end(); I != E; ++I) {
