@@ -60,7 +60,7 @@ private:
 
     Function *getAddCountFunc(Module &M);
 
-    Function *getReportCountFunc(Module &M);
+    Function *getAtExitFunc(Module &M);
 
     void getAddCountArgs(std::vector<Value *>& Args, unsigned int LOC, 
                          const CAPArray_t &CAPArray);

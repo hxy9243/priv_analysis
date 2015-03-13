@@ -32,7 +32,6 @@ void DynCount::getAnalysisUsage(AnalysisUsage &AU) const
 {
     AU.addRequired<GlobalLiveAnalysis>();
     AU.addRequired<SplitBB>();
-    AU.addRequired<UnifyFunctionExitNodes>();
 }
 
 
@@ -79,16 +78,29 @@ Function* DynCount::getInitCountFunc(Module &M)
 // get report count function
 // param: M - module
 // return: pointer to initCount function
-Function* DynCount::getReportCountFunc(Module &M)
+Function* DynCount::getAtExitFunc(Module &M)
 {
     std::vector<Type *> Params;
     Type *IntType = IntegerType::get(M.getContext(), 32);
+    Type *VoidType = Type::getVoidTy(M.getContext());
 
-    FunctionType *ReportCountFuncType = FunctionType::get(IntType,
-                                                          ArrayRef<Type *>(Params), false);
-    Constant *ReportCountFunc = M.getOrInsertFunction(REPORT_COUNT_FUNC,
-                                                      ReportCountFuncType);
-    return dyn_cast<Function>(ReportCountFunc);
+    // insert function void atexit(void (*)(void))
+    // get void function type
+    FunctionType *VoidFuncType = FunctionType::get(VoidType,
+                                                   ArrayRef<Type *>(Params), false);
+    PointerType *VoidFuncPointer = VoidFuncType->getPointerTo();
+
+    // get atexit function type
+    Params.clear();
+    Params.push_back(VoidFuncPointer);
+    FunctionType *AtExitFuncType = FunctionType::get(IntType,
+                                                     ArrayRef<Type *>(Params), false);
+
+    Constant *AtExitFunc = M.getOrInsertFunction("atexit", AtExitFuncType);
+
+    assert(AtExitFunc != NULL && "AtExit Function is NULL!");
+
+    return dyn_cast<Function>(AtExitFunc);
 }
 
 
@@ -188,14 +200,20 @@ bool DynCount::runOnModule(Module &M)
                      INIT_COUNT_FUNC, entryBB.getFirstNonPHI());
     
 
-    // Add reportCount to returnBB of main
-    UnifyFunctionExitNodes &UnifyExitNode = getAnalysis<UnifyFunctionExitNodes>(*mainFunc);
-    BasicBlock *returnBB = UnifyExitNode.getReturnBlock();
+    // Add atexit() call to the entry block of main
+    Type *VoidType = Type::getVoidTy(M.getContext());
 
-    assert(returnBB != NULL && "Return BB is NULL\n");
+    FunctionType *VoidFuncType = FunctionType::get(VoidType, false);
+    Constant *reportCountFuncConstant = M.getOrInsertFunction("reportCount",
+                                                              VoidFuncType);
+    assert(reportCountFuncConstant && "report count constant is NULL");
 
-    CallInst::Create(getReportCountFunc(M), ArrayRef<Value *>(Args),
-                     REPORT_COUNT_FUNC, returnBB->getTerminator());
+    Function *reportCountFunc = dyn_cast<Function>(reportCountFuncConstant);
+
+    assert(reportCountFunc && "report count function is NULL");
+    Args.push_back(reportCountFunc);
+    CallInst::Create(getAtExitFunc(M), Args, "", entryBB.getFirstNonPHI());
+
     return false;
 }
 
