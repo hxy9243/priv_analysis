@@ -208,10 +208,11 @@ bool DynCount::runOnModule(Module &M)
                                                               VoidFuncType);
     assert(reportCountFuncConstant && "report count constant is NULL");
 
-    Function *reportCountFunc = dyn_cast<Function>(reportCountFuncConstant);
+    // TODO: why this cause (reportCountFunc == NULL)? 
+    // Function *reportCountFunc = dyn_cast<Function>(reportCountFuncConstant);
+    // assert(reportCountFunc && "report count function is NULL");
 
-    assert(reportCountFunc && "report count function is NULL");
-    Args.push_back(reportCountFunc);
+    Args.push_back(reportCountFuncConstant);
     CallInst::Create(getAtExitFunc(M), Args, "", entryBB.getFirstNonPHI());
 
     return false;
