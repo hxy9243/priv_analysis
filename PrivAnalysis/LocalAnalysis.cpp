@@ -60,6 +60,7 @@ bool LocalAnalysis::runOnModule(Module &M)
     // retrieve all data for later use
     SplitBB &SB = getAnalysis<SplitBB>();
     BBFuncTable = SB.BBFuncTable;
+    ExtraJMPBB = SB.ExtraJMPBB;
   
     // find all users of Targeted function
     Function *F = M.getFunction(PRIVRAISE);

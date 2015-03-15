@@ -38,6 +38,9 @@ public:
     // Map from BB to its non-external Function Calls
     BBFuncTable_t BBFuncTable;
 
+    // Vector to store new direct JMP as terminator
+    std::vector<BasicBlock *> ExtraJMPBB;
+
     // constructor
     LocalAnalysis();
 

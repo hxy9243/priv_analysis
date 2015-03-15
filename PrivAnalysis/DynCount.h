@@ -16,7 +16,7 @@
 
 
 #include "ADT.h"
-#include "SplitBB.h"
+#include "LocalAnalysis.h"
 #include "GlobalLiveAnalysis.h"
 
 

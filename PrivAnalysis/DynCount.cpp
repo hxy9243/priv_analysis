@@ -18,7 +18,7 @@
 
 
 using namespace llvm;
-using namespace llvm::splitBB;
+using namespace llvm::localAnalysis;
 using namespace llvm::globalLiveAnalysis;
 using namespace llvm::dynCount;
 
@@ -31,7 +31,7 @@ DynCount::DynCount() : ModulePass(ID) { };
 void DynCount::getAnalysisUsage(AnalysisUsage &AU) const
 {
     AU.addRequired<GlobalLiveAnalysis>();
-    AU.addRequired<SplitBB>();
+    AU.addRequired<LocalAnalysis>();
 }
 
 
@@ -141,7 +141,7 @@ bool DynCount::doInitialization(Module &M)
 // run on module
 bool DynCount::runOnModule(Module &M)
 {
-    SplitBB &SB = getAnalysis<SplitBB>();
+    LocalAnalysis &LA = getAnalysis<LocalAnalysis>();
     GlobalLiveAnalysis &GA = getAnalysis<GlobalLiveAnalysis>();
 
     // Add function to module 
@@ -178,7 +178,7 @@ bool DynCount::runOnModule(Module &M)
 
             // Insert addcount for terminator if it's not redundant jmp
             // created by splitBB
-            if (findVector<BasicBlock*>(SB.ExtraJMPBB, BB)) {
+            if (findVector<BasicBlock*>(LA.ExtraJMPBB, BB)) {
                 continue;
             }
             else {
@@ -238,9 +238,9 @@ bool DynCount::findVector(std::vector<T> V, T elem)
 
 void DynCount::print(raw_ostream &O, const Module *M) const
 {
-    SplitBB &SB = getAnalysis<SplitBB>();
+    LocalAnalysis &LA = getAnalysis<LocalAnalysis>();
 
-    O << SB.ExtraJMPBB.size() << "\n";
+    O << LA.ExtraJMPBB.size() << "\n";
 }
 
 
