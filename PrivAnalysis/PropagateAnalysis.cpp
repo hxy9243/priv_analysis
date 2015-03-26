@@ -15,6 +15,7 @@
 #include <array>
 #include <vector>
 #include <map>
+#include <stack>
 
 using namespace llvm;
 using namespace llvm::privAnalysis;
@@ -77,31 +78,55 @@ void PropagateAnalysis::Propagate(Module &M)
     CopyTableKeys(FuncCAPTable_in, FuncCAPTable);
     CopyTableKeys(FuncCAPTable_out, FuncCAPTable);
 
+    Function* mainFunc = M.getFunction("main");
+    assert(mainFunc && "Cannot find main function\n");
+    CallGraphNode *mainNode = CG[mainFunc];
+    
+    // DFS related data structures
+    std::stack<CallGraphNode *> worklist;
+    std::vector<Function *> internalFuncList;
+
     // Keep iterating until converged
     while (ischanged) {
         ischanged = false;
 
-        // Iterate through the callgraph
-        for (CallGraph::iterator CI = CG.begin(), CE = CG.end();
-             CI != CE; ++ CI) {
+        worklist.push(mainNode);
+
+        // DFS from the main node
+        while (worklist.size() != 0) {
             // Get CallgraphNode
-            CallGraphNode *N = CI->second;
+            CallGraphNode *N = worklist.top();
             Function *FCaller = N->getFunction();
+
+            internalFuncList.push_back(FCaller);
+            worklist.pop();
+
             // protector
-            if (!FCaller) {
-                continue;
-            }
+            if (!FCaller) { continue; }
 
             // Get Caller mapped array in FuncCAPTables
             CAPArray_t &callerIn = FuncCAPTable_in[FCaller];
             CAPArray_t &callerOut = FuncCAPTable_out[FCaller];
+
             // Iterate through Callgraphnode for callees
             for (CallGraphNode::iterator RI = N->begin(), RE = N->end();
                  RI != RE; ++ RI) {
                 // Get callee
                 Function *FCallee = RI->second->getFunction();
-                if (!FCallee) {
-                    continue;
+                if (!FCallee) { continue; }
+
+                // push to the worklist
+                bool found = false;
+                for (auto II = internalFuncList.begin(), 
+                         IE = internalFuncList.end(); II != IE; ++II) {
+                    if (*II == FCallee) {
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    internalFuncList.push_back(FCallee);
+                    worklist.push(CG[FCallee]);
                 }
 
                 CAPArray_t &calleeIn = FuncCAPTable_in[FCallee];
@@ -109,13 +134,15 @@ void PropagateAnalysis::Propagate(Module &M)
                 ischanged |= UnionCAPArrays(callerOut, calleeIn);
             } // Iterate through Callgraphnode for callees
 
+            // delete N;
+
             // Propagate all information from caller_out to caller_in
             ischanged |= UnionCAPArrays(callerOut, FuncCAPTable[FCaller]);
             ischanged |= UnionCAPArrays(callerIn, callerOut);
-
         } // iterator for caller nodes
     } // main loop
 
+    funcList = internalFuncList;
     FuncCAPTable = FuncCAPTable_in;
 }
 

@@ -66,6 +66,8 @@ bool GlobalLiveAnalysis::runOnModule(Module &M)
     BBCAPTable_t &BBCAPTable = PA.BBCAPTable;
     BBFuncTable_t &BBFuncTable = PA.BBFuncTable;
 
+    std::vector<Function *> funcList = PA.funcList;
+
     // init data structure
     bool ischanged = true;
 
@@ -75,8 +77,10 @@ bool GlobalLiveAnalysis::runOnModule(Module &M)
         ischanged = false;
 
         // iterate through all functions
-        for (Module::iterator FI = M.begin(), FE = M.end(); FI != FE; ++FI) {
-            Function *F = dyn_cast<Function>(FI);
+        // for (Module::iterator FI = M.begin(), FE = M.end(); FI != FE; ++FI) {
+        for (auto FI = funcList.begin(), FE = funcList.end(); 
+             FI != FE; ++FI) {
+            Function *F = *FI;
             if (F == NULL || F->empty()) {
                 continue;
             }

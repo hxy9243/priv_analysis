@@ -3,7 +3,7 @@ add_llvm_loadable_module( LLVMPrivAnalysis
   LocalAnalysis.cpp
   PropagateAnalysis.cpp
   SplitBB.cpp
-  GlobalPrivAnalysis.cpp
+  GlobalLiveAnalysis.cpp
   PrivRemoveInsert.cpp
   DynCount.cpp
   )

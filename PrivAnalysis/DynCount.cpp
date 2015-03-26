@@ -19,6 +19,7 @@
 
 using namespace llvm;
 using namespace llvm::localAnalysis;
+using namespace llvm::propagateAnalysis;
 using namespace llvm::globalLiveAnalysis;
 using namespace llvm::dynCount;
 
@@ -30,8 +31,9 @@ DynCount::DynCount() : ModulePass(ID) { };
 // Preserve analysis usage
 void DynCount::getAnalysisUsage(AnalysisUsage &AU) const
 {
-    AU.addRequired<GlobalLiveAnalysis>();
     AU.addRequired<LocalAnalysis>();
+    AU.addRequired<PropagateAnalysis>();
+    AU.addRequired<GlobalLiveAnalysis>();
 }
 
 
@@ -142,18 +144,21 @@ bool DynCount::doInitialization(Module &M)
 bool DynCount::runOnModule(Module &M)
 {
     LocalAnalysis &LA = getAnalysis<LocalAnalysis>();
+    PropagateAnalysis &PA = getAnalysis<PropagateAnalysis>();
     GlobalLiveAnalysis &GA = getAnalysis<GlobalLiveAnalysis>();
 
     // Add function to module 
     Function *addCountFunction = getAddCountFunc(M);
     // Insert callinst to all BBs 
     std::vector<Value *>Args;
+    std::vector<Function *>funcList = PA.funcList;
 
     assert(addCountFunction && "The addCount function is NULL!\n");
 
     // iterate through all functions
-    for (Module::iterator FI = M.begin(), FE = M.end(); FI != FE; ++FI) {
-        Function *F = dyn_cast<Function>(FI);
+    // for (Module::iterator FI = M.begin(), FE = M.end(); FI != FE; ++FI) {
+    for (auto FI = funcList.begin(), FE = funcList.end(); FI != FE; ++FI) {
+        Function *F = *FI;
         if (F == NULL) {
             continue;
         }

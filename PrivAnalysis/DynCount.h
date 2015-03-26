@@ -17,6 +17,7 @@
 
 #include "ADT.h"
 #include "LocalAnalysis.h"
+#include "PropagateAnalysis.h"
 #include "GlobalLiveAnalysis.h"
 
 
