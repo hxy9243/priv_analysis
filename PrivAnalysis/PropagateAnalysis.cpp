@@ -91,6 +91,7 @@ void PropagateAnalysis::Propagate(Module &M)
         ischanged = false;
 
         worklist.push(mainNode);
+        internalFuncList.clear();
 
         // DFS from the main node
         while (worklist.size() != 0) {
@@ -133,8 +134,6 @@ void PropagateAnalysis::Propagate(Module &M)
                 // Propagate all information from callee to caller_out 
                 ischanged |= UnionCAPArrays(callerOut, calleeIn);
             } // Iterate through Callgraphnode for callees
-
-            // delete N;
 
             // Propagate all information from caller_out to caller_in
             ischanged |= UnionCAPArrays(callerOut, FuncCAPTable[FCaller]);
