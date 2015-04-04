@@ -79,9 +79,12 @@ void PropagateAnalysis::Propagate(Module &M)
     CopyTableKeys(FuncCAPTable_out, FuncCAPTable);
 
     Function* mainFunc = M.getFunction("main");
-    assert(mainFunc && "Cannot find main function\n");
     CallGraphNode *mainNode = CG[mainFunc];
-    
+    CallGraphNode *externalNode = CG.getExternalCallingNode();
+
+    assert(mainNode && "Cannot find main Node\n");
+    assert(externalNode && "Cannot find external calling Node\n");
+        
     // DFS related data structures
     std::stack<CallGraphNode *> worklist;
     std::vector<Function *> internalFuncList;
@@ -91,6 +94,8 @@ void PropagateAnalysis::Propagate(Module &M)
         ischanged = false;
 
         worklist.push(mainNode);
+        //worklist.push(externalNode);
+
         internalFuncList.clear();
 
         // DFS from the main node
