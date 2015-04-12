@@ -38,6 +38,21 @@ bool ExternFunCall::runOnModule(Module &M)
             extern_funcs.push_back(F);
         }
     }
+
+    // Iterate through all callees of instructions
+    CallGraph CG(M);
+    CallGraphNode *externNode = CG.getExternalCallingNode();
+
+    for (CallGraphNode::iterator NI = externNode->begin(), NE = externNode->end();
+         NI != NE; ++NI) {
+        Function* CalledFunc = NI->second->getFunction();
+        assert(CalledFunc != NULL && "Callgraph node is NULL\n");
+        if (CalledFunc->empty()) {
+            continue;
+        }
+        extern_calls.push_back(CalledFunc);
+    }
+
     return false;
 }
 
@@ -45,12 +60,20 @@ bool ExternFunCall::runOnModule(Module &M)
 // Print out the 
 void ExternFunCall::print(raw_ostream &O, const Module *M) const
 {
-
+    O << "The extern functions are: \n";
     for (auto FI = extern_funcs.begin(), FE = extern_funcs.end();
          FI != FE; ++FI) {
         O << ((*FI)->getName()) << "\n";
         // O << (*FI) << "\n";
     }
+
+    O << "The functions accessible from external nodes are: \n";
+    for (auto FI = extern_calls.begin(), FE = extern_calls.end();
+         FI != FE; ++FI) {
+        O << ((*FI)->getName()) << "\n";
+        // O << (*FI) << "\n";
+    }
+    
 }
 
 

@@ -10,6 +10,7 @@
 
 #include "llvm/ADT/Statistic.h"
 #include "llvm/IR/Instructions.h"
+#include "llvm/Analysis/CallGraph.h"
 #include "llvm/IR/Module.h"
 #include "llvm/IR/Constants.h"
 #include "llvm/Pass.h"
@@ -42,6 +43,8 @@ public:
 
 private:
     std::vector<Function *> extern_funcs;
+
+    std::vector<Function *> extern_calls;
 };
 
 
