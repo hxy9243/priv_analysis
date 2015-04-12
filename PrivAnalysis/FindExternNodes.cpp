@@ -55,13 +55,14 @@ bool FindExternNodes::runOnModule(Module &M)
     PropagateAnalysis &PA = getAnalysis<PropagateAnalysis>();
 
     // get data structures
-    FuncCAPTable_t FuncCAPTable = PA.FuncCAPTable;
+    FuncCAPTable_t FuncCAPTable;
     
     // get all nodes calling from externcallingnode
-    for (auto FI = FuncCAPTable.begin(), FE = FuncCAPTable.end();
+    // TODO: problem here
+    for (auto FI = PA.FuncCAPTable.begin(), FE = PA.FuncCAPTable.end();
          FI != FE; ++FI) {
-        if (IsCAPArrayEmpty(FI->second)) {
-            FuncCAPTable.erase(FI);
+        if (!IsCAPArrayEmpty(FI->second)) {
+            FuncCAPTable[FI->first] = FI->second;
         }
     }
 
@@ -90,9 +91,9 @@ void FindExternNodes::print(raw_ostream &O, const Module *M) const
 {
     for (auto FI = ExternPrivNodes.begin(), FE = ExternPrivNodes.end();
          FI != FE; ++FI) {
-        O << FI->first->getName() << "\n";
+        O << FI->first->getName() << ":\t";
+        dumpCAPArray(O, FI->second);
     }
-    
 }
 
 
