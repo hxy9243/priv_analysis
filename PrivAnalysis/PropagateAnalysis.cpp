@@ -78,34 +78,17 @@ void PropagateAnalysis::Propagate(Module &M)
     CopyTableKeys(FuncCAPTable_in, FuncCAPTable);
     CopyTableKeys(FuncCAPTable_out, FuncCAPTable);
 
-    Function* mainFunc = M.getFunction("main");
-    CallGraphNode *mainNode = CG[mainFunc];
-    CallGraphNode *externalNode = CG.getExternalCallingNode();
-
-    assert(mainNode && "Cannot find main Node\n");
-    assert(externalNode && "Cannot find external calling Node\n");
-        
-    // DFS related data structures
-    std::stack<CallGraphNode *> worklist;
-    std::vector<Function *> internalFuncList;
-
     // Keep iterating until converged
     while (ischanged) {
         ischanged = false;
 
-        worklist.push(mainNode);
-        //worklist.push(externalNode);
+        // iterate the whole callgraph
+        for (CallGraph::iterator NI = CG.begin(), NE = CG.end();
+             NI != NE; ++NI) {
 
-        internalFuncList.clear();
-
-        // DFS from the main node
-        while (worklist.size() != 0) {
             // Get CallgraphNode
-            CallGraphNode *N = worklist.top();
+            CallGraphNode *N = NI->second;
             Function *FCaller = N->getFunction();
-
-            internalFuncList.push_back(FCaller);
-            worklist.pop();
 
             // protector
             if (!FCaller) { continue; }
@@ -145,8 +128,6 @@ void PropagateAnalysis::Propagate(Module &M)
             ischanged |= UnionCAPArrays(callerIn, callerOut);
         } // iterator for caller nodes
     } // main loop
-
-    funcList = internalFuncList;
     FuncCAPTable = FuncCAPTable_in;
 }
 
