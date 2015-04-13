@@ -59,6 +59,9 @@ public:
     // Print out information for debugging purposes
     void print(raw_ostream &O, const Module *M) const;
 private:
+    // Insert dummy function
+    static Function *InsertDummyFunc(Module &M, const StringRef name); 
+
     // Data propagation analysis
     void Propagate(Module &M);
 

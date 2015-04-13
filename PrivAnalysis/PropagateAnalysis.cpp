@@ -7,6 +7,7 @@
 //
 // ====-------------------------------------------------------====
 
+#include "llvm/IR/DerivedTypes.h"
 #include "llvm/Analysis/CallGraph.h"
 
 #include "PropagateAnalysis.h"
@@ -61,6 +62,21 @@ bool PropagateAnalysis::runOnModule(Module &M)
 }
 
 
+// Adding dummy function of type void(*)(void)
+// param: M    - the module
+//        name - function name
+Function* PropagateAnalysis::InsertDummyFunc(Module &M, const StringRef name)
+{
+    Type *voidTy = Type::getVoidTy(M.getContext());
+    std::vector<Type *>Params;
+    
+    FunctionType *dummyType = FunctionType::get(voidTy, ArrayRef<Type *>(Params),
+                                                false);
+    Constant *func = M.getOrInsertFunction(name, dummyType);
+    return dyn_cast<Function>(func);
+}
+
+
 // Depth First Search data propagation analysis
 // param: M - the program module
 //        FuncCAPTable - the captable to store live analysis data
@@ -72,6 +88,15 @@ void PropagateAnalysis::Propagate(Module &M)
     CallGraph CG(M);
     bool ischanged = true;
 
+    // Add external calls node function as NULL
+    CallGraphNode* callsNode = CG.getCallsExternalNode();
+    CallGraphNode* callingNode = CG.getExternalCallingNode();
+
+    Function *callsNodeFunc = InsertDummyFunc(M, "CallsExternNode");
+    Function *callingNodeFunc = InsertDummyFunc(M, "CallsExternNode");
+    FuncCAPTable[callsNodeFunc] = {};
+    FuncCAPTable[callingNodeFunc] = {};
+
     // copy to FuncCAPTable_in
     // TODO: Is FuncCAPTable_in really needed here?
     // TODO: Could be using FuncCAPTable directly?
@@ -82,10 +107,9 @@ void PropagateAnalysis::Propagate(Module &M)
     while (ischanged) {
         ischanged = false;
 
-        // iterate the whole callgraph
+        // iterate the whole callgraph 
         for (CallGraph::iterator NI = CG.begin(), NE = CG.end();
              NI != NE; ++NI) {
-
             // Get CallgraphNode
             CallGraphNode *N = NI->second;
             Function *FCaller = N->getFunction();
@@ -99,24 +123,16 @@ void PropagateAnalysis::Propagate(Module &M)
 
             // Iterate through Callgraphnode for callees
             for (CallGraphNode::iterator RI = N->begin(), RE = N->end();
-                 RI != RE; ++ RI) {
-                // Get callee
-                Function *FCallee = RI->second->getFunction();
-                if (!FCallee) { continue; }
+                 RI != RE; ++RI) {
+                if (RI->second == callingNode) { continue; }
 
-                // push to the worklist
-                bool found = false;
-                for (auto II = internalFuncList.begin(), 
-                         IE = internalFuncList.end(); II != IE; ++II) {
-                    if (*II == FCallee) {
-                        found = true;
-                        break;
-                    }
-                }
-                if (!found) {
-                    internalFuncList.push_back(FCallee);
-                    worklist.push(CG[FCallee]);
-                }
+                // Get callee
+                Function *FCallee;
+                if (RI->second == callsNode) { FCallee = callsNodeFunc; }
+                else { FCallee = RI->second->getFunction(); }
+
+                // calls external node has no corresponding function
+                // if (FCallee == NULL) { continue; }
 
                 CAPArray_t &calleeIn = FuncCAPTable_in[FCallee];
                 // Propagate all information from callee to caller_out 
@@ -127,6 +143,26 @@ void PropagateAnalysis::Propagate(Module &M)
             ischanged |= UnionCAPArrays(callerOut, FuncCAPTable[FCaller]);
             ischanged |= UnionCAPArrays(callerIn, callerOut);
         } // iterator for caller nodes
+
+        // special handle calls external node, propagate callees of external
+        // calling node to this calls external node
+
+        CAPArray_t &callerIn = FuncCAPTable_in[callingNodeFunc];
+        CAPArray_t &callerOut = FuncCAPTable_out[callingNodeFunc];
+        
+        for (CallGraphNode::iterator RI = callingNode->begin(), 
+                 RE = callingNode->end(); RI != RE; ++RI) {
+            Function *FCallee = RI->second->getFunction();
+
+            if (FCallee == M.getFunction("main")) { continue; }
+
+            CAPArray_t &calleeIn = FuncCAPTable_in[FCallee];
+
+            ischanged |= UnionCAPArrays(callerOut, calleeIn);
+        }
+        ischanged |= UnionCAPArrays(callerOut, FuncCAPTable[callingNodeFunc]);
+        ischanged |= UnionCAPArrays(callerIn, callerOut);
+
     } // main loop
     FuncCAPTable = FuncCAPTable_in;
 }
@@ -142,7 +178,6 @@ void PropagateAnalysis::print(raw_ostream &O, const Module *M) const
 
         O << F->getName() << ": ";
         dumpCAPArray(O, A);
-        O << "\n";
     }
 }
 
