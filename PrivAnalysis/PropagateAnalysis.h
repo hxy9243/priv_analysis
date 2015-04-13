@@ -41,9 +41,6 @@ public:
     // Map from BB to its non-external Function Calls
     BBFuncTable_t BBFuncTable;
 
-    // vector of functions used by main
-    std::vector<Function *> funcList;
-
     // constructor
     PropagateAnalysis();
 

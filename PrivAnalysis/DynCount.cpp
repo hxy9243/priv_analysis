@@ -151,14 +151,14 @@ bool DynCount::runOnModule(Module &M)
     Function *addCountFunction = getAddCountFunc(M);
     // Insert callinst to all BBs 
     std::vector<Value *>Args;
-    std::vector<Function *>funcList = PA.funcList;
+    FuncCAPTable_t FuncCAPTable = PA.FuncCAPTable;
 
     assert(addCountFunction && "The addCount function is NULL!\n");
 
     // iterate through all functions
     // for (Module::iterator FI = M.begin(), FE = M.end(); FI != FE; ++FI) {
-    for (auto FI = funcList.begin(), FE = funcList.end(); FI != FE; ++FI) {
-        Function *F = *FI;
+    for (auto FI = FuncCAPTable.begin(), FE = FuncCAPTable.end(); FI != FE; ++FI) {
+        Function *F = FI->first;
         if (F == NULL) {
             continue;
         }

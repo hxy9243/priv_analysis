@@ -66,7 +66,7 @@ bool GlobalLiveAnalysis::runOnModule(Module &M)
     BBCAPTable_t &BBCAPTable = PA.BBCAPTable;
     BBFuncTable_t &BBFuncTable = PA.BBFuncTable;
 
-    std::vector<Function *> funcList = PA.funcList;
+    FuncCAPTable_t FuncCAPTable = PA.FuncCAPTable;
 
     // init data structure
     bool ischanged = true;
@@ -78,9 +78,9 @@ bool GlobalLiveAnalysis::runOnModule(Module &M)
 
         // iterate through all functions
         // for (Module::iterator FI = M.begin(), FE = M.end(); FI != FE; ++FI) {
-        for (auto FI = funcList.begin(), FE = funcList.end(); 
+        for (auto FI = FuncCAPTable.begin(), FE = FuncCAPTable.end(); 
              FI != FE; ++FI) {
-            Function *F = *FI;
+            Function *F = FI->first;
             if (F == NULL || F->empty()) {
                 continue;
             }

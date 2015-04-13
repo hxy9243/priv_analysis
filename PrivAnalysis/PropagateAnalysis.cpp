@@ -164,6 +164,10 @@ void PropagateAnalysis::Propagate(Module &M)
         ischanged |= UnionCAPArrays(callerIn, callerOut);
 
     } // main loop
+
+    FuncCAPTable_in.erase(callsNodeFunc);
+    FuncCAPTable_in.erase(callingNodeFunc);
+
     FuncCAPTable = FuncCAPTable_in;
 }
 
