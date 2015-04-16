@@ -132,7 +132,10 @@ void PropagateAnalysis::Propagate(Module &M)
                 else { FCallee = RI->second->getFunction(); }
 
                 // calls external node has no corresponding function
-                // if (FCallee == NULL) { continue; }
+                if (FCallee == M.getFunction("main")) { continue; }
+
+                // DEBUG
+                // if (FCallee == callsNodeFunc) { errs() << FCaller->getName() << " Calling calls External Node\n";}
 
                 CAPArray_t &calleeIn = FuncCAPTable_in[FCallee];
                 // Propagate all information from callee to caller_out 
