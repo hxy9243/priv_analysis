@@ -121,10 +121,18 @@ void PropagateAnalysis::Propagate(Module &M)
              NI != NE; ++NI) {
             // Get CallgraphNode
             CallGraphNode *N = NI->second;
-            Function *FCaller = N->getFunction();
+            Function *FCaller;
 
-            // protector
-            if (!FCaller) { continue; }
+            // special handle external nodes
+            if (N == callingNode) {
+                FCaller = callingNodeFunc;
+            }
+            else if (N == callsNode) {
+                continue;
+            }
+            else {
+                FCaller = N->getFunction();
+            }
 
             // Get Caller mapped array in FuncCAPTables
             CAPArray_t &callerIn = FuncCAPTable_in[FCaller];
@@ -135,16 +143,20 @@ void PropagateAnalysis::Propagate(Module &M)
                  RI != RE; ++RI) {
                 if (RI->second == callingNode) { continue; }
 
-                // Get callee
-                Function *FCallee;
-                if (RI->second == callsNode) { FCallee = callsNodeFunc; }
-                else { FCallee = RI->second->getFunction(); }
-
-                // calls external node has no corresponding function
+                // special case main function
                 if (FCallee == M.getFunction("main")) { continue; }
 
-                // DEBUG
-                if (FCallee == callsNodeFunc) { errs() << FCaller->getName() << " Calling calls External Node\n";}
+                // Get callee
+                // If calle is external callsNode, find it in DSA
+                Function *FCallee;
+                if (RI->second == callsNode) { 
+                    FCallee = callsNodeFunc; 
+
+                    // find it in DSA
+                }
+                else {
+                    FCallee = RI->second->getFunction(); 
+                }
 
                 CAPArray_t &calleeIn = FuncCAPTable_in[FCallee];
                 // Propagate all information from callee to caller_out 
@@ -159,21 +171,12 @@ void PropagateAnalysis::Propagate(Module &M)
         // special handle calls external node, propagate callees of external
         // calling node to this calls external node
 
-        CAPArray_t &callerIn = FuncCAPTable_in[callingNodeFunc];
-        CAPArray_t &callerOut = FuncCAPTable_out[callingNodeFunc];
+        CAPArray_t &callingNodeIn = FuncCAPTable_in[callingNodeFunc];
+        CAPArray_t &callsNodeIn = FuncCAPTable_in[callsNodeFunc];
+        CAPArray_t &callsNodeOut = FuncCAPTable_out[callsNodeFunc];
         
-        for (CallGraphNode::iterator RI = callingNode->begin(), 
-                 RE = callingNode->end(); RI != RE; ++RI) {
-            Function *FCallee = RI->second->getFunction();
-
-            if (FCallee == M.getFunction("main")) { continue; }
-
-            CAPArray_t &calleeIn = FuncCAPTable_in[FCallee];
-
-            ischanged |= UnionCAPArrays(callerOut, calleeIn);
-        }
-        ischanged |= UnionCAPArrays(callerOut, FuncCAPTable[callingNodeFunc]);
-        ischanged |= UnionCAPArrays(callerIn, callerOut);
+        ischanged |= UnionCAPArrays(callsNodeOut, callingNodeIn);
+        ischanged |= UnionCAPArrays(callsNodeIn, callsNodeOut);
 
     } // main loop
 
