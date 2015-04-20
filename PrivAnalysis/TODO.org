@@ -1,0 +1,11 @@
+* TODO [0/2]:
+
+- [ ] Cleaning the code from Privilege Analysis [0/6]
+  - [ ] GlobalLiveAnalysis - retrieve information directly from LocalAnalysis
+  - [ ] GlobalLiveAnalysis - separate UnifyExitNodes as individual transform?
+  - [ ] GlobalLiveAnalysis - code cleaning
+  - [ ] LocalAnalysis - separaet splitBB as an individual transformation pass
+  - [ ] PropagateAnalysis - Is funcCAPTable_in really needed here?
+  - [ ] PropagateAnalysis - Could be using FuncCAPTable directly?
+- [ ] Finalizing Privilege Transformation [0/1] 
+  - [ ] Adding priv_remove calls
