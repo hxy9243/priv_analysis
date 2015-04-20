@@ -141,6 +141,8 @@ void PropagateAnalysis::Propagate(Module &M)
             // Iterate through Callgraphnode for callees
             for (CallGraphNode::iterator RI = N->begin(), RE = N->end();
                  RI != RE; ++RI) {
+                Function* FCallee = RI->second->getFunction(); 
+
                 if (RI->second == callingNode) { continue; }
 
                 // special case main function
@@ -148,14 +150,12 @@ void PropagateAnalysis::Propagate(Module &M)
 
                 // Get callee
                 // If calle is external callsNode, find it in DSA
-                Function *FCallee;
                 if (RI->second == callsNode) { 
                     FCallee = callsNodeFunc; 
 
                     // find it in DSA
-                }
-                else {
-                    FCallee = RI->second->getFunction(); 
+
+
                 }
 
                 CAPArray_t &calleeIn = FuncCAPTable_in[FCallee];

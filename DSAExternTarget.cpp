@@ -17,7 +17,7 @@
 using namespace llvm;
 using namespace dsa;
 using namespace privAnalysis;
-using namespace localanalysis;
+using namespace localAnalysis;
 using namespace dsaexterntarget;
 
 
@@ -47,7 +47,7 @@ bool DSAExternTarget::runOnModule(Module &M)
     CallTargetFinder<TDDataStructures> &CTF = 
         getAnalysis<CallTargetFinder<TDDataStructures> >();
 
-    for (std::list<CallSite>::iterator CSI = CTF.cs_begin(), CSE = CTF.end();
+    for (std::list<CallSite>::iterator CSI = CTF.cs_begin(), CSE = CTF.cs_end();
          CSI != CSE; ++CSI) {
         CallSite &CS = *CSI;
 
