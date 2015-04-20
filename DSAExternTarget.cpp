@@ -47,6 +47,8 @@ bool DSAExternTarget::runOnModule(Module &M)
     CallTargetFinder<TDDataStructures> &CTF = 
         getAnalysis<CallTargetFinder<TDDataStructures> >();
 
+    callsToExternNode = {};
+
     for (std::list<CallSite>::iterator CSI = CTF.cs_begin(), CSE = CTF.cs_end();
          CSI != CSE; ++CSI) {
         CallSite &CS = *CSI;
@@ -71,9 +73,11 @@ bool DSAExternTarget::runOnModule(Module &M)
         }
 
         // Add it to the data structure
-        // TODO:
-
-
+        // FunctionMap[CF] = {};
+        for (std::vector<const Function*>::iterator FI = CTF.begin(CS), FE = CTF.end(CS);
+             FI != FE; ++FI) {
+            callsToExternNode[CF].push_back(*FI);
+        }
     }
      
 

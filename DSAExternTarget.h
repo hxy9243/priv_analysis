@@ -33,7 +33,7 @@ public:
 
     DSAExternTarget();
 
-    typedef std::map<Function*, std::vector<Function*> > FunctionMap;
+    typedef std::map<Function*, std::vector<const Function*> > FunctionMap;
 
     // If a callsite to callsExternNode is complete, record it here
     // with all its callees
