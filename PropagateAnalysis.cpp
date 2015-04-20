@@ -13,6 +13,8 @@
 #include "PropagateAnalysis.h"
 #include "LocalAnalysis.h"
 #include "dsa/DataStructure.h"
+#include "dsa/DSGraph.h"
+#include "dsa/CallTargets.h"
 
 #include <array>
 #include <vector>
@@ -20,6 +22,7 @@
 #include <stack>
 
 using namespace llvm;
+using namespace dsa;
 using namespace llvm::privAnalysis;
 using namespace llvm::localAnalysis;
 using namespace llvm::propagateAnalysis;
@@ -33,6 +36,7 @@ void PropagateAnalysis::getAnalysisUsage(AnalysisUsage &AU) const
 {
     AU.setPreservesCFG();
     AU.addRequired<LocalAnalysis>();
+    AU.addRequired<CallTargetFinder<TDDataStructures> >();
 
     // preserve usage
     AU.setPreservesAll();
@@ -89,6 +93,10 @@ void PropagateAnalysis::Propagate(Module &M)
     CallGraph CG(M);
     bool ischanged = true;
 
+    // Get DSA analysis of callgraph
+    const CallTargetFinder<TDDataStructures> &DSAFinder 
+        = getAnalysis<CallTargetFinder<TDDataStructures> >();
+
     // Add external calls node function as NULL
     CallGraphNode* callsNode = CG.getCallsExternalNode();
     CallGraphNode* callingNode = CG.getExternalCallingNode();
@@ -136,7 +144,7 @@ void PropagateAnalysis::Propagate(Module &M)
                 if (FCallee == M.getFunction("main")) { continue; }
 
                 // DEBUG
-                // if (FCallee == callsNodeFunc) { errs() << FCaller->getName() << " Calling calls External Node\n";}
+                if (FCallee == callsNodeFunc) { errs() << FCaller->getName() << " Calling calls External Node\n";}
 
                 CAPArray_t &calleeIn = FuncCAPTable_in[FCallee];
                 // Propagate all information from callee to caller_out 
