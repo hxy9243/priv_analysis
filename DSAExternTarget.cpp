@@ -24,6 +24,7 @@ using namespace dsaexterntarget;
 DSAExternTarget::DSAExternTarget() : ModulePass(ID) { } 
 
 
+// Get pass analysis usage
 void DSAExternTarget::getAnalysisUsage(AnalysisUsage &AU) const
 {
     AU.setPreservesCFG();
@@ -42,6 +43,7 @@ bool DSAExternTarget::doInitialization(Module &M)
 }
 
 
+// Run on Module method for pass
 bool DSAExternTarget::runOnModule(Module &M)
 {
     CallTargetFinder<TDDataStructures> &CTF = 
@@ -79,10 +81,37 @@ bool DSAExternTarget::runOnModule(Module &M)
             callsToExternNode[CF].push_back(*FI);
         }
     }
-     
 
     return false;
 }
+
+
+// print out information for debugging purposes
+void DSAExternTarget::print(raw_ostream &O, const Module *M) const
+{
+    for (FunctionMap::const_iterator FMI = callsToExternNode.begin(),
+             FME = callsToExternNode.end(); FMI != FME; ++FMI) {
+        Function *Caller = FMI->first;
+
+        if (Caller != NULL) {
+            O << Caller->getName() << ":\t";
+        }
+        else {
+            continue;
+        }
+
+        // Iterate through all callees of the function
+        std::vector<const Function*> callees = FMI->second;
+        for (std::vector<const Function*>::iterator FI = callees.begin(),
+                 FE = callees.end(); FI != FE; ++FI) {
+
+            assert((*FI) && "Caller is NULL function\n");
+            O << (*FI)->getName() << ", ";
+        }
+        O << "\n";
+    }
+}
+
 
 
 // register pass
