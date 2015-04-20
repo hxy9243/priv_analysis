@@ -13,7 +13,8 @@ DSA_BUILD = /home/kevin/LocalWorkspace/DSA/build/projects/poolalloc/Release+Asse
 DSA_LIB   = $(DSA_BUILD)/LLVMDataStructure.a
 
 SRC      = ADT.cpp FindExternNodes.cpp LocalAnalysis.cpp PropagateAnalysis.cpp \
-           DynCount.cpp  GlobalLiveAnalysis.cpp  PrivRemoveInsert.cpp  SplitBB.cpp
+           DynCount.cpp  GlobalLiveAnalysis.cpp  PrivRemoveInsert.cpp  SplitBB.cpp \
+           DSAExternNode.cpp
 
 OBJ      = $(SRC:.cpp=.o)
 

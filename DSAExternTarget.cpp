@@ -9,7 +9,9 @@
 
 
 #include "DSAExternTarget.h"
-
+#include "dsa/DataStructure.h"
+#include "dsa/DSGraph.h"
+#include "dsa/CallTargets.h"
 
 
 using namespace llvm;
@@ -42,12 +44,38 @@ bool DSAExternTarget::doInitialization(Module &M)
 
 bool DSAExternTarget::runOnModule(Module &M)
 {
+    CallTargetFinder<TDDataStructures> &CTF = 
+        getAnalysis<CallTargetFinder<TDDataStructures> >();
+
+    for (std::list<CallSite>::iterator CSI = CTF.cs_begin(), CSE = CTF.end();
+         CSI != CSE; ++CSI) {
+        CallSite &CS = *CSI;
+
+        // If callsite is still incomplete, we don't know all callees of callsite,  skip it
+        if (!CTF.isComplete(CS)) {
+            continue;
+        }
+        
+        // If a direct call, don't bother
+        Function *CF = CS.getCalledFunction();
+        if (CF) {
+            continue;
+        }
+        
+        if (dyn_cast<Function>(CS.getCalledValue()->stripPointerCasts())) {
+            continue;
+        }
+
+        if (isa<ConstantPointerNull>(CS.getCalledValue()->stripPointerCasts())) {
+            continue;
+        }
+
+        // Add it to the data structure
+        // TODO:
 
 
-
-
-
-
+    }
+     
 
     return false;
 }
