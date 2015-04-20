@@ -1,0 +1,44 @@
+#===--------- Makefile - Common make rules for LLVM --------*- Makefile -*--===#
+#
+#                        The Privilege Analysis Project
+#
+# Author: Kevin Hu <hxy9243#gmail.com>
+#
+#===------------------------------------------------------------------------===#
+
+#===------------------------------------------------------------------------===#
+# SETUP LLVM DIR AND CONFIG
+#===------------------------------------------------------------------------===#
+LLVM_DIR              = /home/kevin/LocalWorkspace/DSA/build/Release+Asserts/bin
+LLVM_CONFIG           = $(LLVM_DIR)/llvm-config
+
+
+#===------------------------------------------------------------------------===#
+# SETUP COMPILER FLAGS
+#===------------------------------------------------------------------------===#
+CC                    = $(LLVM_DIR)/clang
+CXX                   = $(LLVM_DIR)/clang++
+LD                    = $(LLVM_DIR)/clang++
+
+# CPP FLAGS Setup
+CPPFLAGS              = `$(LLVM_CONFIG) --cppflags`
+CPPFLAGS             += -c 
+CPPFLAGS             += -std=c++11
+CPPFLAGS             += -fvisibility-inlines-hidden -fno-exceptions \
+                          -fno-rtti -fPIC
+CPPFLAGS             += -Woverloaded-virtual -ffunction-sections \
+                        -fdata-sections -Wcast-qual -pedantic -Wno-long-long \
+                        -Wall -W -Wno-unused-parameter -Wwrite-strings \
+                        -Wcovered-switch-default -Wno-uninitialized \
+                        -Wno-missing-field-initializers
+
+# LDFLAGS
+LLVM_LIBDIR           = `$(LLVM_CONFIG) --ldflags`
+LDFLAGS               = $(LLVM_LIBDIR)
+LDFLAGS              += -rdynamic -shared 
+LDFLAGS              += -lz -lpthread -ltinfo -ldl -lm
+
+
+# DSA project setup 
+CPPFLAGS             += -I/home/kevin/LocalWorkspace/DSA/llvm-dsa/projects/poolalloc/include
+LDFLAGS              += -L/home/kevin/LocalWorkspace/DSA/build/projects/poolalloc/Release+Asserts/lib
