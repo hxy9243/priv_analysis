@@ -78,7 +78,7 @@ bool DSAExternTarget::runOnModule(Module &M)
         // FunctionMap[CF] = {};
         for (std::vector<const Function*>::iterator FI = CTF.begin(CS), FE = CTF.end(CS);
              FI != FE; ++FI) {
-            callsToExternNode[CF].push_back(*FI);
+            callsToExternNode[CF].push_back((Function *)*FI);
         }
     }
 
