@@ -5,7 +5,7 @@
 // callsToExternNode will contain calls to calls external node
 // in the LLVM callgraph, which is complete in DSA
 //
-// ====-------------------------------------------------------====
+// ====------------------------------------------------------====
 
 
 #include "DSAExternTarget.h"
@@ -29,7 +29,7 @@ void DSAExternTarget::getAnalysisUsage(AnalysisUsage &AU) const
 {
     AU.setPreservesCFG();
 
-    AU.addRequired<LocalAnalysis>();
+    // AU.addRequired<LocalAnalysis>();
     AU.addRequired<CallTargetFinder<TDDataStructures> >();    
 
     AU.setPreservesAll();
@@ -43,8 +43,8 @@ bool DSAExternTarget::doInitialization(Module &M)
 }
 
 
-// Run on Module method for pass
-bool DSAExternTarget::runOnModule(Module &M)
+// Find out all callsites, save to availCallSites
+void DSAExternTarget::findAllCallSites()
 {
     CallTargetFinder<TDDataStructures> &CTF = 
         getAnalysis<CallTargetFinder<TDDataStructures> >();
@@ -55,10 +55,10 @@ bool DSAExternTarget::runOnModule(Module &M)
          CSI != CSE; ++CSI) {
         CallSite &CS = *CSI;
 
-        // If callsite is still incomplete, we don't know all callees of callsite,  skip it
-        if (!CTF.isComplete(CS)) {
-            continue;
-        }
+        // // If callsite is still incomplete, we don't know all callees of callsite,  skip it
+        // if (!CTF.isComplete(CS)) {
+        //     continue;
+        // }
         
         // If a direct call, don't bother
         Function *CF = CS.getCalledFunction();
@@ -67,6 +67,8 @@ bool DSAExternTarget::runOnModule(Module &M)
         }
         
         if (dyn_cast<Function>(CS.getCalledValue()->stripPointerCasts())) {
+            errs() << "strip Pointer casts\n";
+
             continue;
         }
 
@@ -75,13 +77,25 @@ bool DSAExternTarget::runOnModule(Module &M)
         }
 
         // Add it to the data structure
-        // FunctionMap[CF] = {};
         for (std::vector<const Function*>::iterator FI = CTF.begin(CS), FE = CTF.end(CS);
              FI != FE; ++FI) {
-            callsToExternNode[CF].push_back((Function *)*FI);
+            callsToExternNode[&CS].push_back(*FI);
         }
     }
+}
 
+
+// Run on Module method for pass
+bool DSAExternTarget::runOnModule(Module &M)
+{
+    findAllCallSites();
+
+    // Find all info for CallGraph analysis
+    
+
+    // Find all info for CFG analysis
+
+    
     return false;
 }
 
@@ -89,14 +103,15 @@ bool DSAExternTarget::runOnModule(Module &M)
 // print out information for debugging purposes
 void DSAExternTarget::print(raw_ostream &O, const Module *M) const
 {
-    for (FunctionMap::const_iterator FMI = callsToExternNode.begin(),
+    for (CallSiteMap::const_iterator FMI = callsToExternNode.begin(),
              FME = callsToExternNode.end(); FMI != FME; ++FMI) {
-        Function *Caller = FMI->first;
+        Function *Caller = FMI->first->getInstruction()->getParent()->getParent();
 
         if (Caller != NULL) {
             O << Caller->getName() << ":\t";
         }
         else {
+            O << "NULL\n";
             continue;
         }
 

@@ -137,9 +137,11 @@ void SplitBB::splitOnFunction(Function *F, int splitLoc)
 
 void SplitBB::print(raw_ostream &O, const Module *M) const
 {
+    errs() << "Extra Jump BB size: " << ExtraJMPBB.size() << "\n";
 
-    errs() << ExtraJMPBB.size();
+    errs() << "Priv BB size: " << PrivBB.size() << "\n";
 
+    errs() << "CallSite BB size: " << CallSiteBB.size() << "\n";
 }
 
 
