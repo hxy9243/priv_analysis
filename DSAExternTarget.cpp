@@ -44,11 +44,8 @@ bool DSAExternTarget::doInitialization(Module &M)
 
 
 // Find out all callsites, save to availCallSites
-void DSAExternTarget::findAllCallSites()
+void DSAExternTarget::findAllCallSites(CallTargetFinder<TDDataStructures> &CTF)
 {
-    CallTargetFinder<TDDataStructures> &CTF = 
-        getAnalysis<CallTargetFinder<TDDataStructures> >();
-
     callsToExternNode = {};
 
     for (std::list<CallSite>::iterator CSI = CTF.cs_begin(), CSE = CTF.cs_end();
@@ -88,13 +85,55 @@ void DSAExternTarget::findAllCallSites()
 // Run on Module method for pass
 bool DSAExternTarget::runOnModule(Module &M)
 {
-    findAllCallSites();
+    CallTargetFinder<TDDataStructures> &CTF = 
+        getAnalysis<CallTargetFinder<TDDataStructures> >();
 
-    // Find all info for CallGraph analysis
+    findAllCallSites(CTF);
+
+    functionMap = {};
+    instFunMap = {};
+    std::vector<Function*>incompleteFuns = {};
+
+    for (CallSiteMap_t::iterator FI = callsToExternNode.begin(), FE = callsToExternNode.end();
+         FI != FE; ++FI) {
+        CallSite *CS = FI->first;
+        CallInst *callInst = dyn_cast<CallInst>(FI->first->getInstruction());
+        Function* caller = callInst->getParent()->getParent();
+        std::vector<const Function*>callees = FI->second;
+
+        // adding to instruction to mapping
+        assert(callInst && "Call Instruction is NULL\n");
+        instFunMap[callInst] = callees;
+
+        // if function callsite is incomplete, then skip adding and delete them from callgraph
+        if (!CTF.isComplete(*CS)) {
+            incompleteFuns.push_back(caller);
+            continue;
+        }
+
+        // push all callees to caller's function vector
+        for (std::vector<const Function*>::iterator CII = callees.begin(), CIE = callees.end();
+             CII != CIE; ++CII) {
+            functionMap[caller].push_back(*CII);
+        }
+    }
+
+    // remove all the incomplete functions from the mappings
+    for (std::vector<Function*>::iterator FI = incompleteFuns.begin(), FE = incompleteFuns.end();
+         FI != FE; ++FI) {
+        functionMap.erase(*FI);
+    }
     
 
+    // ------------------------------------- //
     // Find all info for CFG analysis
+    // ------------------------------------- //
 
+    for (CallSiteMap_t::iterator FI = callsToExternNode.begin(), FE = callsToExternNode.end();
+         FI != FE; ++FI) {
+        
+
+    }
     
     return false;
 }
@@ -103,7 +142,7 @@ bool DSAExternTarget::runOnModule(Module &M)
 // print out information for debugging purposes
 void DSAExternTarget::print(raw_ostream &O, const Module *M) const
 {
-    for (CallSiteMap::const_iterator FMI = callsToExternNode.begin(),
+    for (CallSiteMap_t::const_iterator FMI = callsToExternNode.begin(),
              FME = callsToExternNode.end(); FMI != FME; ++FMI) {
         Function *Caller = FMI->first->getInstruction()->getParent()->getParent();
 

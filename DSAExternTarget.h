@@ -33,11 +33,20 @@ public:
 
     DSAExternTarget();
 
-    typedef std::map<Function*, std::vector<const Function*> > FunctionMap;
-
+    typedef std::map<CallSite*, std::vector<const Function*> > CallSiteMap_t;
+    typedef std::map<Function*, std::vector<const Function*> > FunctionMap_t;
+    typedef std::map<Instruction*, std::vector<const Function*> > InstrFunMap_t;
+    
     // If a callsite to callsExternNode is complete, record it here
     // with all its callees
-    FunctionMap callsToExternNode;
+    CallSiteMap_t callsToExternNode;
+
+    // FunctionMap records additional info for the callgraph, mapping callers to
+    // callees
+    FunctionMap_t functionMap;
+
+    // instFunMap records instruction to its possible called functions
+    InstrFunMap_t instFunMap;
     
     void getAnalysisUsage(AnalysisUsage &AU) const;
 
@@ -46,8 +55,9 @@ public:
     virtual bool runOnModule(Module &M);
 
     void print(raw_ostream &O, const Module *M) const;
-private:
 
+private:
+    void findAllCallSites(CallTargetFinder<TDDataStructures> &CTF);
 };
 
 
