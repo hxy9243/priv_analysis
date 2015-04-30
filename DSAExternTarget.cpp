@@ -48,6 +48,7 @@ void DSAExternTarget::findAllCallSites(CallTargetFinder<TDDataStructures> &CTF)
 {
     callsToExternNode = {};
 
+    // Iterate through the CallTargetFinder for all callsites
     for (std::list<CallSite>::iterator CSI = CTF.cs_begin(), CSE = CTF.cs_end();
          CSI != CSE; ++CSI) {
         CallSite &CS = *CSI;
@@ -73,7 +74,9 @@ void DSAExternTarget::findAllCallSites(CallTargetFinder<TDDataStructures> &CTF)
             continue;
         }
 
-        // Add it to the data structure
+        // Add it to the data structure callsToExternNode
+        // TODO: here it presumes that anything besides direct call is a call to 
+        // TODO: CallsExternNode
         for (std::vector<const Function*>::iterator FI = CTF.begin(CS), FE = CTF.end(CS);
              FI != FE; ++FI) {
             callsToExternNode[&CS].push_back(*FI);
@@ -94,6 +97,7 @@ bool DSAExternTarget::runOnModule(Module &M)
     instFunMap = {};
     std::vector<Function*>incompleteFuns = {};
 
+    // Find all functions calling to callsExternNode, see if they're complete in DSA analysis
     for (CallSiteMap_t::iterator FI = callsToExternNode.begin(), FE = callsToExternNode.end();
          FI != FE; ++FI) {
         CallSite *CS = FI->first;
@@ -101,17 +105,17 @@ bool DSAExternTarget::runOnModule(Module &M)
         Function* caller = callInst->getParent()->getParent();
         std::vector<const Function*>callees = FI->second;
 
-        // adding to instruction to mapping
-        assert(callInst && "Call Instruction is NULL\n");
-        instFunMap[callInst] = callees;
-
         // if function callsite is incomplete, then skip adding and delete them from callgraph
         if (!CTF.isComplete(*CS)) {
             incompleteFuns.push_back(caller);
             continue;
         }
 
-        // push all callees to caller's function vector
+        // adding to instruction to mapping
+        assert(callInst && "Call Instruction is NULL\n");
+        instFunMap[callInst] = callees;
+
+        // adding to function mapping, push all callees to caller's function vector
         for (std::vector<const Function*>::iterator CII = callees.begin(), CIE = callees.end();
              CII != CIE; ++CII) {
             functionMap[caller].push_back(*CII);
@@ -119,6 +123,7 @@ bool DSAExternTarget::runOnModule(Module &M)
     }
 
     // remove all the incomplete functions from the mappings
+    // we still need to assume there are calls from these functions to callsExternNode  
     for (std::vector<Function*>::iterator FI = incompleteFuns.begin(), FE = incompleteFuns.end();
          FI != FE; ++FI) {
         functionMap.erase(*FI);
@@ -128,10 +133,11 @@ bool DSAExternTarget::runOnModule(Module &M)
     // ------------------------------------- //
     // Find all info for CFG analysis
     // ------------------------------------- //
-
+    // iterate through all the callsToExternNode
     for (CallSiteMap_t::iterator FI = callsToExternNode.begin(), FE = callsToExternNode.end();
          FI != FE; ++FI) {
-        
+
+        // TODO: 
 
     }
     
