@@ -65,15 +65,17 @@ bool GlobalLiveAnalysis::runOnModule(Module &M)
     // TODO: retrieve information directly from LocalAnalysis?
     BBCAPTable_t &BBCAPTable = PA.BBCAPTable;
     BBFuncTable_t &BBFuncTable = PA.BBFuncTable;
-
     FuncCAPTable_t FuncCAPTable = PA.FuncCAPTable;
+
+    // find the returnBB of all functions
+    FuncReturnBB_t funcReturnBB;
+    findReturnBB(M, funcReturnBB);
 
     // init data structure
     bool ischanged = true;
 
     // iterate till convergence
     while (ischanged) {
-
         ischanged = false;
 
         // iterate through all functions
@@ -85,47 +87,25 @@ bool GlobalLiveAnalysis::runOnModule(Module &M)
                 continue;
             }
 
-            // Find the exit node of the Function
-            // TODO: Separate UnifyExitNodes as an individual transformation pass?
-            UnifyFunctionExitNodes &UnifyExitNode = getAnalysis<UnifyFunctionExitNodes>(*F);
-            UnifyExitNode.runOnFunction(*F);
-            BasicBlock *ReturnBB = UnifyExitNode.getReturnBlock();
-            BasicBlock *UnReachableBB = UnifyExitNode.getUnreachableBlock();
-            BasicBlock *UnwindBB = UnifyExitNode.getUnwindBlock();
-
-            assert(UnwindBB == NULL && "So far not dealing with unwind block\n");
-            assert((ReturnBB != NULL || UnReachableBB != NULL) && "Return BB is NULL\n");
-
             // iterate through all BBs for information propagation
             for (Function::iterator BI = F->begin(), BE = F->end();
                  BI != BE; ++ BI) {
                 BasicBlock *B = dyn_cast<BasicBlock>(BI);
-                if (B == NULL) {
-                    continue;
-                }
+                if (B == NULL) { continue; }
+
                 // ---------------------------------------------------------- //
                 // Propagate information in each BB
                 // ---------------------------------------------------------- //
-
-                // if it's a terminating BB, propagate the info from func live 
-                // CAPTable to BB[out]. Note that only returnBBs are considered
-                // in data propagation UnreachableBBs are not.
-                if (ReturnBB == B) {
-                    ischanged |= UnionCAPArrays(BBCAPTable_out[B], 
-                                                FuncLiveCAPTable_out[F]);
-                }
-
                 // if it's a FunCall BB (found as key in BBFuncTable), add the 
                 // live info to CAPTable of callee's exit BB
                 if (BBFuncTable.find(B) != BBFuncTable.end()) {
                     ischanged |= UnionCAPArrays(BBCAPTable_in[B],
                                                 FuncUseCAPTable[BBFuncTable[B]]);
 
-                    // propagate information 
-                    
-                    
-                    //ischanged |= UnionCAPArrays(FuncLiveCAPTable_out[BBFuncTable[B]],
-                    // BBCAPTable_out[B]);
+                    // propagate information to returnBB of function
+                    Function *callee = BBFuncTable[B];
+                    ischanged |= UnionCAPArrays(BBCAPTable_out[funcReturnBB[callee]],
+                                                BBCAPTable_out[B]);
                 }
 
                 // if it's a Priv Call BB, Propagate privilege to the in of BB
@@ -273,7 +253,7 @@ void GlobalLiveAnalysis::findUniqueSet()
 
 
 // find the exit BB of all functions using Unify Exit Node
-void GlobalLiveAnalysis::findReturnBB(Module &M, FuncExitBB_t& FuncExitBB)
+void GlobalLiveAnalysis::findReturnBB(Module &M, FuncReturnBB_t& FuncReturnBB)
 {
     for (auto FI = M.begin(), FE = M.end(); FI != FE; ++FI) {
         Function *F = dyn_cast<Function>(FI);
@@ -292,7 +272,7 @@ void GlobalLiveAnalysis::findReturnBB(Module &M, FuncExitBB_t& FuncExitBB)
         assert(UnwindBB == NULL && "So far not dealing with unwind block\n");
         assert((ReturnBB != NULL || UnReachableBB != NULL) && "Return BB is NULL\n");
 
-        FuncExitBB[F] = ReturnBB;
+        FuncReturnBB[F] = ReturnBB;
     }
 }
 

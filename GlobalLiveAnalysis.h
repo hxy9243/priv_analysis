@@ -40,7 +40,7 @@ public:
     FuncCAPTable_t FuncLiveCAPTable_out;
 
     // Record exit BB of 
-    typedef std::map<Function*, BasicBlock*> FuncExitBB_t;
+    typedef std::map<Function*, BasicBlock*> FuncReturnBB_t;
 
     // The unique capability set
     CAPSet_t CAPSet;
@@ -58,9 +58,10 @@ public:
 
     // Print out information for debugging purposes
     void print(raw_ostream &O, const Module *M) const;
+
 private:
     // find exit BB of functions inside a Module
-    void findReturnBB(Module& M, FuncExitBB_t&);
+    void findReturnBB(Module& M, FuncReturnBB_t&);
 
     // get the unique privilege set 
     void findUniqueSet();
