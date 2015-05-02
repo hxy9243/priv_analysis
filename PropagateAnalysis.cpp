@@ -149,13 +149,11 @@ void PropagateAnalysis::Propagate(Module &M)
                 if (FCallee == M.getFunction("main")) { continue; }
 
                 // Get callee
-                // If calle is external callsNode, find it in DSA
+                // If callee is external callsNode, find it in DSA
                 if (RI->second == callsNode) { 
                     FCallee = callsNodeFunc; 
-
-                    // find it in DSA
-
-
+                    // TODO: Find in DSA. If compelete in DSA, then don't propagate
+                    // TODO: from callsnode 
                 }
 
                 CAPArray_t &calleeIn = FuncCAPTable_in[FCallee];
