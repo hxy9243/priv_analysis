@@ -83,9 +83,7 @@ bool GlobalLiveAnalysis::runOnModule(Module &M)
         for (auto FI = FuncCAPTable.begin(), FE = FuncCAPTable.end(); 
              FI != FE; ++FI) {
             Function *F = FI->first;
-            if (F == NULL || F->empty()) {
-                continue;
-            }
+            if (F == NULL || F->empty()) { continue; }
 
             // iterate through all BBs for information propagation
             for (Function::iterator BI = F->begin(), BE = F->end();
@@ -112,12 +110,13 @@ bool GlobalLiveAnalysis::runOnModule(Module &M)
                 if (BBCAPTable.find(B) != BBCAPTable.end()) {
                     ischanged |= UnionCAPArrays(BBCAPTable_in[B], BBCAPTable[B]);
                 }
-
                 // propagate from all its successors
                 TerminatorInst *BBTerm = B->getTerminator();
-                for(unsigned BSI = 0, BSE = BBTerm->getNumSuccessors(); 
-                    BSI != BSE; ++ BSI) {
+
+                for (unsigned BSI = 0, BSE = BBTerm->getNumSuccessors(); 
+                     BSI != BSE; ++ BSI) {
                     BasicBlock *SuccessorBB = BBTerm->getSuccessor(BSI);
+                    assert(SuccessorBB && "Successor BB is NULL!");
                     ischanged |= UnionCAPArrays(BBCAPTable_out[B], 
                                                 BBCAPTable_in[SuccessorBB]);
                 }
@@ -125,7 +124,6 @@ bool GlobalLiveAnalysis::runOnModule(Module &M)
                 ischanged |= UnionCAPArrays(BBCAPTable_in[B], BBCAPTable_out[B]);
             } // iterate all BBs
         } // iterate all functions
-
     } // while change
 
     ////////////////////////////////////////
@@ -134,6 +132,8 @@ bool GlobalLiveAnalysis::runOnModule(Module &M)
     ////////////////////////////////////////
     for (auto bi = BBCAPTable_out.begin(); bi != BBCAPTable_out.end(); ++bi) {
         BasicBlock *B = bi->first;
+        if (B == NULL ) { continue; }
+
         CAPArray_t &CAPArray_out = bi->second;
         CAPArray_t &CAPArray_in = BBCAPTable_in[B];
 
@@ -143,7 +143,8 @@ bool GlobalLiveAnalysis::runOnModule(Module &M)
         }
 
         // compare the out with all ins of the child BB, put in drop start of children
-        TerminatorInst *BBTerm = B->getTerminator();
+        const TerminatorInst *BBTerm = B->getTerminator();
+
         for(unsigned BSI = 0, BSE = BBTerm->getNumSuccessors(); 
             BSI != BSE; ++ BSI) {
             BasicBlock *SuccessorBB = BBTerm->getSuccessor(BSI);

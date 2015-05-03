@@ -22,7 +22,7 @@ LD                    = $(LLVM_DIR)/clang++
 
 # CPP FLAGS Setup
 CPPFLAGS              = `$(LLVM_CONFIG) --cppflags`
-CPPFLAGS             += -c 
+CPPFLAGS             += -c -g
 CPPFLAGS             += -std=c++11
 CPPFLAGS             += -fvisibility-inlines-hidden -fno-exceptions \
                           -fno-rtti -fPIC
@@ -34,9 +34,9 @@ CPPFLAGS             += -Woverloaded-virtual -ffunction-sections \
 
 # LDFLAGS
 LLVM_LIBDIR           = `$(LLVM_CONFIG) --ldflags`
-LDFLAGS               = $(LLVM_LIBDIR)
+LDFLAGS               = $(LLVM_LIBDIR) 
 LDFLAGS              += -rdynamic -shared 
-LDFLAGS              += -lz -lpthread -ltinfo -ldl -lm
+LDFLAGS              += -lz -lpthread -ltinfo -ldl -lm -g
 
 
 # DSA project setup 

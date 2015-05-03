@@ -152,6 +152,7 @@ void PropagateAnalysis::Propagate(Module &M)
                 // If callee is external callsNode, find it in DSA
                 if (RI->second == callsNode) { 
                     FCallee = callsNodeFunc; 
+                    continue;
                     // TODO: Find in DSA. If compelete in DSA, then don't propagate
                     // TODO: from callsnode 
                 }
