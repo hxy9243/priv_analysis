@@ -91,7 +91,8 @@ bool GlobalLiveAnalysis::runOnModule(Module &M)
             // and it's faster for dataflow analysis to converge
             Function::iterator BI = F->end(), BE = F->begin();
             while(1) {
-                if (BI != BE) --BI;
+                if (BI != BE) { --BI; }
+                else { break; }
 
                 BasicBlock *B = dyn_cast<BasicBlock>(BI);
                 if (B == NULL) { continue; }
@@ -128,9 +129,7 @@ bool GlobalLiveAnalysis::runOnModule(Module &M)
                 // propagate live info from out[B] to in[B] for each BB
                 ischanged |= UnionCAPArrays(BBCAPTable_in[B], BBCAPTable_out[B]);
 
-                if (BI == BE) break;
             } // iterate all BBs
-
 
         } // iterate all functions
     } // while change
