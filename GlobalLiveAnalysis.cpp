@@ -86,8 +86,13 @@ bool GlobalLiveAnalysis::runOnModule(Module &M)
             if (F == NULL || F->empty()) { continue; }
 
             // iterate through all BBs for information propagation
-            for (Function::iterator BI = F->begin(), BE = F->end();
-                 BI != BE; ++ BI) {
+            // Traversing BBs in reverse order now because it's closer to
+            // topologically reverse order of how BBs are arranged in LLVM, 
+            // and it's faster for dataflow analysis to converge
+            Function::iterator BI = F->end(), BE = F->begin();
+            while(1) {
+                if (BI != BE) --BI;
+
                 BasicBlock *B = dyn_cast<BasicBlock>(BI);
                 if (B == NULL) { continue; }
 
@@ -122,7 +127,11 @@ bool GlobalLiveAnalysis::runOnModule(Module &M)
                 }
                 // propagate live info from out[B] to in[B] for each BB
                 ischanged |= UnionCAPArrays(BBCAPTable_in[B], BBCAPTable_out[B]);
+
+                if (BI == BE) break;
             } // iterate all BBs
+
+
         } // iterate all functions
     } // while change
 
