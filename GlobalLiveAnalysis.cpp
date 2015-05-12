@@ -79,7 +79,6 @@ bool GlobalLiveAnalysis::runOnModule(Module &M)
         ischanged = false;
 
         // iterate through all functions
-        // for (Module::iterator FI = M.begin(), FE = M.end(); FI != FE; ++FI) {
         for (auto FI = FuncCAPTable.begin(), FE = FuncCAPTable.end(); 
              FI != FE; ++FI) {
             Function *F = FI->first;
@@ -89,9 +88,9 @@ bool GlobalLiveAnalysis::runOnModule(Module &M)
             // Traversing BBs in reverse order now because it's closer to
             // topologically reverse order of how BBs are arranged in LLVM, 
             // and it's faster for dataflow analysis to converge
-            Function::iterator BI = F->end(), BE = F->begin();
+            Function::iterator BI = F->end(), BBegin = F->begin();
             while(1) {
-                if (BI != BE) { --BI; }
+                if (BI != BBegin) { --BI; }
                 else { break; }
 
                 BasicBlock *B = dyn_cast<BasicBlock>(BI);
@@ -105,7 +104,6 @@ bool GlobalLiveAnalysis::runOnModule(Module &M)
                 if (BBFuncTable.find(B) != BBFuncTable.end()) {
                     ischanged |= UnionCAPArrays(BBCAPTable_in[B],
                                                 FuncUseCAPTable[BBFuncTable[B]]);
-
                     // propagate information to returnBB of function
                     Function *callee = BBFuncTable[B];
                     ischanged |= UnionCAPArrays(BBCAPTable_out[funcReturnBB[callee]],
@@ -115,6 +113,7 @@ bool GlobalLiveAnalysis::runOnModule(Module &M)
                 // if it's a Priv Call BB, Propagate privilege to the in of BB
                 if (BBCAPTable.find(B) != BBCAPTable.end()) {
                     ischanged |= UnionCAPArrays(BBCAPTable_in[B], BBCAPTable[B]);
+                    //ischangedFunc |= ischanged;
                 }
                 // propagate from all its successors
                 TerminatorInst *BBTerm = B->getTerminator();
@@ -125,10 +124,10 @@ bool GlobalLiveAnalysis::runOnModule(Module &M)
                     assert(SuccessorBB && "Successor BB is NULL!");
                     ischanged |= UnionCAPArrays(BBCAPTable_out[B], 
                                                 BBCAPTable_in[SuccessorBB]);
+                    // ischangedFunc |= ischanged;
                 }
                 // propagate live info from out[B] to in[B] for each BB
                 ischanged |= UnionCAPArrays(BBCAPTable_in[B], BBCAPTable_out[B]);
-
             } // iterate all BBs
 
         } // iterate all functions
