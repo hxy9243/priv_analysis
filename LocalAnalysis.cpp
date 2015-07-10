@@ -48,7 +48,7 @@ void LocalAnalysis::RetrieveAllCAP(CallInst *CI, CAPArray_t &CAParray)
         unsigned int iarg = I->getZExtValue();
 
         // Add it to the array
-        CAParray[iarg] = 1;
+        CAParray |= 1 << iarg;
     }
 }
 
@@ -79,7 +79,7 @@ bool LocalAnalysis::runOnModule(Module &M)
         }
 
         // Retrieve all capabilities from params of function call
-        CAPArray_t CAParray = {{0}};
+        CAPArray_t CAParray = 0;
         RetrieveAllCAP(CI, CAParray);
 
         // Get the function where the Instr is in

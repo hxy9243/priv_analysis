@@ -68,10 +68,8 @@ void PrivRemoveInsert::addToArgs(std::vector<Value *>& Args,
     int cap_num = 0;
     int cap = 0;
 
-    for (auto ci = CAPArray.begin(), ce = CAPArray.end();
-         ci != ce; ++ci) {
-        if (*ci == 0) {
-            cap++;
+    for (cap = 0; cap < CAP_TOTALNUM; ++cap) {
+        if ((CAPArray & (1 << cap)) == 0) {
             continue;
         }
 
@@ -80,7 +78,6 @@ void PrivRemoveInsert::addToArgs(std::vector<Value *>& Args,
             (IntegerType::get(getGlobalContext(), 32), cap);
         Args.push_back(arg);
 
-        cap++;
         cap_num++;
     }
 

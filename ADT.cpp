@@ -2,7 +2,7 @@
 //
 // The ADT and configuration for the PrivAnalysis
 //
-// ====-------------------------------------------------------====
+// ====------------------------------------------------------====
 
 #include "ADT.h"
 #include "llvm/Support/raw_ostream.h"
@@ -73,9 +73,7 @@ void AddToFuncCAPTable(FuncCAPTable_t &CAPTable,
     }
     // else, Union the two arrays
     else {
-        for (int i = 0; i < CAP_TOTALNUM; ++ i) {
-            CAPTable[F][i] |= CAParray[i];
-        }
+        CAPTable[F] |= CAParray;
     }
 }
 
@@ -95,7 +93,7 @@ void AddToBBCAPTable(BBCAPTable_t &CAPTable,
     // else, Union the two arrays
     else {
         for (int i = 0; i < CAP_TOTALNUM; ++ i) {
-            CAPTable[B][i] |= CAParray[i];
+            CAPTable[B] |= CAParray;
         }
     }
 }
@@ -108,7 +106,7 @@ void AddToBBCAPTable(BBCAPTable_t &CAPTable,
 //        src  - src CAPTable
 void CopyTableKeys(FuncCAPTable_t &dest, const FuncCAPTable_t &src)
 {
-    CAPArray_t emptyArray = {{0}};
+    CAPArray_t emptyArray = 0;
 
     for(auto MI = src.begin(), ME = src.end(); MI != ME; ++ MI) {
   
@@ -124,11 +122,10 @@ void CopyTableKeys(FuncCAPTable_t &dest, const FuncCAPTable_t &src)
 // return the number of the capablities inside CAPArray 
 int findCAPArraySize(const CAPArray_t &A)
 {
+    // to be refactored
     int size = 0;
-    for (auto I = A.begin(), E = A.end(); I != E; ++I) {
-        if (*I) {
-            size++;
-        }
+    for (int i = 0; i < CAP_TOTALNUM; ++i){
+        size += (1 << i) & A;
     }
 
     return size;
@@ -144,31 +141,23 @@ bool UnionCAPArrays(CAPArray_t &dest, const CAPArray_t &src)
 {
     bool ischanged = false;
 
-    for (unsigned int i = 0; i < dest.size(); ++ i) {
-        // changed only when dest is 0 and src is 1
-        ischanged |= (~dest[i] & src[i]);
-        dest[i] |= src[i];
-    }
+    ischanged = ~dest & src;
+    dest = dest | src;
+
     return ischanged;
 }
 
 
-// Diff two arrays, save result
+// Diff two arrays, save result to dest
 // param: dest - dest CAPArray
 //        A - the CAPArray to subtract from
 //        B - the CAPArray to subtract
-// return: if the array has content (not all 0s),
-//         return 0 if all capabilities are 0
+// return: if there is difference between A and B
 bool DiffCAPArrays(CAPArray_t &dest, const CAPArray_t &A, const CAPArray_t &B) 
 {
-    bool hasContent = false;
-    for (unsigned int i = 0; i < A.size(); ++i){
-        assert( (A[i] | ~B[i]) && "\nBUG in Diff CAPArrays!\n\n");
-
-        dest[i] |= A[i] & (~B[i]);
-        hasContent |= dest[i];
-    }
-    return hasContent;
+    assert( (A | ~B) && "\nBUG in Diff CAPArrays!\n\n");
+    dest = A & ~B;
+    return (bool)dest;
 } 
 
 
@@ -176,9 +165,7 @@ bool DiffCAPArrays(CAPArray_t &dest, const CAPArray_t &A, const CAPArray_t &B)
 // param: the CAParray to reverse
 void ReverseCAPArray(CAPArray_t &A) 
 {
-    for (auto i = A.begin(), e = A.end(); i != e; ++i) {
-        *i = !(*i);
-    }
+    A = ~A;
 }
 
 // If the CAPArray is empty
@@ -186,32 +173,20 @@ void ReverseCAPArray(CAPArray_t &A)
 // return: if it's empty
 bool IsCAPArrayEmpty(const CAPArray_t &A)
 {
-    bool notEmpty = false;
-    for (auto i = A.begin(), e = A.end(); i != e; ++i) {
-        notEmpty |= *i;
-    }
-    return !notEmpty;
+    return A == 0;
 }
 
 
 // dump CAPArray for debugging purpose
 void dumpCAPArray(raw_ostream &O, const CAPArray_t &A) {
-    int cap = 0;
-    bool isempty = true;
-
-    for (auto i = A.begin(), e = A.end(); i != e; ++i) {
-        if (*i) {
-            if(!isempty) {
-                O << ",";
-            }
-            isempty &= false;
-            O << CAPString[cap];
-        }
-        cap++;
+    if (A == 0) {
+        O << "empty,";
     }
 
-    if (isempty) {
-        O << "empty";
+    for (int i = 0; i < CAP_TOTALNUM; ++i) {
+        if (A & (1 << i)) {
+            O << CAPString[i] << ",";
+        }
     }
 
     O << "\n";
@@ -229,7 +204,6 @@ void dumpCAPArray(const CAPArray_t &A) {
 // param: CT - the CAPTable to dump
 void dumpCAPTable(const FuncCAPTable_t &CT)
 {
-
     // iterate through captable, a map from func to array
     for (auto mi = CT.begin(), me = CT.end();
          mi != me;
@@ -237,8 +211,8 @@ void dumpCAPTable(const FuncCAPTable_t &CT)
         errs() << mi->first->getName() << " Privileges:\n";
 
         // iterate through cap array
-        for (unsigned int i = 0; i < mi->second.size(); ++ i) {
-            if (mi->second[i]) {
+        for (unsigned int i = 0; i < CAP_TOTALNUM; ++i) {
+            if (mi->second & (1 << i)) {
                 errs() << i << "\t";
             }
         }

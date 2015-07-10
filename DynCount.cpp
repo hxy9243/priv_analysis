@@ -112,13 +112,7 @@ Function* DynCount::getAtExitFunc(Module &M)
 void DynCount::getAddCountArgs(std::vector<Value *>& Args, unsigned int LOC,
                                const CAPArray_t &CAPArray)
 {
-    uint64_t cap = 0;
-
-    for (auto ci = CAPArray.begin(), ce = CAPArray.end();
-         ci != ce; ++ci) {
-        cap |= *ci;
-        cap <<= 1;
-    }
+    uint64_t cap = CAPArray;
 
     // add to args vector
     Constant *LOCArg = ConstantInt::get
