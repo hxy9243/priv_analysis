@@ -88,6 +88,9 @@ void dumpCAPArray(raw_ostream &O, const CAPArray_t &A);
 
 void dumpCAPArray(const CAPArray_t &A);
 
+// dump CAPTable for Debugging purpose
+// param: CT - the CAPTable to dump
+void dumpCAPTable(const FuncCAPTable_t &CT);
 
 } // namespace privAnalysis
 } // namepsace llvm

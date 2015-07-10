@@ -6,6 +6,7 @@
 // ====-------------------------------------------------------====
 
 
+#include "ADT.h"
 #include "LocalAnalysis.h"
 #include "SplitBB.h"
 
@@ -35,7 +36,7 @@ bool LocalAnalysis::doInitialization(Module &M)
 // Retrieve all capabilities from params of function call
 // param: CI - call instruction to retrieve from
 //        CAParray - the array of capability to save to
-void LocalAnalysis::RetrieveAllCAP(CallInst *CI, CAPArray_t &CAParray)
+void LocalAnalysis::RetrieveAllCAP(CallInst *CI, CAPArray_t &CAPArray)
 {
     int numArgs = (int) CI->getNumArgOperands();
     assert(CI != NULL && "The CallInst is NULL!\n");
@@ -48,7 +49,7 @@ void LocalAnalysis::RetrieveAllCAP(CallInst *CI, CAPArray_t &CAParray)
         unsigned int iarg = I->getZExtValue();
 
         // Add it to the array
-        CAParray |= 1 << iarg;
+        CAPArray |= 1 << iarg;
     }
 }
 
@@ -62,7 +63,7 @@ bool LocalAnalysis::runOnModule(Module &M)
     BBFuncTable = SB.BBFuncTable;
     ExtraJMPBB = SB.ExtraJMPBB;
   
-    // find all users of Targeted function
+    // find all users of targeted function
     Function *F = M.getFunction(PRIVRAISE);
 
     // Protector: didn't find any function TARGET_FUNC
@@ -89,11 +90,6 @@ bool LocalAnalysis::runOnModule(Module &M)
         AddToFuncCAPTable(FuncCAPTable, CI->getParent()->getParent(), CAParray);
     }
 
-    // DEBUG purpose: dump map table
-    // ---------------------//
-    // dumpCAPTable (FuncCAPTable);
-    // ----------------------//
-
     return false;
 }
 
@@ -113,7 +109,7 @@ void LocalAnalysis::getAnalysisUsage(AnalysisUsage &AU) const
 // Print out information for debugging purposes
 void LocalAnalysis::print(raw_ostream &O, const Module *M) const
 {
-    
+    dumpCAPTable(FuncCAPTable);
 }
 
 

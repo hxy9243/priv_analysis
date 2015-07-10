@@ -63,8 +63,7 @@ const char *CAPString[CAP_TOTALNUM] = {
 // param: CAPTable - ref to the FuncCAPTable
 //        F - the function to add
 //        CAParray - the array of capability to add to FuncCAPTable
-void AddToFuncCAPTable(FuncCAPTable_t &CAPTable,
-                       Function *F, 
+void AddToFuncCAPTable(FuncCAPTable_t &CAPTable, Function *F, 
                        CAPArray_t CAParray)
 {
     // If not found in map, add to map
@@ -82,9 +81,8 @@ void AddToFuncCAPTable(FuncCAPTable_t &CAPTable,
 // param: CAPTable - ref to the BBCAPTable
 //        B - the BasicBlock to add
 //        CAParray - the array of capability to add to FuncCAPTable
-void AddToBBCAPTable(BBCAPTable_t &CAPTable,
-                     BasicBlock *B, 
-                     CAPArray_t CAParray) 
+void AddToBBCAPTable(BBCAPTable_t &CAPTable, BasicBlock *B, 
+                     CAPArray_t CAParray)
 {
     // If not found in map, add to map
     if (CAPTable.find(B) == CAPTable.end() ) {
@@ -92,9 +90,7 @@ void AddToBBCAPTable(BBCAPTable_t &CAPTable,
     }
     // else, Union the two arrays
     else {
-        for (int i = 0; i < CAP_TOTALNUM; ++ i) {
-            CAPTable[B] |= CAParray;
-        }
+        CAPTable[B] |= CAParray;
     }
 }
 
@@ -125,12 +121,11 @@ int findCAPArraySize(const CAPArray_t &A)
     // to be refactored
     int size = 0;
     for (int i = 0; i < CAP_TOTALNUM; ++i){
-        size += (1 << i) & A;
+        size += ((uint64_t)1 << i) & A;
     }
 
     return size;
 }
-
 
   
 // Union two arrays, save result to dest
@@ -184,7 +179,7 @@ void dumpCAPArray(raw_ostream &O, const CAPArray_t &A) {
     }
 
     for (int i = 0; i < CAP_TOTALNUM; ++i) {
-        if (A & (1 << i)) {
+        if (A & ((uint64_t)1 << i)) {
             O << CAPString[i] << ",";
         }
     }
@@ -199,21 +194,20 @@ void dumpCAPArray(const CAPArray_t &A) {
 }
 
 
-
 // dump CAPTable for Debugging purpose
 // param: CT - the CAPTable to dump
 void dumpCAPTable(const FuncCAPTable_t &CT)
 {
     // iterate through captable, a map from func to array
     for (auto mi = CT.begin(), me = CT.end();
-         mi != me;
-         ++ mi){
-        errs() << mi->first->getName() << " Privileges:\n";
+         mi != me; ++ mi){
+
+        errs() << mi->first->getName() << " Privileges:\t";
 
         // iterate through cap array
-        for (unsigned int i = 0; i < CAP_TOTALNUM; ++i) {
-            if (mi->second & (1 << i)) {
-                errs() << i << "\t";
+        for (int i = 0; i < CAP_TOTALNUM; ++i) {
+            if (mi->second & ((uint64_t)1 << i)) {
+                errs() << CAPString[i] << "\t";
             }
         }
         errs() << "\n";
