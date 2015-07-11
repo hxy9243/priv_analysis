@@ -65,6 +65,8 @@ private:
 
     // get the unique privilege set 
     void findUniqueSet();
+
+    void dumpTable();
 };
 
 } // namespace globalLiveAnalysis

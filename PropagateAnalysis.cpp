@@ -91,29 +91,29 @@ void PropagateAnalysis::Propagate(Module &M)
     FuncCAPTable_t FuncCAPTable_in;
     FuncCAPTable_t FuncCAPTable_out;
     CallGraph CG(M);
-    bool ischanged = true;
+    bool ischanged;
 
     // Get DSA analysis of callgraph
     const CallTargetFinder<TDDataStructures> &DSAFinder 
         = getAnalysis<CallTargetFinder<TDDataStructures> >();
 
-    // Add external calls node function as NULL
+    // Add dummy external calls node function as NULL
+    // Add them to function table 
     CallGraphNode* callsNode = CG.getCallsExternalNode();
     CallGraphNode* callingNode = CG.getExternalCallingNode();
-
-    Function *callsNodeFunc = InsertDummyFunc(M, "CallsExternNode");
-    Function *callingNodeFunc = InsertDummyFunc(M, "CallsExternNode");
+    Function* callsNodeFunc = InsertDummyFunc(M, "CallsExternNode");
+    Function* callingNodeFunc = InsertDummyFunc(M, "CallsExternNode");
     FuncCAPTable[callsNodeFunc] = {};
     FuncCAPTable[callingNodeFunc] = {};
 
-    // copy to FuncCAPTable_in
+    // copy keys to FuncCAPTable_in
     // TODO: Is FuncCAPTable_in really needed here?
     // TODO: Could be using FuncCAPTable directly?
     CopyTableKeys(FuncCAPTable_in, FuncCAPTable);
     CopyTableKeys(FuncCAPTable_out, FuncCAPTable);
 
     // Keep iterating until converged
-    while (ischanged) {
+    do {
         ischanged = false;
 
         // iterate the whole callgraph 
@@ -124,21 +124,16 @@ void PropagateAnalysis::Propagate(Module &M)
             Function *FCaller;
 
             // special handle external nodes
-            if (N == callingNode) {
-                FCaller = callingNodeFunc;
-            }
-            else if (N == callsNode) {
-                continue;
-            }
-            else {
-                FCaller = N->getFunction();
-            }
+            if (N == callingNode)    { FCaller = callingNodeFunc; }
+            else if (N == callsNode) { continue; }
+            else                     { FCaller = N->getFunction(); }
 
             // Get Caller mapped array in FuncCAPTables
             CAPArray_t &callerIn = FuncCAPTable_in[FCaller];
             CAPArray_t &callerOut = FuncCAPTable_out[FCaller];
 
             // Iterate through Callgraphnode for callees
+            // propagate info from callee to caller
             for (CallGraphNode::iterator RI = N->begin(), RE = N->end();
                  RI != RE; ++RI) {
                 Function* FCallee = RI->second->getFunction(); 
@@ -146,15 +141,28 @@ void PropagateAnalysis::Propagate(Module &M)
                 if (RI->second == callingNode) { continue; }
 
                 // special case main function
+                // as no info should propagate from main node
                 if (FCallee == M.getFunction("main")) { continue; }
 
                 // Get callee
                 // If callee is external callsNode, find it in DSA
+                // --------------------------------------------- //
+                // For function calling to external callsNode,
+                // it indicates that it's calling to unresolved
+                // function pointers, and needs info propagated
+                // from external callingNode.
+                // The only exception being when DSA resolves
+                // the function pointers (It's "complete" in DSA
+                // analysis), then it could propagate from only 
+                // the resolved function pointers
+                // --------------------------------------------- //
                 if (RI->second == callsNode) { 
-                    FCallee = callsNodeFunc; 
-                    continue;
                     // TODO: Find in DSA. If compelete in DSA, then don't propagate
                     // TODO: from callsnode 
+
+
+                    FCallee = callsNodeFunc; 
+                    continue;
                 }
 
                 CAPArray_t &calleeIn = FuncCAPTable_in[FCallee];
@@ -169,7 +177,6 @@ void PropagateAnalysis::Propagate(Module &M)
 
         // special handle calls external node, propagate callees of external
         // calling node to this calls external node
-
         CAPArray_t &callingNodeIn = FuncCAPTable_in[callingNodeFunc];
         CAPArray_t &callsNodeIn = FuncCAPTable_in[callsNodeFunc];
         CAPArray_t &callsNodeOut = FuncCAPTable_out[callsNodeFunc];
@@ -177,8 +184,9 @@ void PropagateAnalysis::Propagate(Module &M)
         ischanged |= UnionCAPArrays(callsNodeOut, callingNodeIn);
         ischanged |= UnionCAPArrays(callsNodeIn, callsNodeOut);
 
-    } // main loop
+    } while (ischanged); // main loop
 
+    // Erase dummy function nodes. Restore function-CAPArray table
     FuncCAPTable_in.erase(callsNodeFunc);
     FuncCAPTable_in.erase(callingNodeFunc);
 

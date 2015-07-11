@@ -15,6 +15,7 @@
 #include "llvm/IR/Instructions.h"
 #include "llvm/IR/IntrinsicInst.h"
 
+#include "ADT.h"
 #include "GlobalLiveAnalysis.h"
 #include "PropagateAnalysis.h"
 #include "LocalAnalysis.h"
@@ -72,10 +73,10 @@ bool GlobalLiveAnalysis::runOnModule(Module &M)
     findReturnBB(M, funcReturnBB);
 
     // init data structure
-    bool ischanged = true;
+    bool ischanged;
 
     // iterate till convergence
-    while (ischanged) {
+    do {
         ischanged = false;
 
         // iterate through all functions
@@ -131,7 +132,7 @@ bool GlobalLiveAnalysis::runOnModule(Module &M)
             } // iterate all BBs
 
         } // iterate all functions
-    } // while change
+    } while (ischanged); // main loop
 
     ////////////////////////////////////////
     // Find Difference of BB in and out CAPArrays
@@ -174,73 +175,9 @@ bool GlobalLiveAnalysis::runOnModule(Module &M)
     ////////////////////////////////////////
     // DEBUG
     ////////////////////////////////////////
+    // dumpTable();
 
-    // errs() << "BBCAPTable_in size " << BBCAPTable_in.size() << "\n";
-
-    // ////////////////////////////////////////
-    // // DEBUG
-    // ////////////////////////////////////////
-    // errs() << "BBCAPTable size " << BBCAPTable_dropEnd.size() << "\n";
-    // // Dump in and out for each BB
-    // int count = 0;
-    // for (auto bi = BBCAPTable_in.begin(); bi != BBCAPTable_in.end(); ++bi) {
-    //     BasicBlock *B = bi->first;
-    //     CAPArray_t &CAPArray_in = bi->second;
-    //     CAPArray_t &CAPArray_out = BBCAPTable_out[B];
-    //     ++count;
-    //     // In 
-    //     errs() << "BB" << count
-    //            << " in " << B->getParent()->getName() << ":  \t";
-    //     for (unsigned int i = 0; i < CAPArray_in.size(); ++i) {
-    //         if(CAPArray_in[i]){
-    //             errs() << i << "\t";
-    //         }
-    //     }
-    //     errs() << "\n";
-    //     errs() << "BB" << count
-    //            << " out " << B->getParent()->getName() << ":  \t";
-    //     // Out
-    //     for (unsigned int i = 0; i < CAPArray_in.size(); ++i) {
-    //         if(CAPArray_out[i]){
-    //             errs() << i << "\t";
-    //         }
-    //     }
-    //     errs() << "\n";
-    // }
-    // errs() << "\n";
-
-    // Dump the drop for each BB
-    // for (auto bi = BBCAPTable_dropEnd.begin(); bi != BBCAPTable_dropEnd.end(); ++bi) {
-    //     BasicBlock *B = bi->first;
-    //     CAPArray_t &CAPArray_drop = bi->second;
-    //     ++count;
-    //     errs() << "BB" << count
-    //            << " drop End " << B->getParent()->getName() << ":  \t";
-    //     for (unsigned int i = 0; i < CAPArray_drop.size(); ++i) {
-    //         if(CAPArray_drop[i]){
-    //             errs() << i << "\t";
-    //         }
-    //     }
-    //     errs() << "\n";
-    // }
-    // errs() << "\n";
-
-    // for (auto bi = BBCAPTable_dropStart.begin(); bi != BBCAPTable_dropStart.end(); ++bi) {
-    //     BasicBlock *B = bi->first;
-    //     CAPArray_t &CAPArray_drop = bi->second;
-    //     ++count;
-    //     errs() << "BB" << count
-    //            << " drop Start " << B->getParent()->getName() << ":  \t";
-    //     for (unsigned int i = 0; i < CAPArray_drop.size(); ++i) {
-    //         if(CAPArray_drop[i]){
-    //             errs() << i << "\t";
-    //         }
-    //     }
-    //     errs() << "\n";
-    // }
-    // errs() << "\n";
-    ////////////////////////////////////////
-
+    // Find unique set for Debug output or ROSA
     findUniqueSet();
 
     return false;
@@ -313,7 +250,78 @@ void GlobalLiveAnalysis::print(raw_ostream &O, const Module *M) const
 }
 
 
+// Dump BBCAPTable for Debugging purpose
+void GlobalLiveAnalysis::dumpTable()
+{
+    errs() << "BBCAPTable_in size " << BBCAPTable_in.size() << "\n";
 
+    ////////////////////////////////////////
+    // DEBUG
+    ////////////////////////////////////////
+    errs() << "BBCAPTable size " << BBCAPTable_dropEnd.size() << "\n";
+    // Dump in and out for each BB
+    int count = 0;
+    for (auto bi = BBCAPTable_in.begin(); 
+         bi != BBCAPTable_in.end(); ++bi) {
+        BasicBlock *B = bi->first;
+        CAPArray_t &CAPArray_in = bi->second;
+        CAPArray_t &CAPArray_out = BBCAPTable_out[B];
+        ++count;
+        // In 
+        errs() << "BB" << count
+               << " in " << B->getParent()->getName() << ":  \t";
+        for (int i = 0; i < CAP_TOTALNUM; ++i) {
+            if (CAPArray_in & ((uint64_t) 1 << i)){
+                errs() << i << "\t";
+            }
+        }
+
+        errs() << "\nBB" << count
+               << " out " << B->getParent()->getName() << ":  \t";
+        // Out
+        for (unsigned int i = 0; i < CAP_TOTALNUM; ++i) {
+            if(CAPArray_out & ((uint64_t) 1 << i)){
+                errs() << i << "\t";
+            }
+        }
+        errs() << "\n";
+    }
+    errs() << "\n";
+
+    // Dump the drop for each BB
+    for (auto bi = BBCAPTable_dropEnd.begin(); 
+         bi != BBCAPTable_dropEnd.end(); ++bi) {
+        BasicBlock *B = bi->first;
+        CAPArray_t &CAPArray_drop = bi->second;
+        ++count;
+        errs() << "BB" << count
+               << " drop End " << B->getParent()->getName() << ":  \t";
+        for (int i = 0; i < CAP_TOTALNUM; ++i) {
+            if (CAPArray_drop & ((uint64_t) 1 << i)){
+                errs() << i << "\t";
+            }
+        }
+        errs() << "\n";
+    }
+    errs() << "\n";
+
+    for (auto bi = BBCAPTable_dropStart.begin(); 
+         bi != BBCAPTable_dropStart.end(); ++bi) {
+        BasicBlock *B = bi->first;
+        CAPArray_t &CAPArray_drop = bi->second;
+        ++count;
+        errs() << "BB" << count
+               << " drop Start " << B->getParent()->getName() << ":  \t";
+        for (unsigned int i = 0; i < CAP_TOTALNUM; ++i) {
+            if(CAPArray_drop & ((uint64_t) 1 << i)){
+                errs() << i << "\t";
+            }
+        }
+        errs() << "\n";
+    }
+    errs() << "\n";
+    
+}
 
 
 // register pass
