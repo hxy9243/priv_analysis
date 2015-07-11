@@ -75,7 +75,7 @@ bool GlobalLiveAnalysis::runOnModule(Module &M)
     // init data structure
     bool ischanged;
 
-    // iterate till convergence
+    // iterate the algorithm till convergence
     do {
         ischanged = false;
 
@@ -85,12 +85,12 @@ bool GlobalLiveAnalysis::runOnModule(Module &M)
             Function *F = FI->first;
             if (F == NULL || F->empty()) { continue; }
 
-            // iterate through all BBs for information propagation
+            // Iterate through all BBs for information propagation
             // Traversing BBs in reverse order now because it's closer to
             // topologically reverse order of how BBs are arranged in LLVM, 
             // and it's faster for dataflow analysis to converge
             Function::iterator BI = F->end(), BBegin = F->begin();
-            while(1) {
+            while (1) {
                 if (BI != BBegin) { --BI; }
                 else { break; }
 
@@ -116,6 +116,7 @@ bool GlobalLiveAnalysis::runOnModule(Module &M)
                     ischanged |= UnionCAPArrays(BBCAPTable_in[B], BBCAPTable[B]);
                     //ischangedFunc |= ischanged;
                 }
+
                 // propagate from all its successors
                 TerminatorInst *BBTerm = B->getTerminator();
 
@@ -172,13 +173,14 @@ bool GlobalLiveAnalysis::runOnModule(Module &M)
         }
     }
 
-    ////////////////////////////////////////
+    // ----------------------------------- //
     // DEBUG
-    ////////////////////////////////////////
+    // ----------------------------------- //
+    // Dump the table for debugging
     // dumpTable();
 
-    // Find unique set for Debug output or ROSA
-    findUniqueSet();
+    // Find unique set for debug output or ROSA
+    // findUniqueSet();
 
     return false;
 }
