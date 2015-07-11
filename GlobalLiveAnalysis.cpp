@@ -102,6 +102,10 @@ bool GlobalLiveAnalysis::runOnModule(Module &M)
                 // ---------------------------------------------------------- //
                 // if it's a FunCall BB (found as key in BBFuncTable), add the 
                 // live info to CAPTable of callee's exit BB
+                // TODO: Consider cases for external nodes and 
+                // TODO: DSA related info here
+
+
                 if (BBFuncTable.find(B) != BBFuncTable.end()) {
                     ischanged |= UnionCAPArrays(BBCAPTable_in[B],
                                                 FuncUseCAPTable[BBFuncTable[B]]);
