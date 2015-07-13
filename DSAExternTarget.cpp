@@ -2,9 +2,13 @@
 //
 // Find information about call sites from DSA analysis
 //
-// callsToExternNode will contain calls to calls external node
-// in the LLVM callgraph, which is complete in DSA
-//
+// callsToExternNode: mapping from all callsites to externNode
+// callgraphMap:      mapping from caller to callees. All callers
+//                    here have calls to externNodes but are
+//                    complete in DSA analysis
+// instFunMap:        mapping from callsite instruction to 
+//                    callees. Saved for CFG in Global Live
+//                    Analysis. 
 // ====------------------------------------------------------====
 
 
@@ -43,7 +47,7 @@ bool DSAExternTarget::doInitialization(Module &M)
 }
 
 
-// Find out all callsites, save to availCallSites
+// Find out all indirect callsites, save to callsToExternNode
 void DSAExternTarget::findAllCallSites(CallTargetFinder<TDDataStructures> &CTF)
 {
     callsToExternNode = {};
@@ -53,23 +57,17 @@ void DSAExternTarget::findAllCallSites(CallTargetFinder<TDDataStructures> &CTF)
          CSI != CSE; ++CSI) {
         CallSite &CS = *CSI;
 
-        // // If callsite is still incomplete, we don't know all callees of callsite,  skip it
-        // if (!CTF.isComplete(CS)) {
-        //     continue;
-        // }
-        
         // If a direct call, don't bother
         Function *CF = CS.getCalledFunction();
-        if (CF) {
-            continue;
-        }
-        
+        if (CF) { continue; }
+
+        // skip strip pointer casts
         if (dyn_cast<Function>(CS.getCalledValue()->stripPointerCasts())) {
             errs() << "strip Pointer casts\n";
-
             continue;
         }
 
+        // skip NULL pointer casts
         if (isa<ConstantPointerNull>(CS.getCalledValue()->stripPointerCasts())) {
             continue;
         }
@@ -77,7 +75,8 @@ void DSAExternTarget::findAllCallSites(CallTargetFinder<TDDataStructures> &CTF)
         // Add it to the data structure callsToExternNode
         // TODO: here it presumes that anything besides direct call is a call to 
         // TODO: CallsExternNode
-        for (std::vector<const Function*>::iterator FI = CTF.begin(CS), FE = CTF.end(CS);
+        for (std::vector<const Function*>::iterator FI = CTF.begin(CS), 
+                 FE = CTF.end(CS);
              FI != FE; ++FI) {
             callsToExternNode[&CS].push_back(*FI);
         }
@@ -91,21 +90,29 @@ bool DSAExternTarget::runOnModule(Module &M)
     CallTargetFinder<TDDataStructures> &CTF = 
         getAnalysis<CallTargetFinder<TDDataStructures> >();
 
-    findAllCallSites(CTF);
-
-    functionMap = {};
+    callgraphMap = {};
     instFunMap = {};
     std::vector<Function*>incompleteFuns = {};
 
-    // Find all functions calling to callsExternNode, see if they're complete in DSA analysis
-    for (CallSiteMap_t::iterator FI = callsToExternNode.begin(), FE = callsToExternNode.end();
+    // Find all callsites that's calling to callsExternNode
+    // Save results to callsToExternNode
+    findAllCallSites(CTF);
+
+    // Find all functions calling to callsExternNode, see if they're 
+    // complete in DSA analysis 
+    // Save incomplete calls to incompleteFuns, so as to remove them 
+    // from callgraphMap later
+    // Save complete calls to callgraphMap
+    for (CallSiteFunMap_t::iterator FI = callsToExternNode.begin(), 
+             FE = callsToExternNode.end();
          FI != FE; ++FI) {
-        CallSite *CS = FI->first;
-        CallInst *callInst = dyn_cast<CallInst>(FI->first->getInstruction());
+        CallSite* CS = FI->first;
+        CallInst* callInst = dyn_cast<CallInst>(FI->first->getInstruction());
         Function* caller = callInst->getParent()->getParent();
         std::vector<const Function*>callees = FI->second;
 
-        // if function callsite is incomplete, then skip adding and delete them from callgraph
+        // if function callsite is incomplete, then skip adding and delete 
+        // them from callgraph
         if (!CTF.isComplete(*CS)) {
             incompleteFuns.push_back(caller);
             continue;
@@ -116,25 +123,28 @@ bool DSAExternTarget::runOnModule(Module &M)
         instFunMap[callInst] = callees;
 
         // adding to function mapping, push all callees to caller's function vector
-        for (std::vector<const Function*>::iterator CII = callees.begin(), CIE = callees.end();
+        for (std::vector<const Function*>::iterator CII = callees.begin(), 
+                 CIE = callees.end();
              CII != CIE; ++CII) {
-            functionMap[caller].push_back(*CII);
+            callgraphMap[caller].push_back(*CII);
         }
     }
 
-    // remove all the incomplete functions from the mappings
-    // we still need to assume there are calls from these functions to callsExternNode  
-    for (std::vector<Function*>::iterator FI = incompleteFuns.begin(), FE = incompleteFuns.end();
+    // remove all the incomplete functions from the callgraphMap
+    // we still need to assume there are calls from these functions to callsExternNode 
+    for (std::vector<Function*>::iterator FI = incompleteFuns.begin(), 
+             FE = incompleteFuns.end();
          FI != FE; ++FI) {
-        functionMap.erase(*FI);
+        callgraphMap.erase(*FI);
     }
     
 
     // ------------------------------------- //
     // Find all info for CFG analysis
     // ------------------------------------- //
-    // iterate through all the callsToExternNode
-    for (CallSiteMap_t::iterator FI = callsToExternNode.begin(), FE = callsToExternNode.end();
+    // iterate through all the callsToExternNode for instruction 
+    // mapping to function call
+    for (CallSiteFunMap_t::iterator FI = callsToExternNode.begin(), FE = callsToExternNode.end();
          FI != FE; ++FI) {
 
         // TODO: 
@@ -148,7 +158,7 @@ bool DSAExternTarget::runOnModule(Module &M)
 // print out information for debugging purposes
 void DSAExternTarget::print(raw_ostream &O, const Module *M) const
 {
-    for (CallSiteMap_t::const_iterator FMI = callsToExternNode.begin(),
+    for (CallSiteFunMap_t::const_iterator FMI = callsToExternNode.begin(),
              FME = callsToExternNode.end(); FMI != FME; ++FMI) {
         Function *Caller = FMI->first->getInstruction()->getParent()->getParent();
 

@@ -33,17 +33,17 @@ public:
 
     DSAExternTarget();
 
-    typedef std::map<CallSite*, std::vector<const Function*> > CallSiteMap_t;
-    typedef std::map<Function*, std::vector<const Function*> > FunctionMap_t;
-    typedef std::map<Instruction*, std::vector<const Function*> > InstrFunMap_t;
+    typedef std::unordered_map<CallSite*, std::vector<const Function*> > CallSiteFunMap_t;
+    typedef std::unordered_map<Function*, std::vector<const Function*> > FunctionMap_t;
+    typedef std::unordered_map<Instruction*, std::vector<const Function*> > InstrFunMap_t;
     
     // If a callsite to callsExternNode is complete, record it here
     // with all its callees
-    CallSiteMap_t callsToExternNode;
+    CallSiteFunMap_t callsToExternNode;
 
     // FunctionMap records additional info for the callgraph, mapping callers to
     // callees
-    FunctionMap_t functionMap;
+    FunctionMap_t callgraphMap;
 
     // instFunMap records instruction to its possible called functions
     InstrFunMap_t instFunMap;

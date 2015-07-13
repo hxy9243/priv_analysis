@@ -66,7 +66,7 @@ bool GlobalLiveAnalysis::runOnModule(Module &M)
     // TODO: retrieve information directly from LocalAnalysis?
     BBCAPTable_t &BBCAPTable = PA.BBCAPTable;
     BBFuncTable_t &BBFuncTable = PA.BBFuncTable;
-    FuncCAPTable_t FuncCAPTable = PA.FuncCAPTable;
+    // FuncCAPTable_t FuncCAPTable = PA.FuncCAPTable;
 
     // find the returnBB of all functions
     FuncReturnBB_t funcReturnBB;
@@ -80,7 +80,7 @@ bool GlobalLiveAnalysis::runOnModule(Module &M)
         ischanged = false;
 
         // iterate through all functions
-        for (auto FI = FuncCAPTable.begin(), FE = FuncCAPTable.end(); 
+        for (auto FI = FuncUseCAPTable.begin(), FE = FuncUseCAPTable.end(); 
              FI != FE; ++FI) {
             Function *F = FI->first;
             if (F == NULL || F->empty()) { continue; }
@@ -139,10 +139,10 @@ bool GlobalLiveAnalysis::runOnModule(Module &M)
         } // iterate all functions
     } while (ischanged); // main loop
 
-    ////////////////////////////////////////
+    // ------------------------------------------ //
     // Find Difference of BB in and out CAPArrays
     // Save it to the output 
-    ////////////////////////////////////////
+    // ------------------------------------------ //
     for (auto bi = BBCAPTable_out.begin(); bi != BBCAPTable_out.end(); ++bi) {
         BasicBlock *B = bi->first;
         if (B == NULL ) { continue; }
