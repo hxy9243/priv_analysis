@@ -1,4 +1,4 @@
-// ====------------  DSAExternTarget.h ----------*- C++ -*---====
+// ====------------  DSAExternAnalysis.h ----------*- C++ -*---====
 //
 // Find information about call sites from DSA analysis
 //
@@ -12,7 +12,7 @@
 // ====------------------------------------------------------====
 
 
-#include "DSAExternTarget.h"
+#include "DSAExternAnalysis.h"
 #include "dsa/DataStructure.h"
 #include "dsa/DSGraph.h"
 #include "dsa/CallTargets.h"
@@ -25,11 +25,11 @@ using namespace localAnalysis;
 using namespace dsaexterntarget;
 
 
-DSAExternTarget::DSAExternTarget() : ModulePass(ID) { } 
+DSAExternAnalysis::DSAExternAnalysis() : ModulePass(ID) { } 
 
 
 // Get pass analysis usage
-void DSAExternTarget::getAnalysisUsage(AnalysisUsage &AU) const
+void DSAExternAnalysis::getAnalysisUsage(AnalysisUsage &AU) const
 {
     AU.setPreservesCFG();
 
@@ -41,14 +41,14 @@ void DSAExternTarget::getAnalysisUsage(AnalysisUsage &AU) const
 
 
 // Do initialization
-bool DSAExternTarget::doInitialization(Module &M)
+bool DSAExternAnalysis::doInitialization(Module &M)
 {
     return false;
 }
 
 
 // Find out all indirect callsites, save to callsToExternNode
-void DSAExternTarget::findAllCallSites(CallTargetFinder<TDDataStructures> &CTF)
+void DSAExternAnalysis::findAllCallSites(CallTargetFinder<TDDataStructures> &CTF)
 {
     callsToExternNode = {};
 
@@ -85,7 +85,7 @@ void DSAExternTarget::findAllCallSites(CallTargetFinder<TDDataStructures> &CTF)
 
 
 // Run on Module method for pass
-bool DSAExternTarget::runOnModule(Module &M)
+bool DSAExternAnalysis::runOnModule(Module &M)
 {
     CallTargetFinder<TDDataStructures> &CTF = 
         getAnalysis<CallTargetFinder<TDDataStructures> >();
@@ -100,9 +100,9 @@ bool DSAExternTarget::runOnModule(Module &M)
 
     // Find all functions calling to callsExternNode, see if they're 
     // complete in DSA analysis 
+    // Save complete calls to callgraphMap
     // Save incomplete calls to incompleteFuns, so as to remove them 
     // from callgraphMap later
-    // Save complete calls to callgraphMap
     for (CallSiteFunMap_t::iterator FI = callsToExternNode.begin(), 
              FE = callsToExternNode.end();
          FI != FE; ++FI) {
@@ -156,7 +156,7 @@ bool DSAExternTarget::runOnModule(Module &M)
 
 
 // print out information for debugging purposes
-void DSAExternTarget::print(raw_ostream &O, const Module *M) const
+void DSAExternAnalysis::print(raw_ostream &O, const Module *M) const
 {
     for (CallSiteFunMap_t::const_iterator FMI = callsToExternNode.begin(),
              FME = callsToExternNode.end(); FMI != FME; ++FMI) {
@@ -185,7 +185,7 @@ void DSAExternTarget::print(raw_ostream &O, const Module *M) const
 
 
 // register pass
-char DSAExternTarget::ID = 0;
-static RegisterPass<DSAExternTarget> X("DSAExternTarget", "Find calls to callsExternNode.",
+char DSAExternAnalysis::ID = 0;
+static RegisterPass<DSAExternAnalysis> X("DSAExternAnalysis", "Find calls to callsExternNode.",
                                          true, /* CFG only? */
                                          true /* Analysis Pass? */);

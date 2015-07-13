@@ -1,4 +1,4 @@
-// ====------------  DSAExternTarget.h ----------*- C++ -*---====
+// ====------------  DSAExternAnalysis.h ----------*- C++ -*---====
 //
 // Find information about call sites from DSA analysis
 //
@@ -26,12 +26,12 @@ namespace dsaexterntarget {
 
 using namespace dsa;
 
-struct DSAExternTarget : public ModulePass
+struct DSAExternAnalysis : public ModulePass
 {
 public:
     static char ID;
 
-    DSAExternTarget();
+    DSAExternAnalysis();
 
     typedef std::unordered_map<CallSite*, std::vector<const Function*> > CallSiteFunMap_t;
     typedef std::unordered_map<Function*, std::vector<const Function*> > FunctionMap_t;
