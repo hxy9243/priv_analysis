@@ -154,19 +154,40 @@ bool DSAExternAnalysis::runOnModule(Module &M)
 void DSAExternAnalysis::print(raw_ostream &O, const Module *M) const
 {
     // Dumping information from the callgraphMap
-    O << "Dumping information from the callgraphMap:\n\n";
+    O << "*****************************************\n" 
+        "* Dumping information from the callgraphMap:\n"
+      << "*****************************************\n\n";
 
     for (FunctionMap_t::const_iterator CGI = callgraphMap.cbegin(),
              CGE = callgraphMap.cend(); CGI != CGE; ++CGI) {
         Function* caller = CGI->first;
         std::vector<const Function*>callees = CGI->second;
 
-        O << "Function " << caller->getName() << " calling: \n";
+        O << caller->getName() << " is calling: \n";
 
-        for (std::vector<const Function*>::iterator FI = callees.begin(),
-                 FE = callees.end(); FI != FE; ++FI) {
+        for (std::vector<const Function*>::const_iterator FI = callees.cbegin(),
+                 FE = callees.cend(); FI != FE; ++FI) {
             O << "\t" << (*FI)->getName() << "\n";
         }
+    }
+
+    // Dumping information from the instFunMap
+    O << "\n*****************************************\n"
+      << "* Dumping information from the instFunMap:\n"
+      << "*****************************************\n\n";
+
+    for (InstrFunMap_t::const_iterator II = instFunMap.cbegin(),
+             IE = instFunMap.cend(); II != IE; ++II) {
+        Function* ParentFun = II->first->getParent()->getParent();
+        std::vector<const Function*>callees = II->second;
+
+        O << ParentFun->getName() << " has instruction calling: \n";
+
+        for (std::vector<const Function*>::const_iterator FI = callees.cbegin(),
+                 FE = callees.cend(); FI != FE; ++FI) {
+            O << "\t" << (*FI)->getName() << "\n";
+        }
+
     }
 
     return;
