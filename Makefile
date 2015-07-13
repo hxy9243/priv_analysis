@@ -14,7 +14,7 @@ DSA_LIB   = $(DSA_BUILD)/LLVMDataStructure.a
 
 SRC      = ADT.cpp FindExternNodes.cpp LocalAnalysis.cpp PropagateAnalysis.cpp \
            DynCount.cpp  GlobalLiveAnalysis.cpp  PrivRemoveInsert.cpp  SplitBB.cpp \
-           DSAExternTarget.cpp
+           DSAExternAnalysis.cpp
 
 OBJ      = $(SRC:.cpp=.o)
 
