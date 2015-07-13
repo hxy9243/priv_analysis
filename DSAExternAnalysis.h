@@ -58,6 +58,8 @@ public:
 
 private:
     void findAllCallSites(CallTargetFinder<TDDataStructures> &CTF);
+
+    void saveToMappings(CallTargetFinder<TDDataStructures> &CTF);
 };
 
 

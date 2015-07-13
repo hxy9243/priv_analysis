@@ -84,23 +84,16 @@ void DSAExternAnalysis::findAllCallSites(CallTargetFinder<TDDataStructures> &CTF
 }
 
 
-// Run on Module method for pass
-bool DSAExternAnalysis::runOnModule(Module &M)
+// Save to Maps
+void DSAExternAnalysis::saveToMappings(CallTargetFinder<TDDataStructures> &CTF)
 {
-    CallTargetFinder<TDDataStructures> &CTF = 
-        getAnalysis<CallTargetFinder<TDDataStructures> >();
-
+    std::vector<Function*>incompleteFuns = {};
     callgraphMap = {};
     instFunMap = {};
-    std::vector<Function*>incompleteFuns = {};
 
-    // Find all callsites that's calling to callsExternNode
-    // Save results to callsToExternNode
-    findAllCallSites(CTF);
-
-    // Find all functions calling to callsExternNode, see if they're 
-    // complete in DSA analysis 
-    // Save complete calls to callgraphMap
+    // Based on callsites in callsExternNode, save information to corresponding
+    // data structures
+    // Save complete calls to callgraphMap and InstrFunMap
     // Save incomplete calls to incompleteFuns, so as to remove them 
     // from callgraphMap later
     for (CallSiteFunMap_t::iterator FI = callsToExternNode.begin(), 
@@ -118,11 +111,11 @@ bool DSAExternAnalysis::runOnModule(Module &M)
             continue;
         }
 
-        // adding to instruction to mapping
+        // Adding to mapping from callInst to all possible callees
         assert(callInst && "Call Instruction is NULL\n");
         instFunMap[callInst] = callees;
 
-        // adding to function mapping, push all callees to caller's function vector
+        // Adding to mapping from callers to callees 
         for (std::vector<const Function*>::iterator CII = callees.begin(), 
                  CIE = callees.end();
              CII != CIE; ++CII) {
@@ -137,19 +130,21 @@ bool DSAExternAnalysis::runOnModule(Module &M)
          FI != FE; ++FI) {
         callgraphMap.erase(*FI);
     }
-    
+}
 
-    // ------------------------------------- //
-    // Find all info for CFG analysis
-    // ------------------------------------- //
-    // iterate through all the callsToExternNode for instruction 
-    // mapping to function call
-    for (CallSiteFunMap_t::iterator FI = callsToExternNode.begin(), FE = callsToExternNode.end();
-         FI != FE; ++FI) {
 
-        // TODO: 
+// Run on Module method for pass
+bool DSAExternAnalysis::runOnModule(Module &M)
+{
+    CallTargetFinder<TDDataStructures> &CTF = 
+        getAnalysis<CallTargetFinder<TDDataStructures> >();
 
-    }
+    // Find all callsites that's calling to callsExternNode
+    // Save results to callsToExternNode
+    findAllCallSites(CTF);
+
+    // Save the information from callsExternNode to mappings
+    saveToMappings(CTF);
     
     return false;
 }
