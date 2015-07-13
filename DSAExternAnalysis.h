@@ -57,8 +57,10 @@ public:
     void print(raw_ostream &O, const Module *M) const;
 
 private:
+    // Find out all indirect callsites, save to callsToExternNode
     void findAllCallSites(CallTargetFinder<TDDataStructures> &CTF);
 
+    // Save information to corresponding data structures
     void saveToMappings(CallTargetFinder<TDDataStructures> &CTF);
 };
 

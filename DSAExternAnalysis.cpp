@@ -84,7 +84,7 @@ void DSAExternAnalysis::findAllCallSites(CallTargetFinder<TDDataStructures> &CTF
 }
 
 
-// Save to Maps
+// Save information to corresponding data structures
 void DSAExternAnalysis::saveToMappings(CallTargetFinder<TDDataStructures> &CTF)
 {
     std::vector<Function*>incompleteFuns = {};
@@ -153,28 +153,23 @@ bool DSAExternAnalysis::runOnModule(Module &M)
 // print out information for debugging purposes
 void DSAExternAnalysis::print(raw_ostream &O, const Module *M) const
 {
-    for (CallSiteFunMap_t::const_iterator FMI = callsToExternNode.begin(),
-             FME = callsToExternNode.end(); FMI != FME; ++FMI) {
-        Function *Caller = FMI->first->getInstruction()->getParent()->getParent();
+    // Dumping information from the callgraphMap
+    O << "Dumping information from the callgraphMap:\n\n";
 
-        if (Caller != NULL) {
-            O << Caller->getName() << ":\t";
-        }
-        else {
-            O << "NULL\n";
-            continue;
-        }
+    for (FunctionMap_t::const_iterator CGI = callgraphMap.cbegin(),
+             CGE = callgraphMap.cend(); CGI != CGE; ++CGI) {
+        Function* caller = CGI->first;
+        std::vector<const Function*>callees = CGI->second;
 
-        // Iterate through all callees of the function
-        std::vector<const Function*> callees = FMI->second;
+        O << "Function " << caller->getName() << " calling: \n";
+
         for (std::vector<const Function*>::iterator FI = callees.begin(),
                  FE = callees.end(); FI != FE; ++FI) {
-
-            assert((*FI) && "Caller is NULL function\n");
-            O << (*FI)->getName() << ", ";
+            O << "\t" << (*FI)->getName() << "\n";
         }
-        O << "\n";
     }
+
+    return;
 }
 
 
