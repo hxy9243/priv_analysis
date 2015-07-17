@@ -54,10 +54,11 @@ bool SplitBB::runOnModule(Module &M)
             F->getName() == PRIVLOWER){
             continue;
         }
+
         // skip external functions
-        if (F->empty()){
-            continue;
-        }
+        // if (F->empty()){
+        // continue;
+        // }
 
         splitOnFunction(F, SPLIT_HERE | SPLIT_NEXT);
     }

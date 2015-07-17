@@ -17,6 +17,7 @@
 
 #include "ADT.h"
 #include "GlobalLiveAnalysis.h"
+#include "DSAExternAnalysis.h"
 #include "PropagateAnalysis.h"
 #include "LocalAnalysis.h"
 
@@ -31,6 +32,7 @@
 using namespace llvm;
 using namespace llvm::propagateAnalysis;
 using namespace llvm::splitBB;
+using namespace llvm::dsaexterntarget;
 using namespace llvm::globalLiveAnalysis;
 
 
@@ -66,7 +68,11 @@ bool GlobalLiveAnalysis::runOnModule(Module &M)
     // TODO: retrieve information directly from LocalAnalysis?
     BBCAPTable_t &BBCAPTable = PA.BBCAPTable;
     BBFuncTable_t &BBFuncTable = PA.BBFuncTable;
-    // FuncCAPTable_t FuncCAPTable = PA.FuncCAPTable;
+
+    Function* callsNodeFunc = PA.callsNodeFunc;
+
+    const DSAExternAnalysis &DSAFinder = getAnalysis<DSAExternAnalysis>();
+    InstrFunMap_t instFunMap = DSAFinder.instFunMap;
 
     // find the returnBB of all functions
     FuncReturnBB_t funcReturnBB;
@@ -104,11 +110,39 @@ bool GlobalLiveAnalysis::runOnModule(Module &M)
                 // live info to CAPTable of callee's exit BB
                 // TODO: Consider cases for external nodes and 
                 // TODO: DSA related info here
-
-
                 if (BBFuncTable.find(B) != BBFuncTable.end()) {
+                    Function* funcall = BBFuncTable[B];
+
+                    // Find the callinst of the BB
+                    Instruction* BBcallInst = B->getFirstNonPHI();
+
+                    // If calling to externnode
+                    if (funcall->empty()) {
+                        // Skip LLVM intrinsic functions
+                        // TODO:
+
+                        // If complete from DSA analysis
+                        if (instFunMap.find(BBcallInst) != instFunMap.end()) {
+                            std::vector<Function*> Instcallees = instFunMap[BBcallInst];
+                            for (std::vector<Function*>::iterator II = Instcallees.begin(),
+                                     IE = Instcallees.end(); II != IE; ++II) {
+                                Function* callee = *II;
+                                ischanged |= UnionCAPArrays(BBCAPTable_in[B],
+                                                            FuncUseCAPTable[callee]);
+                                ischanged |= UnionCAPArrays(BBCAPTable_out[funcReturnBB[callee]],
+                                                            BBCAPTable_out[B]);
+                            }
+                        }
+                        // else if incomplete
+                        // TODO: propagate from externNode?
+                        else {
+                            ischanged |= UnionCAPArrays(BBCAPTable_in[B],
+                                                        FuncUseCAPTable[callsNodeFunc]);
+                        }
+                    }
+
                     ischanged |= UnionCAPArrays(BBCAPTable_in[B],
-                                                FuncUseCAPTable[BBFuncTable[B]]);
+                                                FuncUseCAPTable[funcall]);
                     // propagate information to returnBB of function
                     Function *callee = BBFuncTable[B];
                     ischanged |= UnionCAPArrays(BBCAPTable_out[funcReturnBB[callee]],

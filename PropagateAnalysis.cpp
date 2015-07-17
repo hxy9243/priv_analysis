@@ -106,8 +106,8 @@ void PropagateAnalysis::Propagate(Module &M)
     // Add them to function table 
     CallGraphNode* callsNode = CG.getCallsExternalNode();
     CallGraphNode* callingNode = CG.getExternalCallingNode();
-    Function* callsNodeFunc = InsertDummyFunc(M, "CallsExternNode");
-    Function* callingNodeFunc = InsertDummyFunc(M, "CallsExternNode");
+    callsNodeFunc = InsertDummyFunc(M, "CallsExternNode");
+    callingNodeFunc = InsertDummyFunc(M, "CallsExternNode");
     FuncCAPTable[callsNodeFunc] = {};
     FuncCAPTable[callingNodeFunc] = {};
 
@@ -204,8 +204,8 @@ void PropagateAnalysis::Propagate(Module &M)
     } while (ischanged); // main loop
 
     // Erase dummy function nodes. Restore function-CAPArray table
-    FuncCAPTable_in.erase(callsNodeFunc);
-    FuncCAPTable_in.erase(callingNodeFunc);
+    // FuncCAPTable_in.erase(callsNodeFunc);
+    // FuncCAPTable_in.erase(callingNodeFunc);
 
     FuncCAPTable = FuncCAPTable_in;
 }

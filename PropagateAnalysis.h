@@ -41,6 +41,10 @@ public:
     // Map from BB to its non-external Function Calls
     BBFuncTable_t BBFuncTable;
 
+    // Dummy Node of callingNode and callsNode
+    Function* callingNodeFunc;
+    Function* callsNodeFunc;
+
     // constructor
     PropagateAnalysis();
 
