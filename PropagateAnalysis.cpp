@@ -12,9 +12,10 @@
 
 #include "PropagateAnalysis.h"
 #include "LocalAnalysis.h"
-#include "dsa/DataStructure.h"
-#include "dsa/DSGraph.h"
-#include "dsa/CallTargets.h"
+#include "DSAExternAnalysis.h"
+// #include "dsa/DataStructure.h"
+// #include "dsa/DSGraph.h"
+// #include "dsa/CallTargets.h"
 
 #include <array>
 #include <vector>
@@ -26,6 +27,7 @@ using namespace dsa;
 using namespace llvm::privAnalysis;
 using namespace llvm::localAnalysis;
 using namespace llvm::propagateAnalysis;
+using namespace llvm::dsaexterntarget;
 
 // PropagateAnalysis constructor
 PropagateAnalysis::PropagateAnalysis() : ModulePass(ID) { }
@@ -36,7 +38,8 @@ void PropagateAnalysis::getAnalysisUsage(AnalysisUsage &AU) const
 {
     AU.setPreservesCFG();
     AU.addRequired<LocalAnalysis>();
-    AU.addRequired<CallTargetFinder<TDDataStructures> >();
+    AU.addRequired<DSAExternAnalysis>();
+    // AU.addRequired<CallTargetFinder<TDDataStructures> >();
 
     // preserve usage
     AU.setPreservesAll();
@@ -94,9 +97,11 @@ void PropagateAnalysis::Propagate(Module &M)
     bool ischanged;
 
     // Get DSA analysis of callgraph
-    const CallTargetFinder<TDDataStructures> &DSAFinder 
-        = getAnalysis<CallTargetFinder<TDDataStructures> >();
-
+    // const CallTargetFinder<TDDataStructures> &DSAFinder 
+    // = getAnalysis<CallTargetFinder<TDDataStructures> >();
+    const DSAExternAnalysis &DSAFinder = getAnalysis<DSAExternAnalysis>();
+    FunctionMap_t callgraphMap = DSAFinder.callgraphMap;
+    
     // Add dummy external calls node function as NULL
     // Add them to function table 
     CallGraphNode* callsNode = CG.getCallsExternalNode();
@@ -136,9 +141,10 @@ void PropagateAnalysis::Propagate(Module &M)
             // propagate info from callee to caller
             for (CallGraphNode::iterator RI = N->begin(), RE = N->end();
                  RI != RE; ++RI) {
-                Function* FCallee = RI->second->getFunction(); 
+                CallGraphNode* callee = RI->second;
+                Function* FCallee = callee->getFunction(); 
 
-                if (RI->second == callingNode) { continue; }
+                if (callee == callingNode) { continue; }
 
                 // special case main function
                 // as no info should propagate from main node
@@ -156,18 +162,29 @@ void PropagateAnalysis::Propagate(Module &M)
                 // analysis), then it could propagate from only 
                 // the resolved function pointers
                 // --------------------------------------------- //
-                if (RI->second == callsNode) { 
-                    // TODO: Find in DSA. If compelete in DSA, then don't propagate
-                    // TODO: from callsnode 
-
-
-                    FCallee = callsNodeFunc; 
-                    continue;
+                if (callee == callsNode) { 
+                    // Find in DSA. If compelete in DSA, then don't propagate
+                    // from extern callsnode 
+                    if (callgraphMap.find(FCallee) != callgraphMap.end()) {
+                        // propagate from all its callees in DSA analysis
+                        std::vector<Function*>DSAcallees
+                            = callgraphMap[FCallee];
+                        for (std::vector<Function*>::
+                                 iterator CI = DSAcallees.begin(), CE = DSAcallees.end();
+                             CI!= CE; ++CI) {
+                            CAPArray_t &calleeIn = FuncCAPTable_in[*CI];
+                            ischanged |= UnionCAPArrays(callerOut, calleeIn);
+                        }
+                    }
+                    else {
+                        // incomplete in DSA, propagate from extern calls node
+                        CAPArray_t &calleeIn = FuncCAPTable_in[callsNodeFunc];
+                        ischanged |= UnionCAPArrays(callerOut, calleeIn);
+                    }
                 }
 
-                CAPArray_t &calleeIn = FuncCAPTable_in[FCallee];
                 // Propagate all information from callee to caller_out 
-                ischanged |= UnionCAPArrays(callerOut, calleeIn);
+                ischanged |= UnionCAPArrays(callerOut, FuncCAPTable_in[FCallee]);
             } // Iterate through Callgraphnode for callees
 
             // Propagate all information from caller_out to caller_in
