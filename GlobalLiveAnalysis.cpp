@@ -46,6 +46,7 @@ void GlobalLiveAnalysis::getAnalysisUsage(AnalysisUsage &AU) const
     AU.setPreservesAll();
 
     AU.addRequired<UnifyFunctionExitNodes>();
+    AU.addRequired<DSAExternAnalysis>();
     AU.addRequired<PropagateAnalysis>();
     AU.addRequired<SplitBB>();
 }

@@ -63,7 +63,7 @@ void DSAExternAnalysis::findAllCallSites(CallTargetFinder<TDDataStructures> &CTF
 
         // skip strip pointer casts
         if (dyn_cast<Function>(CS.getCalledValue()->stripPointerCasts())) {
-            errs() << "strip Pointer casts\n";
+            // errs() << "strip Pointer casts\n";
             continue;
         }
 
@@ -78,7 +78,8 @@ void DSAExternAnalysis::findAllCallSites(CallTargetFinder<TDDataStructures> &CTF
         for (std::vector<const Function*>::iterator FI = CTF.begin(CS), 
                  FE = CTF.end(CS);
              FI != FE; ++FI) {
-            callsToExternNode[&CS].push_back(*FI);
+            Function* F = const_cast<Function*>(*FI);
+            callsToExternNode[&CS].push_back(F);
         }
     }
 }
@@ -102,7 +103,7 @@ void DSAExternAnalysis::saveToMappings(CallTargetFinder<TDDataStructures> &CTF)
         CallSite* CS = FI->first;
         CallInst* callInst = dyn_cast<CallInst>(FI->first->getInstruction());
         Function* caller = callInst->getParent()->getParent();
-        std::vector<const Function*>callees = FI->second;
+        std::vector<Function*>callees = FI->second;
 
         // if function callsite is incomplete, then skip adding and delete 
         // them from callgraph
@@ -116,10 +117,11 @@ void DSAExternAnalysis::saveToMappings(CallTargetFinder<TDDataStructures> &CTF)
         instFunMap[callInst] = callees;
 
         // Adding to mapping from callers to callees 
-        for (std::vector<const Function*>::iterator CII = callees.begin(), 
+        for (std::vector<Function*>::iterator CII = callees.begin(), 
                  CIE = callees.end();
              CII != CIE; ++CII) {
-            callgraphMap[caller].push_back(*CII);
+            Function *Fcallee = const_cast<Function*>(*CII);
+            callgraphMap[caller].push_back(Fcallee);
         }
     }
 
@@ -130,6 +132,11 @@ void DSAExternAnalysis::saveToMappings(CallTargetFinder<TDDataStructures> &CTF)
          FI != FE; ++FI) {
         callgraphMap.erase(*FI);
     }
+
+    // DEBUG
+    fprintf(stderr, "Complete ratio is %.2f%%\n", 
+            100*(float)(callgraphMap.size())/(float)(callsToExternNode.size()));
+
 }
 
 
@@ -153,20 +160,21 @@ bool DSAExternAnalysis::runOnModule(Module &M)
 // print out information for debugging purposes
 void DSAExternAnalysis::print(raw_ostream &O, const Module *M) const
 {
+    /*
     // Dumping information from the callgraphMap
     O << "*****************************************\n" 
         "* Dumping information from the callgraphMap:\n"
       << "*****************************************\n\n";
 
-    for (FunctionMap_t::const_iterator CGI = callgraphMap.cbegin(),
-             CGE = callgraphMap.cend(); CGI != CGE; ++CGI) {
+    for (FunctionMap_t::const_iterator CGI = callgraphMap.begin(),
+             CGE = callgraphMap.end(); CGI != CGE; ++CGI) {
         Function* caller = CGI->first;
-        std::vector<const Function*>callees = CGI->second;
+        std::vector<Function*>callees = CGI->second;
 
         O << caller->getName() << " is calling: \n";
 
-        for (std::vector<const Function*>::const_iterator FI = callees.cbegin(),
-                 FE = callees.cend(); FI != FE; ++FI) {
+        for (std::vector<Function*>::iterator FI = callees.begin(),
+                 FE = callees.end(); FI != FE; ++FI) {
             O << "\t" << (*FI)->getName() << "\n";
         }
     }
@@ -176,19 +184,19 @@ void DSAExternAnalysis::print(raw_ostream &O, const Module *M) const
       << "* Dumping information from the instFunMap:\n"
       << "*****************************************\n\n";
 
-    for (InstrFunMap_t::const_iterator II = instFunMap.cbegin(),
-             IE = instFunMap.cend(); II != IE; ++II) {
+    for (InstrFunMap_t::const_iterator II = instFunMap.begin(),
+             IE = instFunMap.end(); II != IE; ++II) {
         Function* ParentFun = II->first->getParent()->getParent();
-        std::vector<const Function*>callees = II->second;
+        std::vector<Function*>callees = II->second;
 
         O << ParentFun->getName() << " has instruction calling: \n";
 
-        for (std::vector<const Function*>::const_iterator FI = callees.cbegin(),
-                 FE = callees.cend(); FI != FE; ++FI) {
+        for (std::vector<Function*>::const_iterator FI = callees.begin(),
+                 FE = callees.end(); FI != FE; ++FI) {
             O << "\t" << (*FI)->getName() << "\n";
         }
-
     }
+*/
 
     return;
 }
