@@ -120,7 +120,7 @@ bool GlobalLiveAnalysis::runOnModule(Module &M)
                     // If calling to externnode
                     if (funcall->empty()) {
                         // Skip LLVM intrinsic functions
-                        // TODO:
+                        if (isa<IntrinsicInst>(BBcallInst)) { continue; }
 
                         // If complete from DSA analysis
                         if (instFunMap.find(BBcallInst) != instFunMap.end()) {
@@ -134,8 +134,7 @@ bool GlobalLiveAnalysis::runOnModule(Module &M)
                                                             BBCAPTable_out[B]);
                             }
                         }
-                        // else if incomplete
-                        // TODO: propagate from externNode?
+                        // else if incomplete, propagate from callsExternNode
                         else {
                             ischanged |= UnionCAPArrays(BBCAPTable_in[B],
                                                         FuncUseCAPTable[callsNodeFunc]);
