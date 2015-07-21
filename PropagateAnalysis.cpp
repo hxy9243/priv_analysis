@@ -94,15 +94,16 @@ void PropagateAnalysis::Propagate(Module &M)
     bool ischanged;
 
     // Get DSA analysis of callgraph
-    const CallTargetFinder<TDDataStructures> &DSAFinder 
-        = getAnalysis<CallTargetFinder<TDDataStructures> >();
+    // const CallTargetFinder<TDDataStructures> &DSAFinder 
+    //     = getAnalysis<CallTargetFinder<TDDataStructures> >();
 
     // Add dummy external calls node function as NULL
     // Add them to function table 
     CallGraphNode* callsNode = CG.getCallsExternalNode();
     CallGraphNode* callingNode = CG.getExternalCallingNode();
-    Function* callsNodeFunc = InsertDummyFunc(M, "CallsExternNode");
-    Function* callingNodeFunc = InsertDummyFunc(M, "CallsExternNode");
+
+    callsNodeFunc = InsertDummyFunc(M, "CallsExternNode");
+    callingNodeFunc = InsertDummyFunc(M, "CallsExternNode");
     FuncCAPTable[callsNodeFunc] = {};
     FuncCAPTable[callingNodeFunc] = {};
 
@@ -144,22 +145,15 @@ void PropagateAnalysis::Propagate(Module &M)
                 // as no info should propagate from main node
                 if (FCallee == M.getFunction("main")) { continue; }
 
-                // Get callee
-                // If callee is external callsNode, find it in DSA
                 // --------------------------------------------- //
                 // For function calling to external callsNode,
                 // it indicates that it's calling to unresolved
                 // function pointers, and needs info propagated
                 // from external callingNode.
-                // The only exception being when DSA resolves
-                // the function pointers (It's "complete" in DSA
-                // analysis), then it could propagate from only 
-                // the resolved function pointers
                 // --------------------------------------------- //
                 if (RI->second == callsNode) { 
-                    // TODO: Find in DSA. If compelete in DSA, then don't propagate
-                    // TODO: from callsnode 
-
+                    // save it for global live analysis
+                    callsToExternNode.push_back(N->getFunction());
 
                     FCallee = callsNodeFunc; 
                     continue;
@@ -187,8 +181,8 @@ void PropagateAnalysis::Propagate(Module &M)
     } while (ischanged); // main loop
 
     // Erase dummy function nodes. Restore function-CAPArray table
-    FuncCAPTable_in.erase(callsNodeFunc);
-    FuncCAPTable_in.erase(callingNodeFunc);
+    // FuncCAPTable_in.erase(callsNodeFunc);
+    // FuncCAPTable_in.erase(callingNodeFunc);
 
     FuncCAPTable = FuncCAPTable_in;
 }

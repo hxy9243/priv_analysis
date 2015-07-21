@@ -66,7 +66,9 @@ bool GlobalLiveAnalysis::runOnModule(Module &M)
     // TODO: retrieve information directly from LocalAnalysis?
     BBCAPTable_t &BBCAPTable = PA.BBCAPTable;
     BBFuncTable_t &BBFuncTable = PA.BBFuncTable;
-    FuncCAPTable_t FuncCAPTable = PA.FuncCAPTable;
+    std::vector<Function*> callsToExternNode = PA.callsToExternNode;
+
+    Function* callsNode = PA.callsNodeFunc;
 
     // find the returnBB of all functions
     FuncReturnBB_t funcReturnBB;
@@ -80,7 +82,7 @@ bool GlobalLiveAnalysis::runOnModule(Module &M)
         ischanged = false;
 
         // iterate through all functions
-        for (auto FI = FuncCAPTable.begin(), FE = FuncCAPTable.end(); 
+        for (auto FI = FuncUseCAPTable.begin(), FE = FuncUseCAPTable.end(); 
              FI != FE; ++FI) {
             Function *F = FI->first;
             if (F == NULL || F->empty()) { continue; }
@@ -104,15 +106,29 @@ bool GlobalLiveAnalysis::runOnModule(Module &M)
                 // live info to CAPTable of callee's exit BB
                 // TODO: Consider cases for external nodes and 
                 // TODO: DSA related info here
-
-
                 if (BBFuncTable.find(B) != BBFuncTable.end()) {
-                    ischanged |= UnionCAPArrays(BBCAPTable_in[B],
-                                                FuncUseCAPTable[BBFuncTable[B]]);
-                    // propagate information to returnBB of function
-                    Function *callee = BBFuncTable[B];
-                    ischanged |= UnionCAPArrays(BBCAPTable_out[funcReturnBB[callee]],
-                                                BBCAPTable_out[B]);
+                    Function* BBcallInst = BBFuncTable[B];
+
+                    // Skip LLVM intrinsic functions
+                    if (isa<IntrinsicInst>(BBcallInst)) { continue; }
+
+                    // if regular function not calling to external node
+                    std::vector<Function*>::iterator it 
+                        = find(callsToExternNode.begin(), callsToExternNode.end(),
+                               BBcallInst);
+                    if (it != callsToExternNode.end()) {
+                        ischanged |= UnionCAPArrays(BBCAPTable_in[B],
+                                                    FuncUseCAPTable[BBFuncTable[B]]);
+                        // propagate information to returnBB of function
+                        Function *callee = BBFuncTable[B];
+                        ischanged |= UnionCAPArrays(BBCAPTable_out[funcReturnBB[callee]],
+                                                    BBCAPTable_out[B]);
+                    }
+                    // else propagate from external node
+                    else {
+                        ischanged |= UnionCAPArrays(BBCAPTable_in[B],
+                                                    FuncUseCAPTable[callsNode]);
+                    }
                 }
 
                 // if it's a Priv Call BB, Propagate privilege to the in of BB

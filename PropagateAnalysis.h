@@ -31,6 +31,13 @@ public:
     // pass ID
     static char ID;
 
+    // calls To external nodes
+    Function* callsNodeFunc;
+    Function* callingNodeFunc;
+
+    // all calls to callsExternNode
+    std::vector<Function*> callsToExternNode;
+
     // CAPTable after info propagation
     FuncCAPTable_t FuncCAPTable;
 
