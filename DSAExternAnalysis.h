@@ -36,6 +36,10 @@ public:
     static char ID;
 
     DSAExternAnalysis();
+
+    // If a callsite to callsExternNode is complete, record it here
+    // with all its callees
+    CallSiteFunMap_t callsToExternNode;
     
     // FunctionMap records additional info for the callgraph, mapping callers to
     // callees
@@ -53,10 +57,6 @@ public:
     void print(raw_ostream &O, const Module *M) const;
 
 private:
-    // If a callsite to callsExternNode is complete, record it here
-    // with all its callees
-    CallSiteFunMap_t callsToExternNode;
-
     // Find out all indirect callsites, save to callsToExternNode
     void findAllCallSites(CallTargetFinder<TDDataStructures> &CTF);
 

@@ -98,7 +98,7 @@ void PropagateAnalysis::Propagate(Module &M)
 
     // Get DSA analysis of callgraph
     // const CallTargetFinder<TDDataStructures> &DSAFinder 
-    // = getAnalysis<CallTargetFinder<TDDataStructures> >();
+    //     = getAnalysis<CallTargetFinder<TDDataStructures> >();
     const DSAExternAnalysis &DSAFinder = getAnalysis<DSAExternAnalysis>();
     FunctionMap_t callgraphMap = DSAFinder.callgraphMap;
     

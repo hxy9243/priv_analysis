@@ -73,6 +73,7 @@ bool GlobalLiveAnalysis::runOnModule(Module &M)
     Function* callsNodeFunc = PA.callsNodeFunc;
 
     const DSAExternAnalysis &DSAFinder = getAnalysis<DSAExternAnalysis>();
+    CallSiteFunMap_t callsToExternNode = DSAFinder.callsToExternNode;
     InstrFunMap_t instFunMap = DSAFinder.instFunMap;
 
     // find the returnBB of all functions
@@ -117,10 +118,16 @@ bool GlobalLiveAnalysis::runOnModule(Module &M)
                     // Find the callinst of the BB
                     Instruction* BBcallInst = B->getFirstNonPHI();
 
+                    CallSite CS(BBcallInst);
+
                     // If calling to externnode
-                    if (funcall->empty()) {
+                    if (callsToExternNode.find(&CS) != callsToExternNode.end()) {
+
                         // Skip LLVM intrinsic functions
                         if (isa<IntrinsicInst>(BBcallInst)) { continue; }
+
+                        // DEBUG
+                        errs() << "Empty function: " << funcall->getName() << "\n";
 
                         // If complete from DSA analysis
                         if (instFunMap.find(BBcallInst) != instFunMap.end()) {

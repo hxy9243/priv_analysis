@@ -19,6 +19,8 @@
 
 #include "ADT.h"
 
+#include <vector>
+
 using namespace llvm::privAnalysis;
 
 namespace llvm {
