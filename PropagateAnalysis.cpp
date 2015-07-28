@@ -36,7 +36,7 @@ void PropagateAnalysis::getAnalysisUsage(AnalysisUsage &AU) const
 {
     AU.setPreservesCFG();
     AU.addRequired<LocalAnalysis>();
-    AU.addRequired<CallTargetFinder<TDDataStructures> >();
+    // AU.addRequired<CallTargetFinder<TDDataStructures> >();
 
     // preserve usage
     AU.setPreservesAll();

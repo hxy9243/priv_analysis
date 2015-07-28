@@ -146,6 +146,12 @@ bool DynCount::runOnModule(Module &M)
     // Insert callinst to all BBs 
     std::vector<Value *>Args;
     FuncCAPTable_t FuncCAPTable = PA.FuncCAPTable;
+    Function* callsNodeFunc = PA.callsNodeFunc;
+    Function* callingNodeFunc = PA.callingNodeFunc;
+
+    FuncCAPTable.erase(callsNodeFunc);
+    FuncCAPTable.erase(callingNodeFunc);
+    
 
     assert(addCountFunction && "The addCount function is NULL!\n");
 

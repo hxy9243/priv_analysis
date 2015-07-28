@@ -116,7 +116,7 @@ bool GlobalLiveAnalysis::runOnModule(Module &M)
                     std::vector<Function*>::iterator it 
                         = find(callsToExternNode.begin(), callsToExternNode.end(),
                                BBcallInst);
-                    if (it != callsToExternNode.end()) {
+                    if (it == callsToExternNode.end()) {
                         ischanged |= UnionCAPArrays(BBCAPTable_in[B],
                                                     FuncUseCAPTable[BBFuncTable[B]]);
                         // propagate information to returnBB of function
